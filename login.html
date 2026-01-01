@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Login - Cinema Muchatlu</title>
+    <link rel="stylesheet" href="auth-pages.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="auth-page">
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="auth-container">
+        <!-- Left Panel - Branding -->
+        <div class="auth-branding">
+            <div class="branding-content">
+                <div class="logo-section">
+                    <h1 class="brand-logo">Cinema Muchatlu</h1>
+                    <p class="brand-tagline">Your Ultimate Movie Community</p>
+                </div>
+
+                <div class="hero-section">
+                    <div class="hero-image">
+                        <div class="movie-reel-icon">🎬</div>
+                    </div>
+                    <h2 class="hero-title">Welcome Back!</h2>
+                    <p class="hero-description">Continue your journey through the world of cinema</p>
+                </div>
+
+                <div class="features-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">📚</span>
+                        <div class="feature-text">
+                            <h3>Discover Movies</h3>
+                            <p>Explore thousands of films</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">💬</span>
+                        <div class="feature-text">
+                            <h3>Join Discussions</h3>
+                            <p>Connect with movie lovers</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">⭐</span>
+                        <div class="feature-text">
+                            <h3>Build Watchlist</h3>
+                            <p>Track your favorite films</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="social-proof">
+                    <p class="proof-text">Join <strong>10,000+</strong> movie enthusiasts</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Login Form -->
+        <div class="auth-form-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Login to Your Account</h2>
+                    <p class="form-subtitle">Enter your credentials to continue</p>
+                </div>
+
+                <!-- Error/Success Banner -->
+                <div id="messageBanner" class="message-banner hidden"></div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <input type="email" id="loginEmail" class="form-input" placeholder=" " required
+                                autocomplete="email">
+                            <label for="loginEmail" class="form-label">Email Address</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <input type="password" id="loginPassword" class="form-input" placeholder=" " required
+                                autocomplete="current-password">
+                            <label for="loginPassword" class="form-label">Password</label>
+                            <button type="button" class="password-toggle" id="togglePassword">
+                                <span class="toggle-icon">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkbox-text">Remember me</span>
+                        </label>
+                        <a href="forgot-password.html" class="link-text">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="loginBtn">
+                        <span class="btn-text">Login</span>
+                        <span class="btn-loader hidden">
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <p class="footer-text">
+                        Don't have an account?
+                        <a href="signup.html" class="link-primary">Sign up</a>
+                    </p>
+                </div>
+
+                <div class="back-home">
+                    <a href="index.html" class="link-text">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="auth-pages.js"></script>
+</body>
+
+</html>

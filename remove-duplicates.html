@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Duplicate Movies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 2rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #output {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .log-line {
+            margin-bottom: 0.5rem;
+        }
+
+        .log-success {
+            color: #48bb78;
+        }
+
+        .log-error {
+            color: #f56565;
+        }
+
+        .log-info {
+            color: #4299e1;
+        }
+
+        .log-warning {
+            color: #ed8936;
+        }
+
+        .log-separator {
+            border-top: 2px solid #cbd5e0;
+            margin: 1rem 0;
+        }
+
+        .stats {
+            background: #edf2f7;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .stats-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🗑️ Remove Duplicate Movies</h1>
+        <p class="subtitle">This tool will identify and remove duplicate movie entries from your Supabase database.</p>
+
+        <button id="runBtn" class="btn" onclick="removeDuplicates()">
+            🚀 Start Duplicate Removal
+        </button>
+
+        <div id="output"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const output = document.getElementById('output');
+        const runBtn = document.getElementById('runBtn');
+
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `log-line log-${type}`;
+            line.textContent = message;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function logSeparator() {
+            const sep = document.createElement('div');
+            sep.className = 'log-separator';
+            output.appendChild(sep);
+        }
+
+        async function removeDuplicates() {
+            output.innerHTML = '';
+            runBtn.disabled = true;
+
+            log('🔍 Starting duplicate removal process...', 'info');
+            log('');
+
+            try {
+                // Initialize Supabase client
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                log('✅ Connected to Supabase', 'success');
+
+                // Fetch all movies
+                log('📥 Fetching all movies from database...', 'info');
+                const { data: movies, error: fetchError } = await supabase
+                    .from('movies')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                if (fetchError) {
+                    log(`❌ Error fetching movies: ${fetchError.message}`, 'error');
+                    runBtn.disabled = false;
+                    return;
+                }
+
+                log(`✅ Found ${movies.length} total entries`, 'success');
+                log('');
+
+                // Find duplicates
+                const seen = new Map();
+                const duplicates = [];
+
+                movies.forEach(movie => {
+                    const key = `${movie.title.toLowerCase()}-${movie.year}`;
+
+                    if (seen.has(key)) {
+                        duplicates.push(movie);
+                    } else {
+                        seen.set(key, movie);
+                    }
+                });
+
+                log(`🔍 Found ${duplicates.length} duplicate entries`, duplicates.length > 0 ? 'warning' : 'success');
+                log('');
+
+                if (duplicates.length === 0) {
+                    log('✅ No duplicates found! Database is clean.', 'success');
+                    runBtn.disabled = false;
+                    return;
+                }
+
+                // Display duplicates
+                logSeparator();
+                log('📋 Duplicate entries to be removed:', 'info');
+                duplicates.forEach((movie, index) => {
+                    log(`${index + 1}. "${movie.title}" (${movie.year}) - ${movie.content_type || 'Movie'}`, 'warning');
+                });
+                logSeparator();
+                log('');
+
+                // Remove duplicates
+                log('🗑️  Removing duplicates...', 'info');
+                let removedCount = 0;
+                let errorCount = 0;
+
+                for (const duplicate of duplicates) {
+                    const { error: deleteError } = await supabase
+                        .from('movies')
+                        .delete()
+                        .eq('id', duplicate.id);
+
+                    if (deleteError) {
+                        log(`❌ Error deleting "${duplicate.title}": ${deleteError.message}`, 'error');
+                        errorCount++;
+                    } else {
+                        removedCount++;
+                    }
+                }
+
+                log('');
+                logSeparator();
+
+                // Summary
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'stats';
+                statsDiv.innerHTML = `
+                    <div class="stats-title">📊 SUMMARY</div>
+                    <div>✅ Successfully removed: ${removedCount} duplicates</div>
+                    ${errorCount > 0 ? `<div>❌ Failed to remove: ${errorCount} entries</div>` : ''}
+                    <div>📦 Remaining unique entries: ${movies.length - removedCount}</div>
+                `;
+                output.appendChild(statsDiv);
+
+                log('');
+                log('🎉 Duplicate removal complete!', 'success');
+
+            } catch (error) {
+                log(`❌ Unexpected error: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                runBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Sign Up - Cinema Muchatlu</title>
+    <link rel="stylesheet" href="auth-pages.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="auth-page">
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="auth-container">
+        <!-- Left Panel - Branding -->
+        <div class="auth-branding">
+            <div class="branding-content">
+                <div class="logo-section">
+                    <h1 class="brand-logo">Cinema Muchatlu</h1>
+                    <p class="brand-tagline">Join the Community</p>
+                </div>
+
+                <div class="hero-section">
+                    <div class="hero-image">
+                        <div class="movie-reel-icon">🎭</div>
+                    </div>
+                    <h2 class="hero-title">Start Your Journey</h2>
+                    <p class="hero-description">Discover, discuss, and celebrate cinema</p>
+                </div>
+
+                <div class="benefits-list">
+                    <h3 class="benefits-title">Why Join Cinema Muchatlu?</h3>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <p>Access to exclusive movie discussions</p>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <p>Personalized watchlist and recommendations</p>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <p>Connect with fellow movie enthusiasts</p>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <p>Rate and review your favorite films</p>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stat-item">
+                        <span class="stat-number">10K+</span>
+                        <span class="stat-label">Members</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Movies</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">1K+</span>
+                        <span class="stat-label">Discussions</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Signup Form -->
+        <div class="auth-form-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Create Your Account</h2>
+                    <p class="form-subtitle">Start exploring movies today</p>
+                </div>
+
+                <!-- Error/Success Banner -->
+                <div id="messageBanner" class="message-banner hidden"></div>
+
+                <form id="signupForm" class="auth-form">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <input type="text" id="signupUsername" class="form-input" placeholder=" " required
+                                autocomplete="username" minlength="3" maxlength="20">
+                            <label for="signupUsername" class="form-label">Username</label>
+                        </div>
+                        <p class="input-hint">3-20 characters, letters and numbers only</p>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <input type="email" id="signupEmail" class="form-input" placeholder=" " required
+                                autocomplete="email">
+                            <label for="signupEmail" class="form-label">Email Address</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <input type="password" id="signupPassword" class="form-input" placeholder=" " required
+                                autocomplete="new-password" minlength="8">
+                            <label for="signupPassword" class="form-label">Password</label>
+                            <button type="button" class="password-toggle" id="togglePassword">
+                                <span class="toggle-icon">👁️</span>
+                            </button>
+                        </div>
+                        <!-- Password Strength Indicator -->
+                        <div class="password-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                            <p class="strength-text" id="strengthText">Enter a password</p>
+                        </div>
+                        <p class="input-hint">At least 8 characters with letters and numbers</p>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <input type="password" id="signupPasswordConfirm" class="form-input" placeholder=" "
+                                required autocomplete="new-password">
+                            <label for="signupPasswordConfirm" class="form-label">Confirm Password</label>
+                            <button type="button" class="password-toggle" id="togglePasswordConfirm">
+                                <span class="toggle-icon">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <span class="checkbox-text">
+                                I agree to the <a href="#" class="link-text">Terms of Service</a>
+                                and <a href="#" class="link-text">Privacy Policy</a>
+                            </span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="signupBtn">
+                        <span class="btn-text">Create Account</span>
+                        <span class="btn-loader hidden">
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <p class="footer-text">
+                        Already have an account?
+                        <a href="login.html" class="link-primary">Login</a>
+                    </p>
+                </div>
+
+                <div class="back-home">
+                    <a href="index.html" class="link-text">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="auth-pages.js"></script>
+</body>
+
+</html>
