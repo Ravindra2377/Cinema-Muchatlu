@@ -34,14 +34,13 @@
                 <a href="#discussions" class="nav-link" data-section="discussions">Community</a>
             </nav>
             <div class="header-actions">
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search movies..." class="search-input">
-                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor">
+                <label class="search-pill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.35-4.35"></path>
                     </svg>
-                </div>
+                    <input type="text" id="searchInput" placeholder="Search movies...">
+                </label>
                 <div class="user-section">
                     <button class="btn-login" id="loginBtn">Login</button>
                     <div class="user-profile hidden" id="userProfile">
@@ -90,15 +89,48 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Home Section -->
         <section id="home" class="section active">
-            <div class="hero">
-                <h2 class="hero-title">Discover Your Next Favorite Movie</h2>
-                <p class="hero-subtitle">Explore thousands of films, join discussions, and connect with movie lovers
-                    worldwide</p>
+            <div class="hero-section">
+                <div class="hero-panel">
+                    <p class="hero-eyebrow">Cinema Muchatlu · curated community</p>
+                    <h1>Find movies that match your mood tonight</h1>
+                    <p class="hero-description">Browse curated playlists, discover trending titles, and join conversations built around the emotions every film sparks.</p>
+                    <div class="hero-cta">
+                        <button class="btn-primary" id="browseCuratedBtn">Browse curated vibes</button>
+                        <button class="btn-secondary" id="exploreMoodBtn">Explore the mood map</button>
+                    </div>
+                    <div class="hero-stats-grid">
+                        <div class="stat-card">
+                            <p class="stat-number" id="catalogCount">0</p>
+                            <small class="stat-label">Catalog entries</small>
+                        </div>
+                        <div class="stat-card">
+                            <p class="stat-number" id="curatedFeedsCount">0</p>
+                            <small class="stat-label">Curated playlists</small>
+                        </div>
+                        <div class="stat-card">
+                            <p class="stat-number" id="discussionCount">0</p>
+                            <small class="stat-label">Community discussions</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-card">
+                    <div class="hero-card-heading">
+                        <span>Spotlight · Trending</span>
+                    </div>
+                    <div class="hero-card-body">
+                        <h3>Peak moods this week</h3>
+                        <p>Heartfelt dramas, neo-noir thrillers, and nostalgic epics are resonating with our community. Tap any mood below to filter the catalog.</p>
+                        <div class="hero-card-tags">
+                            <span>Drama</span>
+                            <span>Action</span>
+                            <span>Sci-Fi</span>
+                            <span>Horror</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Content Type Tabs -->
             <div class="content-type-tabs">
                 <button class="content-type-tab active" data-content-type="all">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -129,7 +161,6 @@
                 </button>
             </div>
 
-            <!-- Genre Filters -->
             <div class="filters">
                 <button class="filter-btn active" data-filter="all">All Genres</button>
                 <button class="filter-btn" data-filter="Action">Action</button>
@@ -140,20 +171,23 @@
                 <button class="filter-btn" data-filter="Horror">Horror</button>
             </div>
 
-            <div class="movies-grid" id="moviesGrid">
-                <!-- Movies will be dynamically loaded here -->
+            <div class="curated-section" id="curatedSection">
+                <div class="section-heading">
+                    <p class="hero-eyebrow">Mood playlists</p>
+                    <h2>Curated vibes by Cinema Muchatlu</h2>
+                    <p class="section-subtitle">Pick a feed to tune the catalog.</p>
+                </div>
+                <div class="curated-grid" id="curatedGrid"></div>
             </div>
+
+            <div class="movies-grid" id="moviesGrid"></div>
         </section>
 
-        <!-- Trending Section -->
         <section id="trending" class="section">
             <h2 class="section-title">Trending This Week</h2>
-            <div class="trending-carousel" id="trendingCarousel">
-                <!-- Trending movies will be dynamically loaded here -->
-            </div>
+            <div class="trending-carousel" id="trendingCarousel"></div>
         </section>
 
-        <!-- Watchlist Section -->
         <section id="watchlist" class="section">
             <h2 class="section-title">My Watchlist</h2>
             <div class="watchlist-grid" id="watchlistGrid">
@@ -167,7 +201,6 @@
             </div>
         </section>
 
-        <!-- Discussions Section -->
         <section id="discussions" class="section">
             <div class="discussions-header">
                 <h2 class="section-title">Community Discussions</h2>
@@ -179,9 +212,7 @@
                     Start Discussion
                 </button>
             </div>
-            <div class="discussions-list" id="discussionsList">
-                <!-- Discussions will be dynamically loaded here -->
-            </div>
+            <div class="discussions-list" id="discussionsList"></div>
         </section>
     </main>
 

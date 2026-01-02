@@ -277,6 +277,43 @@ const SAMPLE_DISCUSSIONS = [
     }
 ];
 
+const CURATED_FEEDS = [
+    {
+        id: 'heartfelt',
+        title: 'Heartfelt Picks',
+        genre: 'Drama',
+        description: 'Warm, high-emotion stories to soothe quiet evenings.',
+        mood: 'Tender',
+        votes: 42
+    },
+    {
+        id: 'noir',
+        title: 'Neo-Noir Thrillers',
+        genre: 'Thriller',
+        description: 'Gripping mysteries with moral gray areas and late-night tension.',
+        mood: 'Electric',
+        votes: 24
+    },
+    {
+        id: 'edge-of-seat',
+        title: 'Edge-of-Seat Sci-Fi',
+        genre: 'Sci-Fi',
+        description: 'Mind-bending futures and imaginative technology, wired for wide screens.',
+        mood: 'Futuristic',
+        votes: 31
+    },
+    {
+        id: 'comfort',
+        title: 'Comfort Classics',
+        genre: 'Comedy',
+        description: 'Familiar favorites that soothe and spark joy even on the busiest days.',
+        mood: 'Cozy',
+        votes: 29
+    }
+];
+
+let activeCuratedIndex = 0;
+
 // ============================================
 // State Management
 // ============================================
@@ -355,6 +392,43 @@ function getBadges(reputation) {
     if (reputation >= 500) badges.push('silver');
     if (reputation >= 100) badges.push('bronze');
     return badges;
+}
+
+function renderCuratedFeedGrid() {
+    const curatedGrid = document.getElementById('curatedGrid');
+    if (!curatedGrid) return;
+
+    curatedGrid.innerHTML = CURATED_FEEDS.map((feed, index) => `
+        <article class="curated-card ${activeCuratedIndex === index ? 'active' : ''}" data-feed-index="${index}">
+            <span class="curated-card-meta">${feed.mood}</span>
+            <h3>${feed.title}</h3>
+            <p>${feed.description}</p>
+            <span class="curated-card-meta">${feed.genre} · ${feed.votes} picks</span>
+        </article>
+    `).join('');
+
+    curatedGrid.querySelectorAll('.curated-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const index = Number(card.dataset.feedIndex);
+            activeCuratedIndex = index;
+            currentFilter = CURATED_FEEDS[index].genre || 'all';
+            renderCuratedFeedGrid();
+            renderMovies(currentFilter);
+        });
+    });
+}
+
+function updateHeroStats() {
+    const catalogLabel = document.getElementById('catalogCount');
+    const curatedLabel = document.getElementById('curatedFeedsCount');
+    const discussionLabel = document.getElementById('discussionCount');
+
+    const catalogSize = allMovies.length;
+    const discussionsCount = discussions.length;
+
+    if (catalogLabel) catalogLabel.textContent = catalogSize.toLocaleString();
+    if (curatedLabel) curatedLabel.textContent = CURATED_FEEDS.length.toString();
+    if (discussionLabel) discussionLabel.textContent = discussionsCount.toString();
 }
 
 // ============================================
@@ -446,6 +520,7 @@ async function initMovies() {
 
     renderMovies();
     renderTrendingMovies();
+    updateHeroStats();
 }
 
 function renderMovies(filter = 'all', searchQuery = '') {
@@ -867,6 +942,8 @@ function renderDiscussions() {
             </div>
         `;
     }).join('');
+
+    updateHeroStats();
 }
 
 function toggleDiscussionLike(discussionId) {
@@ -918,6 +995,7 @@ function createDiscussion(title, content) {
     saveToStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
 
     renderDiscussions();
+    updateHeroStats();
     closeDiscussionModal();
 }
 
@@ -940,6 +1018,20 @@ function initEventListeners() {
         const query = e.target.value;
         renderMovies(currentFilter, query);
     });
+
+    const curatedBtn = document.getElementById('browseCuratedBtn');
+    if (curatedBtn) {
+        curatedBtn.addEventListener('click', () => {
+            document.getElementById('curatedSection')?.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    const moodBtn = document.getElementById('exploreMoodBtn');
+    if (moodBtn) {
+        moodBtn.addEventListener('click', () => {
+            document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
 
     // Content Type Tabs
     document.querySelectorAll('.content-type-tab').forEach(tab => {
@@ -1076,6 +1168,7 @@ function init() {
     initMovies();
     initWatchlist();
     initDiscussions();
+    renderCuratedFeedGrid();
     initEventListeners();
 }
 
