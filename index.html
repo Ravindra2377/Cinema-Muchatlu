@@ -13,8 +13,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
 
-    <!-- Supabase JavaScript SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="auth-styles.css">
@@ -90,46 +89,6 @@
     <!-- Main Content -->
     <main class="main-content">
         <section id="home" class="section active">
-            <div class="hero-section">
-                <div class="hero-panel">
-                    <p class="hero-eyebrow">Cinema Muchatlu · curated community</p>
-                    <h1>Find movies that match your mood tonight</h1>
-                    <p class="hero-description">Browse curated playlists, discover trending titles, and join conversations built around the emotions every film sparks.</p>
-                    <div class="hero-cta">
-                        <button class="btn-primary" id="browseCuratedBtn">Browse curated vibes</button>
-                        <button class="btn-secondary" id="exploreMoodBtn">Explore the mood map</button>
-                    </div>
-                    <div class="hero-stats-grid">
-                        <div class="stat-card">
-                            <p class="stat-number" id="catalogCount">0</p>
-                            <small class="stat-label">Catalog entries</small>
-                        </div>
-                        <div class="stat-card">
-                            <p class="stat-number" id="curatedFeedsCount">0</p>
-                            <small class="stat-label">Curated playlists</small>
-                        </div>
-                        <div class="stat-card">
-                            <p class="stat-number" id="discussionCount">0</p>
-                            <small class="stat-label">Community discussions</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="hero-card">
-                    <div class="hero-card-heading">
-                        <span>Spotlight · Trending</span>
-                    </div>
-                    <div class="hero-card-body">
-                        <h3>Peak moods this week</h3>
-                        <p>Heartfelt dramas, neo-noir thrillers, and nostalgic epics are resonating with our community. Tap any mood below to filter the catalog.</p>
-                        <div class="hero-card-tags">
-                            <span>Drama</span>
-                            <span>Action</span>
-                            <span>Sci-Fi</span>
-                            <span>Horror</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div class="content-type-tabs">
                 <button class="content-type-tab active" data-content-type="all">
@@ -169,15 +128,6 @@
                 <button class="filter-btn" data-filter="Comedy">Comedy</button>
                 <button class="filter-btn" data-filter="Thriller">Thriller</button>
                 <button class="filter-btn" data-filter="Horror">Horror</button>
-            </div>
-
-            <div class="curated-section" id="curatedSection">
-                <div class="section-heading">
-                    <p class="hero-eyebrow">Mood playlists</p>
-                    <h2>Curated vibes by Cinema Muchatlu</h2>
-                    <p class="section-subtitle">Pick a feed to tune the catalog.</p>
-                </div>
-                <div class="curated-grid" id="curatedGrid"></div>
             </div>
 
             <div class="movies-grid" id="moviesGrid"></div>
@@ -407,7 +357,7 @@
         </div>
     </div>
 
-    <!-- Supabase Configuration -->
+    <!-- API Client Configuration -->
     <script src="config.js"></script>
 
     <!-- Authentication Module -->

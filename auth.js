@@ -1,67 +1,40 @@
-// ===== PRODUCTION AUTHENTICATION WITH SUPABASE =====
-// This file handles all authentication logic using Supabase Auth
+// ===== PRODUCTION AUTHENTICATION WITH MONGODB =====
+// This file handles all authentication logic using the Express API + JWT
 
 // Authentication state
 let currentUser = null;
 
-// Initialize Supabase Auth listener
+// Initialize Auth - check for existing session
 function initAuth() {
-    if (!window.supabaseClient) {
-        console.error('Supabase client not initialized');
-        return;
-    }
-
-    // Listen for auth state changes
-    window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state changed:', event);
-
-        if (session?.user) {
-            // User is logged in
-            await loadUserProfile(session.user.id);
-            updateUIForLoggedInUser();
-        } else {
-            // User is logged out
-            currentUser = null;
-            updateUIForLoggedOutUser();
-        }
-    });
-
-    // Check current session on page load
     checkCurrentSession();
 }
 
-// Check if user is already logged in
+// Check if user is already logged in (has valid token)
 async function checkCurrentSession() {
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
-
-    if (session?.user) {
-        await loadUserProfile(session.user.id);
-        updateUIForLoggedInUser();
-    }
-}
-
-// Load user profile from database
-async function loadUserProfile(userId) {
-    const { data, error } = await window.supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-    if (error) {
-        console.error('Error loading profile:', error);
+    const token = getToken();
+    if (!token) {
+        updateUIForLoggedOutUser();
         return;
     }
 
-    currentUser = {
-        id: data.id,
-        username: data.username,
-        email: (await window.supabaseClient.auth.getUser()).data.user.email,
-        isAdmin: data.is_admin,
-        reputation: data.reputation,
-        avatar: data.avatar_url,
-        bio: data.bio
-    };
+    try {
+        const userData = await apiFetch('/auth/me');
+        currentUser = {
+            id: userData.id,
+            username: userData.username,
+            email: userData.email,
+            isAdmin: userData.isAdmin,
+            reputation: userData.reputation,
+            avatar: userData.avatar,
+            bio: userData.bio
+        };
+        updateUIForLoggedInUser();
+    } catch (err) {
+        console.log('Session expired or invalid');
+        removeToken();
+        currentUser = null;
+        updateUIForLoggedOutUser();
+    }
 }
 
 // Sign up new user
@@ -73,40 +46,10 @@ async function signUp(username, email, password) {
             return false;
         }
 
-        // Check if username is already taken
-        const { data: existingUser, error: checkError } = await window.supabaseClient
-            .from('profiles')
-            .select('username')
-            .eq('username', username)
-            .single();
-
-        // Ignore PGRST116 error (no rows found) - this is expected for new usernames
-        if (checkError && checkError.code !== 'PGRST116') {
-            console.error('Error checking username:', checkError);
-            showError('Error checking username availability');
-            return false;
-        }
-
-        if (existingUser) {
-            showError('Username already taken');
-            return false;
-        }
-
-        // Sign up with Supabase Auth
-        const { data, error } = await window.supabaseClient.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    username: username
-                }
-            }
+        await apiFetch('/auth/signup', {
+            method: 'POST',
+            body: JSON.stringify({ username, email, password })
         });
-
-        if (error) {
-            showError(error.message);
-            return false;
-        }
 
         // Show signup successful message
         showSuccess('✓ Signup Successful! Please login with your credentials.');
@@ -136,7 +79,7 @@ async function signUp(username, email, password) {
         return true;
     } catch (err) {
         console.error('Signup error:', err);
-        showError('An error occurred during signup');
+        showError(err.message || 'An error occurred during signup');
         return false;
     }
 }
@@ -144,15 +87,26 @@ async function signUp(username, email, password) {
 // Sign in existing user
 async function signIn(email, password) {
     try {
-        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-            email,
-            password
+        const data = await apiFetch('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
         });
 
-        if (error) {
-            showError(error.message);
-            return false;
-        }
+        // Save token
+        setToken(data.token);
+
+        // Set current user
+        currentUser = {
+            id: data.user.id,
+            username: data.user.username,
+            email: data.user.email,
+            isAdmin: data.user.isAdmin,
+            reputation: data.user.reputation,
+            avatar: data.user.avatar,
+            bio: data.user.bio
+        };
+
+        updateUIForLoggedInUser();
 
         // Show login successful message
         showSuccess('✓ Login Successful! Welcome back!');
@@ -173,7 +127,7 @@ async function signIn(email, password) {
         return true;
     } catch (err) {
         console.error('Login error:', err);
-        showError('An error occurred during login');
+        showError(err.message || 'An error occurred during login');
         return false;
     }
 }
@@ -181,13 +135,9 @@ async function signIn(email, password) {
 // Sign out user
 async function signOut() {
     try {
-        const { error } = await window.supabaseClient.auth.signOut();
-
-        if (error) {
-            showError(error.message);
-            return false;
-        }
-
+        removeToken();
+        currentUser = null;
+        updateUIForLoggedOutUser();
         showSuccess('Logged out successfully');
         return true;
     } catch (err) {
@@ -197,25 +147,10 @@ async function signOut() {
     }
 }
 
-// Reset password
+// Reset password (placeholder - needs email service)
 async function resetPassword(email) {
-    try {
-        const { error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin
-        });
-
-        if (error) {
-            showError(error.message);
-            return false;
-        }
-
-        showSuccess('Password reset email sent! Check your inbox.');
-        return true;
-    } catch (err) {
-        console.error('Password reset error:', err);
-        showError('An error occurred while sending reset email');
-        return false;
-    }
+    showError('Password reset is not yet configured. Please contact the admin.');
+    return false;
 }
 
 // Update UI for logged in user

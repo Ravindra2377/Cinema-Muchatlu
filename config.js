@@ -1,24 +1,48 @@
 // ============================================
-// Cinema Muchatlu - Supabase Configuration
+// Cinema Muchatlu - API Client Configuration
+// Connects frontend to the Express + MongoDB backend
 // ============================================
 
-// IMPORTANT: Replace these values with your actual Supabase credentials
-// Get them from: https://app.supabase.com/project/_/settings/api
+const API_BASE = window.location.origin + '/api';
 
-const SUPABASE_URL = 'https://bjliykebjfmeuiwmatbd.supabase.co'; // e.g., 'https://xxxxx.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbGl5a2ViamZtZXVpd21hdGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMzI4MDIsImV4cCI6MjA4MjYwODgwMn0.xr9UehsyJVqm_XMeGBL97wLnLP8Ai9z8tVPvvx5xheQ'; // Your anon/public key
-
-// Initialize Supabase client
-let supabaseClient;
-
-// Check if Supabase library is loaded
-if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase client initialized successfully');
-    console.log('📡 Connected to:', SUPABASE_URL);
-} else {
-    console.error('❌ Supabase library not loaded. Make sure to include the Supabase CDN script in your HTML.');
+// Token management
+function getToken() {
+    return localStorage.getItem('cinema_muchatlu_token');
 }
 
-// Export for use in other files (use supabaseClient, not supabase)
-window.supabaseClient = supabaseClient;
+function setToken(token) {
+    localStorage.setItem('cinema_muchatlu_token', token);
+}
+
+function removeToken() {
+    localStorage.removeItem('cinema_muchatlu_token');
+}
+
+// API helper with auth headers
+async function apiFetch(endpoint, options = {}) {
+    const token = getToken();
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || 'API request failed');
+    }
+
+    return data;
+}
+
+console.log('✅ API client initialized');
+console.log('📡 Connected to:', API_BASE);

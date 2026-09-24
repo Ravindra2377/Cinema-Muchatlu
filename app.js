@@ -277,42 +277,7 @@ const SAMPLE_DISCUSSIONS = [
     }
 ];
 
-const CURATED_FEEDS = [
-    {
-        id: 'heartfelt',
-        title: 'Heartfelt Picks',
-        genre: 'Drama',
-        description: 'Warm, high-emotion stories to soothe quiet evenings.',
-        mood: 'Tender',
-        votes: 42
-    },
-    {
-        id: 'noir',
-        title: 'Neo-Noir Thrillers',
-        genre: 'Thriller',
-        description: 'Gripping mysteries with moral gray areas and late-night tension.',
-        mood: 'Electric',
-        votes: 24
-    },
-    {
-        id: 'edge-of-seat',
-        title: 'Edge-of-Seat Sci-Fi',
-        genre: 'Sci-Fi',
-        description: 'Mind-bending futures and imaginative technology, wired for wide screens.',
-        mood: 'Futuristic',
-        votes: 31
-    },
-    {
-        id: 'comfort',
-        title: 'Comfort Classics',
-        genre: 'Comedy',
-        description: 'Familiar favorites that soothe and spark joy even on the busiest days.',
-        mood: 'Cozy',
-        votes: 29
-    }
-];
 
-let activeCuratedIndex = 0;
 
 // ============================================
 // State Management
@@ -394,41 +359,10 @@ function getBadges(reputation) {
     return badges;
 }
 
-function renderCuratedFeedGrid() {
-    const curatedGrid = document.getElementById('curatedGrid');
-    if (!curatedGrid) return;
 
-    curatedGrid.innerHTML = CURATED_FEEDS.map((feed, index) => `
-        <article class="curated-card ${activeCuratedIndex === index ? 'active' : ''}" data-feed-index="${index}">
-            <span class="curated-card-meta">${feed.mood}</span>
-            <h3>${feed.title}</h3>
-            <p>${feed.description}</p>
-            <span class="curated-card-meta">${feed.genre} · ${feed.votes} picks</span>
-        </article>
-    `).join('');
-
-    curatedGrid.querySelectorAll('.curated-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const index = Number(card.dataset.feedIndex);
-            activeCuratedIndex = index;
-            currentFilter = CURATED_FEEDS[index].genre || 'all';
-            renderCuratedFeedGrid();
-            renderMovies(currentFilter);
-        });
-    });
-}
 
 function updateHeroStats() {
-    const catalogLabel = document.getElementById('catalogCount');
-    const curatedLabel = document.getElementById('curatedFeedsCount');
-    const discussionLabel = document.getElementById('discussionCount');
-
-    const catalogSize = allMovies.length;
-    const discussionsCount = discussions.length;
-
-    if (catalogLabel) catalogLabel.textContent = catalogSize.toLocaleString();
-    if (curatedLabel) curatedLabel.textContent = CURATED_FEEDS.length.toString();
-    if (discussionLabel) discussionLabel.textContent = discussionsCount.toString();
+    // Hero stats section removed - function kept as no-op for any remaining calls
 }
 
 // ============================================
@@ -441,86 +375,37 @@ function updateHeroStats() {
 // Movie Functions
 // ============================================
 
-async function fetchMoviesFromSupabase() {
-    if (!window.supabaseClient) {
-        console.log('Supabase client not available');
-        return null;
-    }
-
+async function fetchMoviesFromAPI() {
     try {
-        const { data, error } = await window.supabaseClient
-            .from('movies')
-            .select('*')
-            .order('rating', { ascending: false });
-
-        if (error) {
-            console.error('Error fetching movies from Supabase:', error);
+        const movies = await apiFetch('/movies');
+        if (!movies || movies.length === 0) {
+            console.log('No movies found in database');
             return null;
         }
-
-        if (!data || data.length === 0) {
-            console.log('No movies found in Supabase');
-            return null;
-        }
-
-        // Map Supabase columns to App model
-        const mappedMovies = data.map(m => ({
-            id: m.id,
-            title: m.title,
-            year: m.year,
-            genre: m.genres || [],
-            rating: m.rating,
-            poster: m.poster_url,
-            description: m.description,
-            director: m.director,
-            cast: m.movie_cast || [],
-            content_type: m.content_type
-        }));
-
-        // Remove duplicates based on title and year (keep first occurrence)
-        const seen = new Map();
-        const uniqueMovies = [];
-
-        mappedMovies.forEach(movie => {
-            const key = `${movie.title.toLowerCase()}-${movie.year}`;
-            if (!seen.has(key)) {
-                seen.set(key, true);
-                uniqueMovies.push(movie);
-            }
-        });
-
-        console.log(`Fetched ${data.length} movies, ${uniqueMovies.length} unique after deduplication`);
-        return uniqueMovies;
+        console.log(`Fetched ${movies.length} movies from API`);
+        return movies;
     } catch (err) {
-        console.error('Exception fetching movies:', err);
+        console.error('Error fetching movies from API:', err);
         return null;
     }
 }
 
 async function initMovies() {
-    // Try to load from Supabase first
+    // Load from API
     console.log('Initializing movies...');
-    let movies = await fetchMoviesFromSupabase();
+    let movies = await fetchMoviesFromAPI();
 
     if (movies) {
-        console.log(`Loaded ${movies.length} movies from Supabase`);
+        console.log(`Loaded ${movies.length} movies from MongoDB`);
         allMovies = movies;
-        // Optionally update local storage cache
-        saveToStorage(STORAGE_KEYS.MOVIES, allMovies);
     } else {
-        // Fallback to storage or sample data
-        console.log('Falling back to local storage/sample data');
-        const savedMovies = getFromStorage(STORAGE_KEYS.MOVIES);
-        allMovies = savedMovies || SAMPLE_MOVIES;
-
-        if (!savedMovies) {
-            saveToStorage(STORAGE_KEYS.MOVIES, allMovies);
-        }
+        // Fallback to sample data if API fails
+        console.log('API unavailable, falling back to sample data');
+        allMovies = SAMPLE_MOVIES;
     }
 
     renderMovies();
     renderTrendingMovies();
-    updateHeroStats();
 }
 
 function renderMovies(filter = 'all', searchQuery = '') {
@@ -1019,19 +904,7 @@ function initEventListeners() {
         renderMovies(currentFilter, query);
     });
 
-    const curatedBtn = document.getElementById('browseCuratedBtn');
-    if (curatedBtn) {
-        curatedBtn.addEventListener('click', () => {
-            document.getElementById('curatedSection')?.scrollIntoView({ behavior: 'smooth' });
-        });
-    }
 
-    const moodBtn = document.getElementById('exploreMoodBtn');
-    if (moodBtn) {
-        moodBtn.addEventListener('click', () => {
-            document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' });
-        });
-    }
 
     // Content Type Tabs
     document.querySelectorAll('.content-type-tab').forEach(tab => {
@@ -1168,7 +1041,7 @@ function init() {
     initMovies();
     initWatchlist();
     initDiscussions();
-    renderCuratedFeedGrid();
+
     initEventListeners();
 }
 
