@@ -47,7 +47,6 @@ function mapTMDBMovie(m) {
         rating: Math.round(m.vote_average * 10) / 10,
         poster: m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop',
         description: m.overview || 'No description available.',
-        director: 'See TMDB for details',
         cast: [],
         content_type: 'Movie'
     };

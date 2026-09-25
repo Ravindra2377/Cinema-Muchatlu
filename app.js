@@ -509,7 +509,6 @@ async function showMovieDetail(movieId) {
                 <div class="movie-detail-meta">
                     <span class="meta-item rating">⭐ ${movie.rating}</span>
                     <span class="meta-item">${movie.year}</span>
-                    <span class="meta-item">${movie.director}</span>
                 </div>
                 <div class="genre-tags">
                     ${movie.genre.map(g => `<span class="genre-tag">${g}</span>`).join('')}
