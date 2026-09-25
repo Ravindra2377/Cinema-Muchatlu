@@ -76,8 +76,7 @@ const watchlistSchema = new mongoose.Schema({
         required: true
     },
     movieId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Movie',
+        type: String,
         required: true
     },
     addedAt: {
@@ -92,8 +91,7 @@ watchlistSchema.index({ userId: 1, movieId: 1 }, { unique: true });
 // ============================================
 const commentSchema = new mongoose.Schema({
     movieId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Movie',
+        type: String,
         required: true
     },
     userId: {

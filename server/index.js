@@ -9,9 +9,49 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const axios = require('axios');
 
 const { User, Movie, Watchlist, Comment, Discussion, Reply } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
+
+const TMDB_API = 'https://api.tmdb.org/3';
+
+const TMDB_GENRES = {
+    28: 'Action',
+    12: 'Adventure',
+    16: 'Animation',
+    35: 'Comedy',
+    80: 'Crime',
+    99: 'Documentary',
+    18: 'Drama',
+    10751: 'Family',
+    14: 'Fantasy',
+    36: 'History',
+    27: 'Horror',
+    10402: 'Music',
+    9648: 'Mystery',
+    10749: 'Romance',
+    878: 'Sci-Fi',
+    10770: 'TV Movie',
+    53: 'Thriller',
+    10752: 'War',
+    37: 'Western'
+};
+
+function mapTMDBMovie(m) {
+    return {
+        id: m.id.toString(),
+        title: m.title,
+        year: m.release_date ? parseInt(m.release_date.split('-')[0]) : null,
+        genre: (m.genre_ids || []).map(id => TMDB_GENRES[id]).filter(Boolean), 
+        rating: Math.round(m.vote_average * 10) / 10,
+        poster: m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop',
+        description: m.overview || 'No description available.',
+        director: 'See TMDB for details',
+        cast: [],
+        content_type: 'Movie'
+    };
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -157,45 +197,33 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 // MOVIE ROUTES
 // ============================================
 
-// GET /api/movies - Get all movies
+// GET /api/movies - Get all movies (from TMDB)
 app.get('/api/movies', async (req, res) => {
     try {
-        const { genre, contentType, search, sort } = req.query;
-        const filter = {};
-
-        if (genre && genre !== 'all') {
-            filter.genres = genre;
-        }
-        if (contentType && contentType !== 'all') {
-            filter.contentType = contentType;
-        }
+        const { search } = req.query;
+        let results = [];
+        
         if (search) {
-            filter.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
-            ];
+            // Fetch 2 pages of search results to give them lots of global IMDb movies
+            const urls = [1, 2].map(page => 
+                `${TMDB_API}/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(search)}&page=${page}`
+            );
+            const responses = await Promise.all(urls.map(url => axios.get(url)));
+            results = responses.flatMap(r => r.data.results);
+        } else {
+            // Fetch first 4 pages (80 movies) of Telugu movies from 1960 to 2026
+            const urls = [1, 2, 3, 4].map(page => 
+                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
+            );
+            
+            const responses = await Promise.all(urls.map(url => axios.get(url)));
+            results = responses.flatMap(r => r.data.results);
         }
-
-        const sortOption = sort === 'year' ? { year: -1 } : { rating: -1 };
-        const movies = await Movie.find(filter).sort(sortOption);
-
-        // Map to frontend model
-        const mapped = movies.map(m => ({
-            id: m._id,
-            title: m.title,
-            year: m.year,
-            genre: m.genres || [],
-            rating: m.rating,
-            poster: m.posterUrl,
-            description: m.description,
-            director: m.director,
-            cast: m.cast || [],
-            content_type: m.contentType
-        }));
-
+        
+        const mapped = results.map(mapTMDBMovie);
         res.json(mapped);
     } catch (err) {
-        console.error('Error fetching movies:', err);
+        console.error('Error fetching movies from TMDB:', err);
         res.status(500).json({ error: 'Error fetching movies' });
     }
 });
@@ -203,21 +231,12 @@ app.get('/api/movies', async (req, res) => {
 // GET /api/movies/trending - Get top 10 trending movies
 app.get('/api/movies/trending', async (req, res) => {
     try {
-        const movies = await Movie.find().sort({ rating: -1 }).limit(10);
-        const mapped = movies.map(m => ({
-            id: m._id,
-            title: m.title,
-            year: m.year,
-            genre: m.genres || [],
-            rating: m.rating,
-            poster: m.posterUrl,
-            description: m.description,
-            director: m.director,
-            cast: m.cast || [],
-            content_type: m.contentType
-        }));
+        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=vote_average.desc&vote_count.gte=100&page=1`;
+        const response = await axios.get(url);
+        const mapped = response.data.results.slice(0, 10).map(mapTMDBMovie);
         res.json(mapped);
     } catch (err) {
+        console.error('Error fetching trending from TMDB:', err);
         res.status(500).json({ error: 'Error fetching trending movies' });
     }
 });
@@ -225,22 +244,11 @@ app.get('/api/movies/trending', async (req, res) => {
 // GET /api/movies/:id - Get a single movie
 app.get('/api/movies/:id', async (req, res) => {
     try {
-        const movie = await Movie.findById(req.params.id);
-        if (!movie) return res.status(404).json({ error: 'Movie not found' });
-        res.json({
-            id: movie._id,
-            title: movie.title,
-            year: movie.year,
-            genre: movie.genres || [],
-            rating: movie.rating,
-            poster: movie.posterUrl,
-            description: movie.description,
-            director: movie.director,
-            cast: movie.cast || [],
-            content_type: movie.contentType
-        });
+        const url = `${TMDB_API}/movie/${req.params.id}?api_key=${process.env.TMDB_API_KEY}`;
+        const response = await axios.get(url);
+        res.json(mapTMDBMovie(response.data));
     } catch (err) {
-        res.status(500).json({ error: 'Error fetching movie' });
+        res.status(500).json({ error: 'Error fetching movie details' });
     }
 });
 

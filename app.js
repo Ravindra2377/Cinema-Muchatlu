@@ -375,9 +375,10 @@ function updateHeroStats() {
 // Movie Functions
 // ============================================
 
-async function fetchMoviesFromAPI() {
+async function fetchMoviesFromAPI(searchQuery = '') {
     try {
-        const movies = await apiFetch('/movies');
+        const url = searchQuery ? `/movies?search=${encodeURIComponent(searchQuery)}` : '/movies';
+        const movies = await apiFetch(url);
         if (!movies || movies.length === 0) {
             console.log('No movies found in database');
             return null;
@@ -422,14 +423,6 @@ function renderMovies(filter = 'all', searchQuery = '') {
     // Apply genre filter
     if (filter !== 'all') {
         filteredMovies = filteredMovies.filter(movie => movie.genre.includes(filter));
-    }
-
-    // Apply search filter
-    if (searchQuery) {
-        filteredMovies = filteredMovies.filter(movie =>
-            movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            movie.description.toLowerCase().includes(searchQuery.toLowerCase())
-        );
     }
 
     moviesGrid.innerHTML = filteredMovies.map(movie => `
@@ -496,11 +489,16 @@ function renderTrendingMovies() {
     });
 }
 
-function showMovieDetail(movieId) {
+async function showMovieDetail(movieId) {
     const movie = allMovies.find(m => m.id === movieId);
     if (!movie) return;
 
-    const movieComments = comments.filter(c => c.movieId === movieId);
+    let movieComments = [];
+    try {
+        movieComments = await apiFetch(`/comments/${movieId}`);
+    } catch (err) {
+        console.error('Error fetching comments:', err);
+    }
 
     const modalBody = document.getElementById('modalBody');
     modalBody.innerHTML = `
@@ -556,7 +554,7 @@ function renderComments(movieComments) {
         return '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No comments yet. Be the first to share your thoughts!</p>';
     }
 
-    return movieComments.sort((a, b) => b.timestamp - a.timestamp).map(comment => `
+    return movieComments.map(comment => `
         <div class="comment">
             <div class="comment-header">
                 <div class="comment-author">
@@ -570,7 +568,7 @@ function renderComments(movieComments) {
             <p class="comment-text">${comment.text}</p>
             <div class="comment-footer">
                 <button class="like-btn ${comment.likedBy.includes(currentUser?.id) ? 'active' : ''}" 
-                        onclick="toggleCommentLike('${comment.id}')"
+                        onclick="toggleCommentLike('${comment.id}', '${comment.movieId}')"
                         ${!currentUser ? 'disabled' : ''}>
                     <svg viewBox="0 0 24 24" fill="${comment.likedBy.includes(currentUser?.id) ? 'currentColor' : 'none'}" stroke="currentColor">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -578,14 +576,14 @@ function renderComments(movieComments) {
                     ${comment.likes}
                 </button>
                 ${currentUser && (currentUser.id === comment.userId || currentUser.isAdmin) ? `
-                    <button class="btn-delete" onclick="deleteComment('${comment.id}')">Delete</button>
+                    <button class="btn-delete" onclick="deleteComment('${comment.id}', '${comment.movieId}')">Delete</button>
                 ` : ''}
             </div>
         </div>
     `).join('');
 }
 
-function addComment(movieId) {
+async function addComment(movieId) {
     if (!currentUser) {
         alert('Please login to comment');
         return;
@@ -599,72 +597,38 @@ function addComment(movieId) {
         return;
     }
 
-    const newComment = {
-        id: generateId(),
-        movieId,
-        userId: currentUser.id,
-        username: currentUser.username,
-        text,
-        likes: 0,
-        likedBy: [],
-        timestamp: Date.now()
-    };
-
-    comments.push(newComment);
-    saveToStorage(STORAGE_KEYS.COMMENTS, comments);
-
-    // Update reputation
-    currentUser.reputation = calculateReputation(currentUser.id);
-    saveToStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-
-    // Refresh the movie detail
-    showMovieDetail(movieId);
+    try {
+        await apiFetch(`/comments/${movieId}`, {
+            method: 'POST',
+            body: JSON.stringify({ text })
+        });
+        showMovieDetail(movieId);
+    } catch (err) {
+        alert(err.message || 'Error adding comment');
+    }
 }
 
-function toggleCommentLike(commentId) {
+async function toggleCommentLike(commentId, movieId) {
     if (!currentUser) return;
 
-    const comment = comments.find(c => c.id === commentId);
-    if (!comment) return;
-
-    const likedIndex = comment.likedBy.indexOf(currentUser.id);
-
-    if (likedIndex > -1) {
-        comment.likedBy.splice(likedIndex, 1);
-        comment.likes--;
-    } else {
-        comment.likedBy.push(currentUser.id);
-        comment.likes++;
+    try {
+        await apiFetch(`/comments/${commentId}/like`, { method: 'POST' });
+        showMovieDetail(movieId);
+    } catch (err) {
+        console.error('Error toggling like:', err);
     }
-
-    saveToStorage(STORAGE_KEYS.COMMENTS, comments);
-
-    // Refresh comments
-    const movieComments = comments.filter(c => c.movieId === comment.movieId);
-    document.getElementById('commentsList').innerHTML = renderComments(movieComments);
 }
 
-function deleteComment(commentId) {
+async function deleteComment(commentId, movieId) {
     if (!currentUser) return;
-
-    const commentIndex = comments.findIndex(c => c.id === commentId);
-    if (commentIndex === -1) return;
-
-    const comment = comments[commentIndex];
-
-    // Check permissions
-    if (currentUser.id !== comment.userId && !currentUser.isAdmin) {
-        alert('You can only delete your own comments');
-        return;
-    }
 
     if (confirm('Are you sure you want to delete this comment?')) {
-        comments.splice(commentIndex, 1);
-        saveToStorage(STORAGE_KEYS.COMMENTS, comments);
-
-        // Refresh comments
-        const movieComments = comments.filter(c => c.movieId === comment.movieId);
-        document.getElementById('commentsList').innerHTML = renderComments(movieComments);
+        try {
+            await apiFetch(`/comments/${commentId}`, { method: 'DELETE' });
+            showMovieDetail(movieId);
+        } catch (err) {
+            alert(err.message || 'Error deleting comment');
+        }
     }
 }
 
@@ -672,8 +636,19 @@ function deleteComment(commentId) {
 // Watchlist Functions
 // ============================================
 
-function initWatchlist() {
-    watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST) || [];
+async function initWatchlist() {
+    if (!currentUser) {
+        watchlist = [];
+        renderWatchlist();
+        return;
+    }
+    
+    try {
+        watchlist = await apiFetch('/watchlist');
+    } catch (err) {
+        console.error('Error fetching watchlist:', err);
+        watchlist = [];
+    }
     renderWatchlist();
 }
 
@@ -681,26 +656,32 @@ function isInWatchlist(movieId) {
     return watchlist.includes(movieId);
 }
 
-function toggleWatchlist(movieId) {
-    const index = watchlist.indexOf(movieId);
-
-    if (index > -1) {
-        watchlist.splice(index, 1);
-    } else {
-        watchlist.push(movieId);
+async function toggleWatchlist(movieId) {
+    if (!currentUser) {
+        alert('Please login to use the watchlist');
+        return;
     }
 
-    saveToStorage(STORAGE_KEYS.WATCHLIST, watchlist);
-    renderWatchlist();
-    renderMovies(currentFilter);
+    try {
+        const result = await apiFetch(`/watchlist/${movieId}`, { method: 'POST' });
+        
+        if (result.action === 'added') {
+            watchlist.push(movieId);
+        } else {
+            const index = watchlist.indexOf(movieId);
+            if (index > -1) watchlist.splice(index, 1);
+        }
 
-    // If movie modal is open, update the button
-    const modalBody = document.getElementById('modalBody');
-    if (modalBody.innerHTML) {
-        const movie = allMovies.find(m => m.id === movieId);
-        if (movie) {
+        renderWatchlist();
+        renderMovies(currentFilter);
+
+        // If movie modal is open, update the button
+        const modalBody = document.getElementById('modalBody');
+        if (modalBody.innerHTML && modalBody.innerHTML.includes(movieId)) {
             showMovieDetail(movieId);
         }
+    } catch (err) {
+        alert(err.message || 'Error updating watchlist');
     }
 }
 
@@ -763,16 +744,13 @@ function renderWatchlist() {
 // Discussion Functions
 // ============================================
 
-function initDiscussions() {
-    const savedDiscussions = getFromStorage(STORAGE_KEYS.DISCUSSIONS);
-    discussions = savedDiscussions || SAMPLE_DISCUSSIONS;
-
-    if (!savedDiscussions) {
-        saveToStorage(STORAGE_KEYS.DISCUSSIONS, discussions);
+async function initDiscussions() {
+    try {
+        discussions = await apiFetch('/discussions');
+    } catch (err) {
+        console.error('Error fetching discussions:', err);
+        discussions = [];
     }
-
-    replies = getFromStorage(STORAGE_KEYS.REPLIES) || [];
-
     renderDiscussions();
 }
 
@@ -831,57 +809,37 @@ function renderDiscussions() {
     updateHeroStats();
 }
 
-function toggleDiscussionLike(discussionId) {
+async function toggleDiscussionLike(discussionId) {
     if (!currentUser) {
         alert('Please login to like discussions');
         return;
     }
 
-    const discussion = discussions.find(d => d.id === discussionId);
-    if (!discussion) return;
-
-    const likedIndex = discussion.likedBy.indexOf(currentUser.id);
-
-    if (likedIndex > -1) {
-        discussion.likedBy.splice(likedIndex, 1);
-        discussion.likes--;
-    } else {
-        discussion.likedBy.push(currentUser.id);
-        discussion.likes++;
+    try {
+        await apiFetch(`/discussions/${discussionId}/like`, { method: 'POST' });
+        await initDiscussions(); // Refresh
+    } catch (err) {
+        console.error('Error toggling like:', err);
     }
-
-    saveToStorage(STORAGE_KEYS.DISCUSSIONS, discussions);
-    renderDiscussions();
 }
 
-function createDiscussion(title, content) {
+async function createDiscussion(title, content) {
     if (!currentUser || !currentUser.isAdmin) {
         alert('Only admins can create discussions');
         return;
     }
 
-    const newDiscussion = {
-        id: generateId(),
-        userId: currentUser.id,
-        username: currentUser.username,
-        title,
-        content,
-        likes: 0,
-        likedBy: [],
-        replies: [],
-        timestamp: Date.now()
-    };
-
-    discussions.push(newDiscussion);
-    saveToStorage(STORAGE_KEYS.DISCUSSIONS, discussions);
-
-    // Update reputation
-    currentUser.reputation = calculateReputation(currentUser.id);
-    saveToStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-
-    renderDiscussions();
-    updateHeroStats();
-    closeDiscussionModal();
+    try {
+        await apiFetch('/discussions', {
+            method: 'POST',
+            body: JSON.stringify({ title, content })
+        });
+        
+        await initDiscussions(); // Refresh
+        closeDiscussionModal();
+    } catch (err) {
+        alert(err.message || 'Error creating discussion');
+    }
 }
 
 // ============================================
@@ -899,9 +857,21 @@ function initEventListeners() {
     });
 
     // Search
+    let searchTimeout;
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const query = e.target.value;
-        renderMovies(currentFilter, query);
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+            if (query.trim() === '') {
+                // If empty, restore default popular movies
+                allMovies = await fetchMoviesFromAPI();
+            } else {
+                // Fetch search results from the massive TMDB database
+                const results = await fetchMoviesFromAPI(query);
+                if (results) allMovies = results;
+            }
+            renderMovies(currentFilter);
+        }, 500); // Wait 500ms before firing to avoid spamming the API
     });
 
 

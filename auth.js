@@ -165,6 +165,11 @@ function updateUIForLoggedInUser() {
     document.getElementById('userName').textContent = currentUser.username;
     document.getElementById('userRole').textContent = currentUser.isAdmin ? 'Admin' : 'Member';
     document.getElementById('userInitial').textContent = currentUser.username.charAt(0).toUpperCase();
+
+    // Fetch user-specific data from API
+    if (typeof initWatchlist === 'function') {
+        initWatchlist();
+    }
 }
 
 // Update UI for logged out user
