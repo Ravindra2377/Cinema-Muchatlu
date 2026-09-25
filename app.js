@@ -753,23 +753,32 @@ async function initDiscussions() {
     renderDiscussions();
 }
 
+let currentDiscussionCategory = 'all';
+
 function renderDiscussions() {
     const discussionsList = document.getElementById('discussionsList');
+    
+    let filteredDiscussions = discussions;
+    if (currentDiscussionCategory !== 'all') {
+        filteredDiscussions = filteredDiscussions.filter(d => d.category === currentDiscussionCategory);
+    }
 
-    if (discussions.length === 0) {
+    filteredDiscussionsList = filteredDiscussions.sort((a, b) => b.timestamp - a.timestamp);
+    
+    if (filteredDiscussionsList.length === 0) {
         discussionsList.innerHTML = `
             <div class="empty-state">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <p>No discussions yet</p>
-                <span>Start the conversation!</span>
+                <p>No ${currentDiscussionCategory !== 'all' ? currentDiscussionCategory : ''} discussions yet</p>
+                <span>Cheppali mari! Start the conversation!</span>
             </div>
         `;
         return;
     }
 
-    discussionsList.innerHTML = discussions.sort((a, b) => b.timestamp - a.timestamp).map(discussion => {
+    discussionsList.innerHTML = filteredDiscussionsList.map(discussion => {
         const discussionReplies = replies.filter(r => r.discussionId === discussion.id);
 
         return `
@@ -778,13 +787,15 @@ function renderDiscussions() {
                     <div class="discussion-author">
                         <div class="author-avatar">${getUserInitial(discussion.username)}</div>
                         <div class="author-info">
-                            <h4>${discussion.username}</h4>
+                            <h4>${discussion.username} <span class="genre-tag" style="margin-left: 8px; font-size: 0.7rem;">${discussion.category || 'General'}</span></h4>
                             <span>${formatTimeAgo(discussion.timestamp)}</span>
                         </div>
                     </div>
                 </div>
                 <h3 class="discussion-title">${discussion.title}</h3>
-                <p class="discussion-content">${discussion.content}</p>
+                ${(discussion.content.startsWith('http') && discussion.content.match(/\.(jpeg|jpg|gif|png|webp)/i)) ? 
+                    `<img src="${discussion.content}" alt="Meme" style="max-width: 100%; border-radius: 8px; margin-top: 10px; margin-bottom: 10px;">` : 
+                    `<p class="discussion-content">${discussion.content}</p>`}
                 <div class="discussion-footer">
                     <button class="like-btn ${discussion.likedBy.includes(currentUser?.id) ? 'active' : ''}" 
                             onclick="toggleDiscussionLike('${discussion.id}')"
@@ -822,16 +833,16 @@ async function toggleDiscussionLike(discussionId) {
     }
 }
 
-async function createDiscussion(title, content) {
-    if (!currentUser || !currentUser.isAdmin) {
-        alert('Only admins can create discussions');
+async function createDiscussion(title, content, category) {
+    if (!currentUser) {
+        alert('Please login to create discussions');
         return;
     }
 
     try {
         await apiFetch('/discussions', {
             method: 'POST',
-            body: JSON.stringify({ title, content })
+            body: JSON.stringify({ title, content, category })
         });
         
         await initDiscussions(); // Refresh
@@ -941,14 +952,26 @@ function initEventListeners() {
     // Start discussion button
     document.getElementById('startDiscussionBtn').addEventListener('click', openDiscussionModal);
 
+    // Discussion category tabs
+    document.querySelectorAll('[data-discussion-category]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-discussion-category]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentDiscussionCategory = btn.dataset.discussionCategory;
+            renderDiscussions();
+        });
+    });
+
     // Discussion form
     document.getElementById('discussionFormElement').addEventListener('submit', (e) => {
         e.preventDefault();
         const title = document.getElementById('discussionTitle').value;
         const content = document.getElementById('discussionContent').value;
-        createDiscussion(title, content);
+        const category = document.getElementById('discussionCategory').value;
+        createDiscussion(title, content, category);
     });
 }
+
 
 function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(section => {

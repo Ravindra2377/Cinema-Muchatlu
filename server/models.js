@@ -121,6 +121,11 @@ const discussionSchema = new mongoose.Schema({
     username: String,
     title: { type: String, required: true },
     content: { type: String, required: true },
+    category: {
+        type: String,
+        enum: ['General', 'Memes', 'Gossip', 'Trending'],
+        default: 'General'
+    },
     likes: { type: Number, default: 0 },
     likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     timestamp: {

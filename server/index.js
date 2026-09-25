@@ -392,6 +392,7 @@ app.get('/api/discussions', async (req, res) => {
                 username: d.username,
                 title: d.title,
                 content: d.content,
+                category: d.category || 'General',
                 likes: d.likes,
                 likedBy: d.likedBy,
                 replyCount,
@@ -405,18 +406,15 @@ app.get('/api/discussions', async (req, res) => {
     }
 });
 
-// POST /api/discussions - Create a discussion (admin only)
+// POST /api/discussions - Create a discussion
 app.post('/api/discussions', authMiddleware, async (req, res) => {
     try {
-        if (!req.user.isAdmin) {
-            return res.status(403).json({ error: 'Only admins can create discussions' });
-        }
-
         const discussion = await Discussion.create({
             userId: req.user.id,
             username: req.user.username,
             title: req.body.title,
-            content: req.body.content
+            content: req.body.content,
+            category: req.body.category || 'General'
         });
 
         res.status(201).json({
@@ -425,6 +423,7 @@ app.post('/api/discussions', authMiddleware, async (req, res) => {
             username: discussion.username,
             title: discussion.title,
             content: discussion.content,
+            category: discussion.category,
             likes: 0,
             likedBy: [],
             replyCount: 0,

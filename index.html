@@ -153,7 +153,7 @@
 
         <section id="discussions" class="section">
             <div class="discussions-header">
-                <h2 class="section-title">Community Discussions</h2>
+                <h2 class="section-title">Muchatlu</h2>
                 <button class="btn-primary" id="startDiscussionBtn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -162,6 +162,15 @@
                     Start Discussion
                 </button>
             </div>
+
+            <div class="filter-bar" style="margin-bottom: 2rem; justify-content: center;">
+                <button class="filter-btn active" data-discussion-category="all">All</button>
+                <button class="filter-btn" data-discussion-category="General">General</button>
+                <button class="filter-btn" data-discussion-category="Memes">Memes</button>
+                <button class="filter-btn" data-discussion-category="Gossip">Gossip</button>
+                <button class="filter-btn" data-discussion-category="Trending">Trending</button>
+            </div>
+
             <div class="discussions-list" id="discussionsList"></div>
         </section>
     </main>
@@ -343,12 +352,24 @@
                 <h2>Start a Discussion</h2>
                 <form id="discussionFormElement">
                     <div class="form-group">
+                        <label for="discussionCategory">Category</label>
+                        <select id="discussionCategory"
+                            style="width: 100%; padding: 0.8rem; border-radius: var(--radius-md); background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 1rem; margin-bottom: 1rem;"
+                            required>
+                            <option value="General">General</option>
+                            <option value="Memes">Memes</option>
+                            <option value="Gossip">Gossip</option>
+                            <option value="Trending">Trending</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="discussionTitle">Title</label>
                         <input type="text" id="discussionTitle" placeholder="What's on your mind?" required>
                     </div>
                     <div class="form-group">
-                        <label for="discussionContent">Content</label>
-                        <textarea id="discussionContent" rows="6" placeholder="Share your thoughts..."
+                        <label for="discussionContent">Content (or Image URL for Memes)</label>
+                        <textarea id="discussionContent" rows="6"
+                            placeholder="Share your thoughts, drop a meme URL, or start some gossip..."
                             required></textarea>
                     </div>
                     <button type="submit" class="btn-primary">Post Discussion</button>
