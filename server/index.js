@@ -428,7 +428,8 @@ app.post('/api/discussions', optionalAuth, async (req, res) => {
         });
         res.status(201).json(discussion);
     } catch (err) {
-        res.status(500).json({ error: 'Error creating discussion' });
+        console.error('Discussion creation error:', err);
+        res.status(500).json({ error: err.message || 'Error creating discussion' });
     }
 });
 
@@ -478,7 +479,8 @@ app.post('/api/discussions/:id/replies', optionalAuth, async (req, res) => {
         
         res.status(201).json(reply);
     } catch (err) {
-        res.status(500).json({ error: 'Error adding reply' });
+        console.error('Reply creation error:', err);
+        res.status(500).json({ error: err.message || 'Error adding reply' });
     }
 });
 
