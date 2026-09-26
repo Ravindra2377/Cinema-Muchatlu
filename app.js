@@ -1192,7 +1192,7 @@ function renderDiscussionDetail(discussion, replies) {
         
         <h3 style="margin-bottom: 1rem; color: #ccc;">💬 ${replies.length} Replies</h3>
         
-        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+        <div id="repliesContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
             ${replies.map(reply => `
                 <div style="background: #111; padding: 1.5rem; border-radius: 8px; border: 1px solid #222;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
@@ -1241,15 +1241,47 @@ async function handleReplySubmit(e) {
     e.preventDefault();
     if (!activeDiscussionId) return;
     
-    const text = document.getElementById('replyInput').value;
+    const inputEl = document.getElementById('replyInput');
+    const text = inputEl.value.trim();
+    if (!text) return;
+    
+    // Instantly clear the input and blur it (closes keyboard on mobile)
+    inputEl.value = '';
+    
+    // Optimistic UI update: instantly show the message
+    const fakeUsername = currentUser ? currentUser.username : 'Anonymous Guest';
+    const repliesContainer = document.getElementById('repliesContainer');
+    if (repliesContainer) {
+        const fakeReplyHtml = `
+            <div style="background: #111; padding: 1.5rem; border-radius: 8px; border: 1px solid #222; opacity: 0.6; transition: opacity 0.3s;" id="optimistic-reply">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="font-weight: bold; color: #aaa;">👤 ${fakeUsername}</span>
+                    <span style="color: #666; font-size: 0.8rem;">Sending...</span>
+                </div>
+                <p style="margin-bottom: 1rem; line-height: 1.5;">${text}</p>
+            </div>
+        `;
+        repliesContainer.insertAdjacentHTML('beforeend', fakeReplyHtml);
+        
+        // Scroll to the bottom to see the new reply
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+
     try {
         await apiFetch(`/discussions/${activeDiscussionId}/replies`, {
             method: 'POST',
             body: JSON.stringify({ text })
         });
-        viewDiscussion(activeDiscussionId); // Refresh thread
+        viewDiscussion(activeDiscussionId); // Refresh thread cleanly to get real IDs and reactions
     } catch (err) {
         alert('Error adding reply: ' + err.message);
+        // Remove the fake reply if it failed
+        const fakeReply = document.getElementById('optimistic-reply');
+        if (fakeReply) fakeReply.remove();
+        inputEl.value = text; // Restore the text so they don't lose it
     }
 }
 
