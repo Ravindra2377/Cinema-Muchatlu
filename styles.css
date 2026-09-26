@@ -62,10 +62,9 @@ body {
 
 /* Header Styles */
 .header {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
+    z-index: 1000;
     background: rgba(10, 10, 10, 0.85);
     backdrop-filter: blur(22px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -306,7 +305,6 @@ body {
 
 /* Main Content */
 .main-content {
-    margin-top: 110px;
     padding: 3rem 2rem 4rem;
     max-width: 1400px;
     margin-left: auto;
