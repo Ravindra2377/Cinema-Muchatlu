@@ -1443,6 +1443,10 @@ body {
 }
 
 @media (max-width: 768px) {
+    body:has(input:focus, textarea:focus) .header {
+        position: static;
+    }
+
     .feed-header-responsive {
         flex-direction: column;
         align-items: flex-start;
