@@ -21,8 +21,15 @@ function removeToken() {
 // API helper with auth headers
 async function apiFetch(endpoint, options = {}) {
     const token = getToken();
+    let sessionId = localStorage.getItem('sessionId');
+    if (!sessionId) {
+        sessionId = Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('sessionId', sessionId);
+    }
+    
     const headers = {
         'Content-Type': 'application/json',
+        'X-Session-Id': sessionId,
         ...(options.headers || {})
     };
 

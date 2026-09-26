@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinema Muchatlu - Recommendation Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d0d0f;
+            --bg-card: #1a1a1f;
+            --primary-color: #ff2d55;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --border-color: #2c2c35;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 { margin-top: 0; font-size: 2rem; color: #fff; margin-bottom: 2rem; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        .card h3 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin: 0 0 1rem 0;
+        }
+        .metric {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            background: -webkit-linear-gradient(#fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bar-container {
+            margin-top: 1rem;
+        }
+        .bar-label { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;}
+        .bar-bg { width: 100%; height: 12px; background: #2a2a2a; border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem; }
+        .bar-fill { height: 100%; transition: width 0.5s ease-out; }
+        .personalized-color { background: #34c759; }
+        .global-color { background: #007aff; }
+        .exploration-color { background: #af52de; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recommendation Engine Analytics</h1>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>Personalized CTR</h3>
+                <p class="metric" id="ctr-personalized">--</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;"><span id="imp-personalized">0</span> Impressions</p>
+            </div>
+            <div class="card">
+                <h3>Global CTR</h3>
+                <p class="metric" id="ctr-global">--</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;"><span id="imp-global">0</span> Impressions</p>
+            </div>
+            <div class="card">
+                <h3>Exploration CTR</h3>
+                <p class="metric" id="ctr-exploration">--</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;"><span id="imp-exploration">0</span> Impressions</p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3>Feed Source Distribution (Impressions)</h3>
+            <div class="bar-container">
+                <div class="bar-label"><span>Personalized</span><span id="dist-p">0%</span></div>
+                <div class="bar-bg"><div class="bar-fill personalized-color" id="bar-p" style="width: 0%"></div></div>
+
+                <div class="bar-label"><span>Global</span><span id="dist-g">0%</span></div>
+                <div class="bar-bg"><div class="bar-fill global-color" id="bar-g" style="width: 0%"></div></div>
+
+                <div class="bar-label"><span>Exploration</span><span id="dist-e">0%</span></div>
+                <div class="bar-bg"><div class="bar-fill exploration-color" id="bar-e" style="width: 0%"></div></div>
+            </div>
+        </div>
+
+        </div>
+
+        <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; font-weight: 500;">A/B Experiment Performance (CTR)</h2>
+        <div class="grid">
+            <div class="card" style="border-top: 4px solid #34c759;">
+                <h3>Group A (40/60 - Base)</h3>
+                <p class="metric" id="ctr-a">--</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;"><span id="imp-a">0</span> Impressions</p>
+            </div>
+            <div class="card" style="border-top: 4px solid #007aff;">
+                <h3>Group B (50/50)</h3>
+                <p class="metric" id="ctr-b">--</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;"><span id="imp-b">0</span> Impressions</p>
+            </div>
+            <div class="card" style="border-top: 4px solid #af52de;">
+                <h3>Group C (60/40)</h3>
+                <p class="metric" id="ctr-c">--</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;"><span id="imp-c">0</span> Impressions</p>
+            </div>
+        </div>
+
+        <div class="grid" style="margin-top: 2rem;">
+            <div class="card">
+                <h3>Total Telemetry Events</h3>
+                <p class="metric" id="total-events">0</p>
+            </div>
+        </div>
+        
+        <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; font-weight: 500;">Meme Moderation Queue</h2>
+        <div class="card" style="margin-bottom: 3rem;">
+            <div id="pendingMemes" style="display: flex; flex-direction: column; gap: 1rem;">
+                <p style="color: var(--text-secondary);">Loading pending memes...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchAnalytics() {
+            try {
+                const res = await fetch('/api/analytics/recommendations');
+                const data = await res.json();
+                
+                const p = data.performanceBySource.personalized || { impressions: 0, engagementRate: '0%' };
+                const g = data.performanceBySource.global || { impressions: 0, engagementRate: '0%' };
+                const e = data.performanceBySource.exploration || { impressions: 0, engagementRate: '0%' };
+
+                document.getElementById('ctr-personalized').textContent = p.engagementRate;
+                document.getElementById('ctr-global').textContent = g.engagementRate;
+                document.getElementById('ctr-exploration').textContent = e.engagementRate;
+
+                document.getElementById('imp-personalized').textContent = p.impressions;
+                document.getElementById('imp-global').textContent = g.impressions;
+                document.getElementById('imp-exploration').textContent = e.impressions;
+                
+                const groupA = data.performanceByGroup.A || { impressions: 0, engagementRate: '0%' };
+                const groupB = data.performanceByGroup.B || { impressions: 0, engagementRate: '0%' };
+                const groupC = data.performanceByGroup.C || { impressions: 0, engagementRate: '0%' };
+                
+                document.getElementById('ctr-a').textContent = groupA.engagementRate;
+                document.getElementById('imp-a').textContent = groupA.impressions;
+                document.getElementById('ctr-b').textContent = groupB.engagementRate;
+                document.getElementById('imp-b').textContent = groupB.impressions;
+                document.getElementById('ctr-c').textContent = groupC.engagementRate;
+                document.getElementById('imp-c').textContent = groupC.impressions;
+                
+                document.getElementById('total-events').textContent = data.totalEvents;
+
+                const totalImp = p.impressions + g.impressions + e.impressions;
+                if (totalImp > 0) {
+                    const pPct = ((p.impressions / totalImp) * 100).toFixed(1);
+                    const gPct = ((g.impressions / totalImp) * 100).toFixed(1);
+                    const ePct = ((e.impressions / totalImp) * 100).toFixed(1);
+
+                    document.getElementById('dist-p').textContent = pPct + '%';
+                    document.getElementById('bar-p').style.width = pPct + '%';
+                    
+                    document.getElementById('dist-g').textContent = gPct + '%';
+                    document.getElementById('bar-g').style.width = gPct + '%';
+                    
+                    document.getElementById('dist-e').textContent = ePct + '%';
+                    document.getElementById('bar-e').style.width = ePct + '%';
+                }
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        async function fetchPendingMemes() {
+            try {
+                const res = await fetch('/api/memes/pending');
+                const memes = await res.json();
+                
+                const container = document.getElementById('pendingMemes');
+                if (memes.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-secondary);">No pending memes. Queue is empty! 🎉</p>';
+                    return;
+                }
+                
+                container.innerHTML = memes.map(m => `
+                    <div style="background: var(--bg-darker); border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; display: flex; gap: 1rem; align-items: flex-start;">
+                        <img src="${m.media}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;" />
+                        <div style="flex: 1;">
+                            <p style="margin-top: 0; font-size: 1.1rem;">${m.content}</p>
+                            <p style="color: #888; font-size: 0.85rem; margin-bottom: 1rem;">By ${m.authorName || 'User'} | Tags: ${m.tags?.join(', ') || 'None'}</p>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="moderateMeme('${m._id}', 'APPROVED')" style="background: #34c759; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Approve</button>
+                                <button onclick="moderateMeme('${m._id}', 'REJECTED')" style="background: #ff3b30; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Reject</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        async function moderateMeme(id, status) {
+            try {
+                await fetch(`/api/memes/${id}/moderate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                fetchPendingMemes();
+            } catch(err) {
+                console.error(err);
+                alert("Failed to moderate");
+            }
+        }
+        
+        fetchAnalytics();
+        fetchPendingMemes();
+        setInterval(fetchAnalytics, 5000);
+        setInterval(fetchPendingMemes, 15000);
+    </script>
+</body>
+</html>

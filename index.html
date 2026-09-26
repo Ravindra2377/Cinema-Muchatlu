@@ -27,10 +27,13 @@
                 <h1>Cinema Muchatlu</h1>
             </div>
             <nav class="nav">
-                <a href="#home" class="nav-link active" data-section="home">Home</a>
-                <a href="#trending" class="nav-link" data-section="trending">Trending</a>
-                <a href="#watchlist" class="nav-link" data-section="watchlist">My Watchlist</a>
-                <a href="#discussions" class="nav-link" data-section="discussions">Community</a>
+                <a href="#feed" class="nav-link active" data-section="feed">🏠 Muchatlu</a>
+                <a href="#trending" class="nav-link" data-section="trending">🔥 Trending</a>
+                <a href="#home" class="nav-link" data-section="home">🎬 Cinema</a>
+                <a href="#music" class="nav-link" data-section="music">🎵 Music</a>
+                <a href="#memes" class="nav-link" data-section="memes">😂 Memes</a>
+                <a href="#play" class="nav-link" data-section="play">🎮 Play</a>
+                <a href="#watchlist" class="nav-link" data-section="watchlist">❤️ My Stuff</a>
             </nav>
             <div class="header-actions">
                 <label class="search-pill">
@@ -88,7 +91,40 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <section id="home" class="section active">
+        <section id="feed" class="section active">
+            <div style="max-width: 800px; margin: 0 auto 2rem; padding-top: 4rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="font-size: 1.5rem; color: var(--text-primary);">Muchatlu Discussions</h2>
+                    <button onclick="openDiscussionModal()" style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; cursor: pointer;">+ Start Discussion</button>
+                </div>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="discussionFilters">
+                    <button class="filter-chip active" data-category="Trending">🔥 Trending</button>
+                    <button class="filter-chip" data-category="Latest">🆕 Latest</button>
+                    <button class="filter-chip" data-category="Popular">👑 Popular</button>
+                </div>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color);" id="discussionCategories">
+                    <button class="filter-chip" data-category="Cinema">🎬 Cinema</button>
+                    <button class="filter-chip" data-category="Memes">😂 Memes</button>
+                    <button class="filter-chip" data-category="Celebrities">🌟 Celebrities</button>
+                    <button class="filter-chip" data-category="Trends">🏏 Trends</button>
+                    <button class="filter-chip" data-category="Dialogues">🗣️ Dialogues</button>
+                    <button class="filter-chip" data-category="Music">🎵 Music</button>
+                    <button class="filter-chip" data-category="General">💬 General</button>
+                </div>
+            </div>
+
+            <!-- Detail view for a single discussion -->
+            <div id="discussionDetailContainer" style="max-width: 800px; margin: 0 auto; display: none;"></div>
+
+            <!-- Discussion feed -->
+            <div class="feed-container" id="feedContainer" style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Feed items will be injected here -->
+            </div>
+        </section>
+
+        <section id="home" class="section">
 
             <div class="content-type-tabs">
                 <button class="content-type-tab active" data-content-type="all">
@@ -136,6 +172,42 @@
         <section id="trending" class="section">
             <h2 class="section-title">Trending This Week</h2>
             <div class="trending-carousel" id="trendingCarousel"></div>
+        </section>
+
+        <section id="music" class="section">
+            <h2 class="section-title">Top Telugu Tracks</h2>
+            <div class="movies-grid" id="musicGrid">
+                <!-- Music cards will be injected here -->
+            </div>
+        </section>
+
+        <!-- ==============================
+             MEMES SECTION
+        =============================== -->
+        <section id="memes" class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 class="section-title" style="margin: 0;">😂 Telugu Memes</h2>
+                <button class="btn btn-primary" onclick="showCreateMemeModal()">+ Create Meme</button>
+            </div>
+            
+            <div class="pill-menu" style="margin-bottom: 2rem; display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                <button class="pill active" onclick="loadMemes('latest')">🆕 Latest</button>
+                <button class="pill" onclick="loadMemes('trending')">🔥 Trending</button>
+                <button class="pill" onclick="loadMemes('mass')">🔥 Mass</button>
+                <button class="pill" onclick="loadMemes('love')">❤️ Love</button>
+                <button class="pill" onclick="loadMemes('wtf')">🤯 WTF</button>
+            </div>
+
+            <div id="memesGrid" class="grid">
+                <!-- Memes injected here -->
+            </div>
+        </section>
+
+        <section id="play" class="section">
+            <h2 class="section-title">🎮 Muchatlu Games (Coming Soon)</h2>
+            <div style="background: var(--bg-card); padding: 3rem; text-align: center; border-radius: 12px; border: 1px dashed var(--border-color); color: var(--text-secondary);">
+                <p>Guess the movie, complete the dialogue, and top the leaderboard!</p>
+            </div>
         </section>
 
         <section id="watchlist" class="section">
@@ -375,6 +447,87 @@
                     <button type="submit" class="btn-primary">Post Discussion</button>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Create Meme Modal -->
+    <!-- Start Discussion Modal -->
+    <div id="discussionModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: var(--bg-card); padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem;">Start a Discussion</h2>
+                <button onclick="document.getElementById('discussionModal').style.display='none'" style="background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="discussionForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ccc;">Title</label>
+                    <input type="text" id="discussionTitle" required placeholder="What do you think about...?" style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ccc;">Category</label>
+                    <select id="discussionCategory" style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
+                        <option value="Cinema">Cinema</option>
+                        <option value="Memes">Memes</option>
+                        <option value="Celebrities">Celebrities</option>
+                        <option value="Trends">Trends</option>
+                        <option value="Dialogues">Dialogues</option>
+                        <option value="Music">Music</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ccc;">Content</label>
+                    <textarea id="discussionContent" required placeholder="Share your thoughts..." rows="4" style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; resize: vertical;"></textarea>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ccc;">Attach Image URL (Optional)</label>
+                    <input type="url" id="discussionMedia" placeholder="https://..." style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
+                </div>
+                <div style="border-top: 1px solid #333; padding-top: 1rem; margin-top: 0.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #888; font-size: 0.9rem;">Related Entities (Optional)</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="discussionMovieId" placeholder="Movie ID" style="flex: 1; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; font-size: 0.8rem;">
+                        <input type="text" id="discussionActorId" placeholder="Actor ID" style="flex: 1; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; font-size: 0.8rem;">
+                    </div>
+                </div>
+                <button type="submit" style="background: var(--primary-color); color: white; border: none; padding: 1rem; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 1rem;">Post Discussion</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="memeModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: var(--bg-card); max-width: 500px; width: 90%; border-radius: 12px; border: 1px solid var(--border-color); padding: 2rem; position: relative;">
+            <button class="close-modal" onclick="closeMemeModal()" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; color: #fff; font-size: 2rem; cursor: pointer;">&times;</button>
+            <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff;">😂 Create Meme</h2>
+            
+            <form id="memeForm" onsubmit="handleMemeSubmit(event)">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #aaa;">Image URL</label>
+                    <input type="text" id="memeImage" required style="width: 100%; padding: 0.8rem; background: var(--bg-darker); border: 1px solid #333; color: white; border-radius: 8px;" placeholder="https://..." />
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #aaa;">Caption</label>
+                    <textarea id="memeCaption" required rows="3" style="width: 100%; padding: 0.8rem; background: var(--bg-darker); border: 1px solid #333; color: white; border-radius: 8px;" placeholder="When he says..."></textarea>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #aaa;">Related Movie (Optional TMDB ID)</label>
+                    <input type="text" id="memeMovieId" style="width: 100%; padding: 0.8rem; background: var(--bg-darker); border: 1px solid #333; color: white; border-radius: 8px;" placeholder="e.g. 256040 (Baahubali)" />
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #aaa;">Related Actor (Optional TMDB Person ID)</label>
+                    <input type="text" id="memeActorId" style="width: 100%; padding: 0.8rem; background: var(--bg-darker); border: 1px solid #333; color: white; border-radius: 8px;" placeholder="e.g. 73421 (Prabhas)" />
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #aaa;">Tags (comma separated)</label>
+                    <input type="text" id="memeTags" style="width: 100%; padding: 0.8rem; background: var(--bg-darker); border: 1px solid #333; color: white; border-radius: 8px;" placeholder="mass, tollywood, emotional" />
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Publish Meme</button>
+            </form>
         </div>
     </div>
 

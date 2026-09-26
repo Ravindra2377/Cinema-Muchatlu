@@ -11,8 +11,21 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const axios = require('axios');
 
-const { User, Movie, Watchlist, Comment, Discussion, Reply } = require('./models');
+const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
+
+// Hash function for deterministic A/B assignment
+function getExperimentGroup(identifier) {
+    if (!identifier) return 'A'; // Default fallback
+    let hash = 0;
+    for (let i = 0; i < identifier.length; i++) {
+        hash = ((hash << 5) - hash) + identifier.charCodeAt(i);
+        hash |= 0;
+    }
+    const groups = ['A', 'B', 'C'];
+    return groups[Math.abs(hash) % 3];
+}
+const { processUserEvent } = require('./recommendationEngine');
 
 const TMDB_API = 'https://api.tmdb.org/3';
 
@@ -227,12 +240,22 @@ app.get('/api/movies', async (req, res) => {
     }
 });
 
-// GET /api/movies/trending - Get top 10 trending movies
+// GET /api/movies/trending - Get trending movies (Multiple Pages for Doom Scrolling)
 app.get('/api/movies/trending', async (req, res) => {
     try {
-        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=vote_average.desc&vote_count.gte=100&page=1`;
-        const response = await axios.get(url);
-        const mapped = response.data.results.slice(0, 10).map(mapTMDBMovie);
+        // Fetch truly trending Telugu movies by filtering strictly to the year 2026
+        const url1 = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=1`;
+        const url2 = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=2`;
+        const url3 = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=3`;
+        
+        const [res1, res2, res3] = await Promise.all([
+            axios.get(url1),
+            axios.get(url2),
+            axios.get(url3)
+        ]);
+        
+        const allResults = [...res1.data.results, ...res2.data.results, ...res3.data.results];
+        const mapped = allResults.map(mapTMDBMovie);
         res.json(mapped);
     } catch (err) {
         console.error('Error fetching trending from TMDB:', err);
@@ -379,122 +402,451 @@ app.delete('/api/comments/:commentId', authMiddleware, async (req, res) => {
 // ============================================
 
 // GET /api/discussions - Get all discussions
+// GET /api/discussions
 app.get('/api/discussions', async (req, res) => {
     try {
-        const allDiscussions = await Discussion.find().sort({ timestamp: -1 });
-        const result = [];
-
-        for (const d of allDiscussions) {
-            const replyCount = await Reply.countDocuments({ discussionId: d._id });
-            result.push({
-                id: d._id,
-                userId: d.userId,
-                username: d.username,
-                title: d.title,
-                content: d.content,
-                category: d.category || 'General',
-                likes: d.likes,
-                likedBy: d.likedBy,
-                replyCount,
-                timestamp: d.timestamp.getTime()
-            });
-        }
-
-        res.json(result);
+        const { category } = req.query;
+        let query = { status: 'ACTIVE' };
+        if (category) query.category = category;
+        
+        const discussions = await Discussion.find(query).sort({ timestamp: -1 }).limit(50).lean();
+        res.json(discussions);
     } catch (err) {
         res.status(500).json({ error: 'Error fetching discussions' });
     }
 });
 
-// POST /api/discussions - Create a discussion
+// POST /api/discussions
 app.post('/api/discussions', authMiddleware, async (req, res) => {
     try {
+        const { title, content, category, media, movieId, actorId, songId } = req.body;
         const discussion = await Discussion.create({
             userId: req.user.id,
             username: req.user.username,
-            title: req.body.title,
-            content: req.body.content,
-            category: req.body.category || 'General'
+            title, content, category: category || 'General',
+            media, movieId, actorId, songId
         });
-
-        res.status(201).json({
-            id: discussion._id,
-            userId: discussion.userId,
-            username: discussion.username,
-            title: discussion.title,
-            content: discussion.content,
-            category: discussion.category,
-            likes: 0,
-            likedBy: [],
-            replyCount: 0,
-            timestamp: discussion.timestamp.getTime()
-        });
+        res.status(201).json(discussion);
     } catch (err) {
         res.status(500).json({ error: 'Error creating discussion' });
     }
 });
 
-// POST /api/discussions/:discussionId/like - Toggle like
-app.post('/api/discussions/:discussionId/like', authMiddleware, async (req, res) => {
+// GET /api/discussions/:id (Full thread)
+app.get('/api/discussions/:id', async (req, res) => {
     try {
-        const discussion = await Discussion.findById(req.params.discussionId);
-        if (!discussion) return res.status(404).json({ error: 'Discussion not found' });
-
-        const userId = req.user.id;
-        const likedIndex = discussion.likedBy.indexOf(userId);
-
-        if (likedIndex > -1) {
-            discussion.likedBy.splice(likedIndex, 1);
-            discussion.likes = Math.max(0, discussion.likes - 1);
-        } else {
-            discussion.likedBy.push(userId);
-            discussion.likes += 1;
-        }
-
-        await discussion.save();
-        res.json({ likes: discussion.likes, likedBy: discussion.likedBy });
+        const discussion = await Discussion.findById(req.params.id).lean();
+        if (!discussion || discussion.status !== 'ACTIVE') return res.status(404).json({ error: 'Not found' });
+        
+        const replies = await Reply.find({ discussionId: discussion._id, status: 'ACTIVE' }).sort({ timestamp: 1 }).lean();
+        res.json({ discussion, replies });
     } catch (err) {
-        res.status(500).json({ error: 'Error toggling like' });
+        res.status(500).json({ error: 'Error fetching discussion thread' });
     }
 });
 
-// GET /api/discussions/:discussionId/replies - Get replies
-app.get('/api/discussions/:discussionId/replies', async (req, res) => {
+// POST /api/discussions/:id/replies
+app.post('/api/discussions/:id/replies', authMiddleware, async (req, res) => {
     try {
-        const replies = await Reply.find({ discussionId: req.params.discussionId })
-            .sort({ timestamp: 1 });
-        res.json(replies.map(r => ({
-            id: r._id,
-            discussionId: r.discussionId,
-            userId: r.userId,
-            username: r.username,
-            text: r.text,
-            timestamp: r.timestamp.getTime()
-        })));
-    } catch (err) {
-        res.status(500).json({ error: 'Error fetching replies' });
-    }
-});
-
-// POST /api/discussions/:discussionId/replies - Add a reply
-app.post('/api/discussions/:discussionId/replies', authMiddleware, async (req, res) => {
-    try {
+        const discussionId = req.params.id;
+        const discussion = await Discussion.findById(discussionId);
+        if (!discussion || discussion.status !== 'ACTIVE') return res.status(404).json({ error: 'Not found or locked' });
+        
         const reply = await Reply.create({
-            discussionId: req.params.discussionId,
+            discussionId,
             userId: req.user.id,
             username: req.user.username,
             text: req.body.text
         });
-        res.status(201).json({
-            id: reply._id,
-            discussionId: reply.discussionId,
-            userId: reply.userId,
-            username: reply.username,
-            text: reply.text,
-            timestamp: reply.timestamp.getTime()
-        });
+        
+        discussion.repliesCount += 1;
+        await discussion.save();
+        
+        // Notification
+        if (discussion.userId.toString() !== req.user.id) {
+            await Notification.create({
+                userId: discussion.userId,
+                actorId: req.user.id,
+                actorName: req.user.username,
+                type: 'reply',
+                discussionId
+            });
+        }
+        
+        res.status(201).json(reply);
     } catch (err) {
         res.status(500).json({ error: 'Error adding reply' });
+    }
+});
+
+// DELETE /api/discussions/:id
+app.delete('/api/discussions/:id', authMiddleware, async (req, res) => {
+    try {
+        const discussion = await Discussion.findById(req.params.id);
+        if (!discussion) return res.status(404).json({ error: 'Not found' });
+        if (discussion.userId.toString() !== req.user.id && !req.user.isAdmin) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        discussion.status = 'REMOVED';
+        await discussion.save();
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Error deleting discussion' });
+    }
+});
+
+// DELETE /api/replies/:id
+app.delete('/api/replies/:id', authMiddleware, async (req, res) => {
+    try {
+        const reply = await Reply.findById(req.params.id);
+        if (!reply) return res.status(404).json({ error: 'Not found' });
+        if (reply.userId.toString() !== req.user.id && !req.user.isAdmin) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        reply.status = 'REMOVED';
+        await reply.save();
+        await Discussion.findByIdAndUpdate(reply.discussionId, { $inc: { repliesCount: -1 } });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Error deleting reply' });
+    }
+});
+
+// GET /api/notifications
+app.get('/api/notifications', authMiddleware, async (req, res) => {
+    try {
+        const notifications = await Notification.find({ userId: req.user.id }).sort({ timestamp: -1 }).limit(20).lean();
+        res.json(notifications);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching notifications' });
+    }
+});
+
+// ============================================
+// CULTURE GRAPH FEED ROUTES
+// ============================================
+
+app.get('/api/feed', optionalAuth, async (req, res) => {
+    try {
+        const identifier = req.user ? req.user.id : req.headers['x-session-id'];
+        const group = getExperimentGroup(identifier);
+
+        let userInterest = null;
+        if (req.user) {
+            userInterest = await UserInterest.findOne({ userId: req.user.id }).lean();
+        }
+
+        let posts = await CulturePost.find({ moderationStatus: 'APPROVED' }).sort({ createdAt: -1 }).limit(30).lean();
+        
+        // Seed if empty
+        if (posts.length === 0) {
+            const seedPosts = [
+                { type: 'news', title: 'SSMB29 Title Reveal!', content: 'Rajamouli and Mahesh Babu\'s globe-trotting adventure finally gets a title. Will this cross the 2000 Crore mark at the box office?', likes: [], commentsCount: 1245 },
+                { type: 'meme', content: 'Bro after watching the interval bang of Spirit', media: 'https://i.imgflip.com/4/8k0a3j.jpg', likes: [], commentsCount: 328 },
+                { type: 'poll', title: 'Best Telugu Comedy Movie of all time?', pollOptions: [{text: 'Athadu'}, {text: 'Venky'}, {text: 'Nuvvu Naaku Nachav'}, {text: 'Jamba Lakidi Pamba'}], likes: [], commentsCount: 842 },
+                { type: 'dialogue', content: 'Okkokkadini kadu sharekhan... vandha mandini okesari pampu!', title: 'Magadheera (2009)', likes: [], commentsCount: 123 },
+                { type: 'opinion', title: 'Unpopular Opinion', content: 'Kalki 2898 AD Part 2 is the greatest cinematic achievement of this decade, completely surpassing Baahubali.', likes: [], commentsCount: 456 }
+            ];
+            await CulturePost.insertMany(seedPosts);
+            posts = await CulturePost.find({ moderationStatus: 'APPROVED' }).sort({ createdAt: -1 }).limit(30).lean();
+        }
+
+        // Fetch a few trending movies to interleave
+        const trendingUrl = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=1`;
+        const movieRes = await axios.get(trendingUrl);
+        const topMovies = movieRes.data.results.slice(0, 6).map(mapTMDBMovie);
+        
+        // Combine them into a feed
+        const mixedFeed = [];
+        posts.forEach(post => mixedFeed.push({ feedType: 'culture', data: post }));
+        topMovies.forEach(movie => mixedFeed.push({ feedType: 'movie', data: movie }));
+        
+        // Add some cached music if available
+        if (cachedMusic && cachedMusic.length > 0) {
+            cachedMusic.slice(0, 4).forEach(song => mixedFeed.push({ feedType: 'music', data: song }));
+        }
+        
+        // Calculate Feed Relevancy Score (The Algorithm)
+        const now = new Date();
+        const scoredFeed = mixedFeed.map(item => {
+            let globalScore = 0;
+            let personalScore = 0;
+            
+            let matchedEntities = [];
+            let matchedContentType = null;
+            
+            if (item.feedType === 'culture') {
+                const post = item.data;
+                // Engagement score: sum of all expressive reactions + comments
+                let reactionsCount = 0;
+                if (post.reactions) {
+                    reactionsCount = (post.reactions.mass || 0) + (post.reactions.lol || 0) + 
+                                     (post.reactions.love || 0) + (post.reactions.wtf || 0) + 
+                                     (post.reactions.emotional || 0);
+                }
+                const engagement = (reactionsCount * 2) + ((post.commentsCount || 0) * 3);
+                
+                // Freshness: exponential decay over days
+                const postDate = new Date(post.createdAt || now);
+                const daysOld = Math.max(0, (now - postDate) / (1000 * 60 * 60 * 24));
+                const freshness = Math.max(0.1, 1 - (daysOld * 0.1));
+                
+                globalScore = (10 + engagement) * freshness;
+                
+                // Boost certain types to ensure a dynamic feed
+                if (post.type === 'news') globalScore *= 1.2;
+                if (post.type === 'poll') globalScore *= 1.15;
+                if (post.type === 'meme') globalScore *= 1.05;
+
+                // Personal Score calculation
+                if (userInterest) {
+                    const cTypeScore = userInterest.contentTypes?.[post.type] || 0;
+                    if (cTypeScore > 0) matchedContentType = post.type;
+                    
+                    const mScore = post.movieId ? (userInterest.entities?.movies?.[post.movieId] || 0) : 0;
+                    if (mScore > 0) matchedEntities.push(`Movie: ${post.movieId}`);
+                    
+                    const aScore = post.actorId ? (userInterest.entities?.actors?.[post.actorId] || 0) : 0;
+                    if (aScore > 0) matchedEntities.push(`Actor: ${post.actorId}`);
+                    
+                    const sScore = post.songId ? (userInterest.entities?.songs?.[post.songId] || 0) : 0;
+                    if (sScore > 0) matchedEntities.push(`Song: ${post.songId}`);
+                    
+                    personalScore = cTypeScore + mScore + aScore + sScore;
+                }
+                
+            } else if (item.feedType === 'movie') {
+                const movie = item.data;
+                globalScore = (movie.popularity || 10) / 10;
+                // Boost highly anticipated movies
+                globalScore *= 1.3;
+
+                if (userInterest) {
+                    personalScore = userInterest.entities?.movies?.[movie.id] || 0;
+                    if (personalScore > 0) matchedEntities.push(`Movie: ${movie.id}`);
+                }
+            } else if (item.feedType === 'music') {
+                globalScore = 15; // Baseline high score for viral tracks
+                
+                if (userInterest) {
+                    personalScore = userInterest.entities?.songs?.[item.data.id] || 0;
+                    if (personalScore > 0) matchedEntities.push(`Song: ${item.data.id}`);
+                }
+            }
+            
+            // Configurable Weights by Experiment Group
+            let pWeight = parseFloat(process.env.PERSONAL_WEIGHT || '0.40');
+            let gWeight = parseFloat(process.env.GLOBAL_WEIGHT || '0.60');
+            
+            if (group === 'B') {
+                pWeight = 0.50;
+                gWeight = 0.50;
+            } else if (group === 'C') {
+                pWeight = 0.60;
+                gWeight = 0.40;
+            }
+
+            // Blend Global and Personal Scores based on config
+            const normalizedPersonal = personalScore > 0 ? (personalScore * 2) : 0;
+            const blendedScore = (globalScore * gWeight) + (normalizedPersonal * pWeight);
+
+            // Determine primary source for analytics
+            let source = 'global';
+            if (normalizedPersonal > (globalScore * gWeight)) {
+                source = 'personalized';
+            }
+
+            // Add a small randomization jitter (0.8x to 1.2x) so the feed isn't perfectly static
+            const jitter = 0.8 + (Math.random() * 0.4);
+            const finalScore = blendedScore * jitter;
+            
+            const _debugInfo = {
+                personalScore: personalScore.toFixed(2),
+                globalScore: globalScore.toFixed(2),
+                finalScore: finalScore.toFixed(2),
+                source,
+                matchedEntities,
+                matchedContentType
+            };
+            
+            return { ...item, score: finalScore, _source: source, _debugInfo };
+        });
+        
+        // Sort initially by computed Relevancy Score (descending)
+        let sortedFeed = scoredFeed.sort((a, b) => b.score - a.score);
+
+        // ============================================
+        // DIVERSITY RERANKER (Phase 4)
+        // Max 2 consecutive entities, Max 3 consecutive types
+        // ============================================
+        const diverseFeed = [];
+        let consecutiveEntityCount = 0;
+        let lastEntity = null;
+        let consecutiveTypeCount = 0;
+        let lastType = null;
+        
+        while (sortedFeed.length > 0) {
+            let selectedIdx = 0; // Default to highest scored item
+            
+            // Scan top 10 items for the first one that doesn't violate diversity rules
+            for (let i = 0; i < Math.min(10, sortedFeed.length); i++) {
+                const candidate = sortedFeed[i];
+                
+                // Extract entity for diversity check
+                let entity = null;
+                if (candidate.feedType === 'culture') {
+                    entity = candidate.data.actorId || candidate.data.movieId || candidate.data.songId;
+                } else if (candidate.feedType === 'movie' || candidate.feedType === 'music') {
+                    entity = candidate.data.id;
+                }
+                
+                // Extract type for diversity check
+                let type = candidate.feedType === 'culture' ? candidate.data.type : candidate.feedType;
+                
+                const entityLimit = parseInt(process.env.ENTITY_CONSECUTIVE_LIMIT || '2');
+                const typeLimit = parseInt(process.env.CONTENT_TYPE_CONSECUTIVE_LIMIT || '3');
+
+                const violatesEntity = (entity && entity === lastEntity && consecutiveEntityCount >= entityLimit);
+                const violatesType = (type === lastType && consecutiveTypeCount >= typeLimit);
+                
+                // If it passes the checks (or we have no better options in the scan window)
+                if (!violatesEntity && !violatesType) {
+                    selectedIdx = i;
+                    break; // Found our best valid candidate
+                }
+            }
+            
+            // Pull the selected item from the array
+            const [selectedItem] = sortedFeed.splice(selectedIdx, 1);
+            diverseFeed.push(selectedItem);
+            
+            // Update trackers
+            let selectedEntity = null;
+            if (selectedItem.feedType === 'culture') {
+                selectedEntity = selectedItem.data.actorId || selectedItem.data.movieId || selectedItem.data.songId;
+            } else if (selectedItem.feedType === 'movie' || selectedItem.feedType === 'music') {
+                selectedEntity = selectedItem.data.id;
+            }
+            let selectedType = selectedItem.feedType === 'culture' ? selectedItem.data.type : selectedItem.feedType;
+            
+            if (selectedEntity && selectedEntity === lastEntity) {
+                consecutiveEntityCount++;
+            } else {
+                lastEntity = selectedEntity;
+                consecutiveEntityCount = 1;
+            }
+            
+            if (selectedType === lastType) {
+                consecutiveTypeCount++;
+            } else {
+                lastType = selectedType;
+                consecutiveTypeCount = 1;
+            }
+        }
+        
+        // ============================================
+        // EXPLORATION BUCKET (Phase 4)
+        // Inject dynamic percentage (default ~10%) from the bottom (unseen/unrelated) into the top feed
+        // ============================================
+        if (diverseFeed.length > 10) {
+            let expPercent = parseFloat(process.env.EXPLORATION_PERCENT || '0.10');
+            if (group === 'C') expPercent = 0.15;
+            
+            // Take the bottom % of items (lowest personal + global score)
+            const explorationCandidates = diverseFeed.splice(-Math.floor(diverseFeed.length * expPercent));
+            
+            explorationCandidates.forEach(explorationItem => {
+                // Force them into the upper feed (between positions 3 and 15) to guarantee they are seen
+                // This tests the user's appetite for new entities/topics
+                const insertIdx = Math.floor(Math.random() * 12) + 3;
+                explorationItem._source = 'exploration';
+                diverseFeed.splice(Math.min(insertIdx, diverseFeed.length), 0, explorationItem);
+            });
+        }
+        
+        const finalFeed = diverseFeed.map(item => {
+            delete item.score; // Clean up payload
+            return item;
+        });
+        
+        res.json(finalFeed);
+    } catch (err) {
+        console.error('Error fetching feed:', err);
+        res.status(500).json({ error: 'Error generating culture feed' });
+    }
+});
+
+// ============================================
+// MUSIC ROUTES (JIOSAAVN INTEGRATION)
+// ============================================
+
+let cachedMusic = [];
+let lastMusicFetch = 0;
+
+// GET /api/music - Get popular Telugu music live from local JioSaavn API
+app.get('/api/music', async (req, res) => {
+    try {
+        const searchQuery = req.query.search || 'telugu+hit+songs';
+        
+        // Cache results for 1 hour to prevent excessive requests (only cache default hits, not search)
+        if (!req.query.search && cachedMusic.length > 0 && (Date.now() - lastMusicFetch) < 3600000) {
+            return res.json(cachedMusic);
+        }
+
+        // Search JioSaavn via local API instance
+        const response = await axios.get(`http://localhost:3000/api/search/songs?query=${searchQuery}&limit=40`);
+        
+        // Handle different response structures for jiosaavn-api
+        const songs = response.data.data?.results || response.data.results || [];
+        
+        cachedMusic = songs.map(song => {
+            // Find highest resolution image
+            let bestImage = '';
+            if (Array.isArray(song.image)) {
+                bestImage = song.image[song.image.length - 1]?.url || song.image[0]?.link || '';
+            } else {
+                bestImage = song.image;
+            }
+
+            // Find highest quality audio stream URL
+            let bestMedia = '';
+            const downloadUrls = song.downloadUrl || song.media_url;
+            if (Array.isArray(downloadUrls)) {
+                bestMedia = downloadUrls[downloadUrls.length - 1]?.url || downloadUrls[0]?.link || '';
+            } else {
+                bestMedia = downloadUrls;
+            }
+            
+            return {
+                title: song.name || song.title || song.song,
+                artist: song.primaryArtists || song.primary_artists || 'Unknown Artist',
+                thumbnailUrl: bestImage,
+                mediaUrl: bestMedia,
+                providerId: song.id
+            };
+        });
+        
+        lastMusicFetch = Date.now();
+        res.json(cachedMusic);
+    } catch (err) {
+        console.error('Error fetching music from JioSaavn API:', err.message);
+        
+        // Fallback to static mock data if scraping fails
+        const fallbackMusic = [
+            {
+                title: "Naa Roja Nuvve (From Kushi)",
+                artist: "Hesham Abdul Wahab",
+                thumbnailUrl: "https://c.saavncdn.com/712/Kushi-Telugu-2023-20230829141042-500x500.jpg",
+                mediaUrl: "https://www.youtube.com/embed/bQd0Dk8Wz6M"
+            },
+            {
+                title: "Srivalli (From Pushpa)",
+                artist: "Sid Sriram, Devi Sri Prasad",
+                thumbnailUrl: "https://c.saavncdn.com/188/Srivalli-From-Pushpa-The-Rise-Part-01-Telugu-2021-20211013110903-500x500.jpg",
+                mediaUrl: "https://www.youtube.com/embed/hcMzwMrr1tE"
+            }
+        ];
+        res.json(fallbackMusic);
     }
 });
 
@@ -507,6 +859,229 @@ app.get('*', (req, res) => {
 
 // ============================================
 // Start Server
+// ============================================
+// TELEMETRY & EVENTS ROUTE (Recommendation Engine v1)
+// ============================================
+
+// ============================================
+// Memes API
+// ============================================
+
+// GET /api/memes
+app.get('/api/memes', async (req, res) => {
+    try {
+        const memes = await CulturePost.find({ type: 'meme', moderationStatus: 'APPROVED' })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .lean();
+        res.json(memes);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// GET /api/memes/trending
+app.get('/api/memes/trending', async (req, res) => {
+    try {
+        const memes = await CulturePost.find({ type: 'meme', moderationStatus: 'APPROVED' })
+            .sort({ 'reactions.lol': -1, 'reactions.mass': -1, createdAt: -1 })
+            .limit(50)
+            .lean();
+        res.json(memes);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// POST /api/memes
+app.post('/api/memes', authMiddleware, async (req, res) => {
+    try {
+        const { content, media, movieId, actorId, songId, tags } = req.body;
+        const meme = new CulturePost({
+            type: 'meme',
+            content,
+            media,
+            movieId,
+            actorId,
+            songId,
+            tags,
+            authorId: req.user.id,
+            authorName: req.user.username || 'User',
+            moderationStatus: 'PENDING'
+        });
+        await meme.save();
+        res.status(201).json(meme);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// GET /api/memes/pending (Admin)
+app.get('/api/memes/pending', async (req, res) => {
+    try {
+        const memes = await CulturePost.find({ type: 'meme', moderationStatus: 'PENDING' })
+            .sort({ createdAt: -1 })
+            .lean();
+        res.json(memes);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// POST /api/memes/:id/moderate (Admin)
+app.post('/api/memes/:id/moderate', async (req, res) => {
+    try {
+        const { status } = req.body; // 'APPROVED' or 'REJECTED'
+        const meme = await CulturePost.findByIdAndUpdate(req.params.id, { moderationStatus: status }, { new: true });
+        res.json(meme);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/events', optionalAuth, async (req, res) => {
+    try {
+        const { eventType, targetType, targetId, entityType, entityId, metadata } = req.body;
+        
+        const identifier = req.user ? req.user.id : req.headers['x-session-id'];
+        const group = getExperimentGroup(identifier);
+        
+        // 1. Log the event for the recommendation engine
+        const event = new UserEvent({
+            userId: req.user ? req.user.id : null,
+            sessionId: req.headers['x-session-id'],
+            experimentGroup: group,
+            eventType, 
+            targetType, 
+            targetId, 
+            entityType, 
+            entityId, 
+            metadata
+        });
+        await event.save();
+        
+        // 2. Process the event to update the User Interest Vector (Phase 2)
+        if (req.user) {
+            // Run asynchronously, no need to block the response
+            processUserEvent(req.user.id, eventType, targetType, targetId, metadata);
+        }
+        
+        // 3. If it's a reaction, update the actual model count
+        if (eventType === 'reaction') {
+            const reactionType = metadata?.reaction;
+            if (reactionType) {
+                const updatePath = `reactions.${reactionType}`;
+                if (targetType === 'culturePost') {
+                    await CulturePost.findByIdAndUpdate(targetId, { $inc: { [updatePath]: 1 } });
+                } else if (targetType === 'discussion') {
+                    await Discussion.findByIdAndUpdate(targetId, { $inc: { [updatePath]: 1 } });
+                } else if (targetType === 'reply') {
+                    await Reply.findByIdAndUpdate(targetId, { $inc: { [updatePath]: 1 } });
+                }
+            }
+        }
+        
+        // 4. If it's a poll vote, update the actual CulturePost count
+        if (eventType === 'poll_vote' && targetType === 'culturePost') {
+            const optionIndex = metadata?.optionIndex;
+            if (optionIndex !== undefined) {
+                const updatePath = `pollOptions.${optionIndex}.votes`;
+                await CulturePost.findByIdAndUpdate(targetId, {
+                    $inc: { [updatePath]: 1 }
+                });
+            }
+        }
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error tracking event:', err);
+        res.status(500).json({ error: 'Failed to track event' });
+    }
+});
+
+// GET /api/recommendations/debug/:userId
+app.get('/api/recommendations/debug/:userId', async (req, res) => {
+    try {
+        const interest = await UserInterest.findOne({ userId: req.params.userId }).lean();
+        if (!interest) {
+            return res.json({ message: 'No interest profile found for this user.' });
+        }
+        res.json(interest);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch debug interest profile' });
+    }
+});
+
+// ============================================
+// RECOMMENDATION ANALYTICS (Phase 5)
+// ============================================
+app.get('/api/analytics/recommendations', async (req, res) => {
+    try {
+        // Aggregate all telemetry events
+        const events = await UserEvent.find().lean();
+        
+        const stats = {
+            totalEvents: events.length,
+            breakdown: {
+                reactions: events.filter(e => e.eventType === 'reaction').length,
+                impressions: events.filter(e => e.eventType === 'feed_impression').length,
+                comments: events.filter(e => e.eventType === 'comment').length,
+            },
+            performanceBySource: {
+                personalized: { impressions: 0, engagements: 0 },
+                global: { impressions: 0, engagements: 0 },
+                exploration: { impressions: 0, engagements: 0 }
+            },
+            performanceByGroup: {
+                A: { impressions: 0, engagements: 0 },
+                B: { impressions: 0, engagements: 0 },
+                C: { impressions: 0, engagements: 0 }
+            }
+        };
+
+        // Calculate CTR / Engagement by Source and Group
+        events.forEach(e => {
+            const source = e.metadata?.source || 'unknown';
+            if (stats.performanceBySource[source]) {
+                if (e.eventType === 'feed_impression') {
+                    stats.performanceBySource[source].impressions++;
+                } else if (['reaction', 'comment', 'share', 'save'].includes(e.eventType)) {
+                    stats.performanceBySource[source].engagements++;
+                }
+            }
+            
+            const group = e.experimentGroup || 'A';
+            if (stats.performanceByGroup[group]) {
+                if (e.eventType === 'feed_impression') {
+                    stats.performanceByGroup[group].impressions++;
+                } else if (['reaction', 'comment', 'share', 'save'].includes(e.eventType)) {
+                    stats.performanceByGroup[group].engagements++;
+                }
+            }
+        });
+
+        // Compute Rates
+        Object.keys(stats.performanceBySource).forEach(source => {
+            const data = stats.performanceBySource[source];
+            data.engagementRate = data.impressions > 0 
+                ? ((data.engagements / data.impressions) * 100).toFixed(2) + '%' 
+                : '0%';
+        });
+        
+        Object.keys(stats.performanceByGroup).forEach(group => {
+            const data = stats.performanceByGroup[group];
+            data.engagementRate = data.impressions > 0 
+                ? ((data.engagements / data.impressions) * 100).toFixed(2) + '%' 
+                : '0%';
+        });
+
+        res.json(stats);
+    } catch (err) {
+        console.error('Error fetching analytics:', err);
+        res.status(500).json({ error: 'Failed to generate analytics report' });
+    }
+});
+
 // ============================================
 connectDB().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
