@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const axios = require('axios');
 
-const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest } = require('./models');
+const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
 
 // Hash function for deterministic A/B assignment
