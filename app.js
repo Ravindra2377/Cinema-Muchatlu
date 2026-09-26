@@ -1208,8 +1208,8 @@ function renderDiscussionDetail(discussion, replies) {
             `).join('')}
         </div>
         
-        <form onsubmit="handleReplySubmit(event)" style="display: flex; gap: 1rem; position: sticky; bottom: 20px; background: var(--bg-color); padding: 1rem; border-radius: 12px; border: 1px solid #333; box-shadow: 0 -4px 12px rgba(0,0,0,0.5);">
-            <input type="text" id="replyInput" required placeholder="Write a reply..." style="flex: 1; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
+        <form onsubmit="handleReplySubmit(event)" style="display: flex; gap: 1rem; position: sticky; bottom: max(20px, env(safe-area-inset-bottom)); background: var(--bg-color); padding: 1rem; border-radius: 12px; border: 1px solid #333; box-shadow: 0 -4px 12px rgba(0,0,0,0.5);">
+            <input type="text" id="replyInput" required placeholder="Write a reply..." style="flex: 1; padding: 0.75rem; font-size: max(16px, 1rem); background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
             <button type="submit" style="background: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: bold; cursor: pointer;">Send</button>
         </form>
     `;
