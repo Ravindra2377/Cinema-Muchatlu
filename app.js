@@ -1353,9 +1353,6 @@ function initEventListeners() {
     document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
     document.getElementById('authModalOverlay').addEventListener('click', closeAuthModal);
 
-    document.getElementById('discussionModalClose').addEventListener('click', closeDiscussionModal);
-    document.getElementById('discussionModalOverlay').addEventListener('click', closeDiscussionModal);
-
     // Auth tabs
     document.querySelectorAll('.auth-tab').forEach(tab => {
         tab.addEventListener('click', () => {

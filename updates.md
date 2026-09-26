@@ -334,3 +334,4 @@ Prepared the application for external testing via Render deployment.
 
 - **Discussion Access:** Removed the strict `isAdmin` requirement for creating new discussions in `app.js`. The "Start Discussion" button is now accessible to all authenticated users, allowing beta testers to populate the Muchatlu community feed.
 - **Modal DOM Cleanup:** Refactored `index.html` to remove duplicate/legacy `discussionModal` components. Standardized the active modal to ensure all inputs (Category, Title, Content, Media URL, Movie/Actor bindings) correctly bind to the `app.js` event listeners.
+- **Cascading JS Bug Fix:** Fixed a critical bug where deleting the legacy discussion modal elements from the DOM caused `app.js` initialization to crash (null reference on `addEventListener`). This previously halted script execution and broke the main Login/Signup buttons.
