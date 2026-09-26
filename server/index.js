@@ -417,12 +417,12 @@ app.get('/api/discussions', async (req, res) => {
 });
 
 // POST /api/discussions
-app.post('/api/discussions', authMiddleware, async (req, res) => {
+app.post('/api/discussions', optionalAuth, async (req, res) => {
     try {
         const { title, content, category, media, movieId, actorId, songId } = req.body;
         const discussion = await Discussion.create({
-            userId: req.user.id,
-            username: req.user.username,
+            userId: req.user ? req.user.id : new mongoose.Types.ObjectId(),
+            username: req.user ? req.user.username : 'Anonymous Guest',
             title, content, category: category || 'General',
             media, movieId, actorId, songId
         });
@@ -446,24 +446,27 @@ app.get('/api/discussions/:id', async (req, res) => {
 });
 
 // POST /api/discussions/:id/replies
-app.post('/api/discussions/:id/replies', authMiddleware, async (req, res) => {
+app.post('/api/discussions/:id/replies', optionalAuth, async (req, res) => {
     try {
         const discussionId = req.params.id;
         const discussion = await Discussion.findById(discussionId);
         if (!discussion || discussion.status !== 'ACTIVE') return res.status(404).json({ error: 'Not found or locked' });
         
+        const replyUserId = req.user ? req.user.id : new mongoose.Types.ObjectId();
+        const replyUsername = req.user ? req.user.username : 'Anonymous Guest';
+
         const reply = await Reply.create({
             discussionId,
-            userId: req.user.id,
-            username: req.user.username,
+            userId: replyUserId,
+            username: replyUsername,
             text: req.body.text
         });
         
         discussion.repliesCount += 1;
         await discussion.save();
         
-        // Notification
-        if (discussion.userId.toString() !== req.user.id) {
+        // Notification (only if a real logged-in user is replying to someone else)
+        if (req.user && discussion.userId.toString() !== req.user.id) {
             await Notification.create({
                 userId: discussion.userId,
                 actorId: req.user.id,

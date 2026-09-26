@@ -1222,7 +1222,6 @@ function backToDiscussions() {
 }
 
 async function handleDiscussionReaction(discussionId, type, btnElement) {
-    if (!currentUser) return openAuthModal();
     const countSpan = btnElement.querySelector('span');
     countSpan.textContent = parseInt(countSpan.textContent) + 1;
     btnElement.style.pointerEvents = 'none';
@@ -1231,7 +1230,6 @@ async function handleDiscussionReaction(discussionId, type, btnElement) {
 }
 
 async function handleReplyReaction(replyId, type, btnElement) {
-    if (!currentUser) return openAuthModal();
     const countSpan = btnElement.querySelector('span');
     countSpan.textContent = parseInt(countSpan.textContent) + 1;
     btnElement.style.pointerEvents = 'none';
@@ -1241,7 +1239,6 @@ async function handleReplyReaction(replyId, type, btnElement) {
 
 async function handleReplySubmit(e) {
     e.preventDefault();
-    if (!currentUser) return openAuthModal();
     if (!activeDiscussionId) return;
     
     const text = document.getElementById('replyInput').value;
@@ -1257,7 +1254,6 @@ async function handleReplySubmit(e) {
 }
 
 async function createDiscussion(data) {
-    if (!currentUser) return openAuthModal();
 
     try {
         await apiFetch('/discussions', {
