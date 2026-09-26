@@ -1123,9 +1123,17 @@ body {
     .nav {
         order: 2;
         width: 100%;
-        justify-content: center;
-        gap: 1rem;
+        justify-content: flex-start;
+        gap: 1.5rem;
         margin-top: 0.35rem;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+    }
+    .nav::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
     }
 
     .search-pill {
@@ -1416,8 +1424,16 @@ body {
     .nav {
         order: 3;
         width: 100%;
-        justify-content: space-around;
-        gap: 1rem;
+        justify-content: flex-start;
+        gap: 1.5rem;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .nav::-webkit-scrollbar {
+        display: none;
     }
 
     .search-input {
