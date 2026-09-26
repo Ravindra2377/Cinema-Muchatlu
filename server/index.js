@@ -466,16 +466,6 @@ app.post('/api/discussions/:id/replies', optionalAuth, async (req, res) => {
         discussion.repliesCount += 1;
         await discussion.save();
         
-        // Notification (only if a real logged-in user is replying to someone else)
-        if (req.user && discussion.userId.toString() !== req.user.id) {
-            await Notification.create({
-                userId: discussion.userId,
-                actorId: req.user.id,
-                actorName: req.user.username,
-                type: 'reply',
-                discussionId
-            });
-        }
         
         res.status(201).json(reply);
     } catch (err) {
