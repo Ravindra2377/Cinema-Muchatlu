@@ -1424,7 +1424,32 @@ body {
 }
 
 /* Responsive Design */
+.feed-header-responsive {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.horizontal-scroll-pills {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.horizontal-scroll-pills::-webkit-scrollbar {
+    display: none;
+}
+
 @media (max-width: 768px) {
+    .feed-header-responsive {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
     .header-content {
         flex-wrap: wrap;
         padding: 1rem;
