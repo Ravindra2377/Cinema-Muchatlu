@@ -410,46 +410,6 @@
         </div>
     </div>
 
-    <!-- New Discussion Modal -->
-    <div class="modal" id="discussionModal">
-        <div class="modal-overlay" id="discussionModalOverlay"></div>
-        <div class="modal-content">
-            <button class="modal-close" id="discussionModalClose">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            <div class="discussion-form-container">
-                <h2>Start a Discussion</h2>
-                <form id="discussionFormElement">
-                    <div class="form-group">
-                        <label for="discussionCategory">Category</label>
-                        <select id="discussionCategory"
-                            style="width: 100%; padding: 0.8rem; border-radius: var(--radius-md); background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 1rem; margin-bottom: 1rem;"
-                            required>
-                            <option value="General">General</option>
-                            <option value="Memes">Memes</option>
-                            <option value="Gossip">Gossip</option>
-                            <option value="Trending">Trending</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="discussionTitle">Title</label>
-                        <input type="text" id="discussionTitle" placeholder="What's on your mind?" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="discussionContent">Content (or Image URL for Memes)</label>
-                        <textarea id="discussionContent" rows="6"
-                            placeholder="Share your thoughts, drop a meme URL, or start some gossip..."
-                            required></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary">Post Discussion</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <!-- Create Meme Modal -->
     <!-- Start Discussion Modal -->
     <div id="discussionModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">

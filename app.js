@@ -1412,9 +1412,9 @@ function initEventListeners() {
                 title: document.getElementById('discussionTitle').value,
                 category: document.getElementById('discussionCategory').value,
                 content: document.getElementById('discussionContent').value,
-                media: document.getElementById('discussionMedia').value || undefined,
-                movieId: document.getElementById('discussionMovieId').value || undefined,
-                actorId: document.getElementById('discussionActorId').value || undefined
+                media: document.getElementById('discussionMedia') ? document.getElementById('discussionMedia').value : undefined,
+                movieId: document.getElementById('discussionMovieId') ? document.getElementById('discussionMovieId').value : undefined,
+                actorId: document.getElementById('discussionActorId') ? document.getElementById('discussionActorId').value : undefined
             });
         });
     }
@@ -1449,16 +1449,17 @@ window.closeAuthModal = closeAuthModal;
 
 
 function openDiscussionModal() {
-    if (!currentUser || !currentUser.isAdmin) {
-        alert('Only admins can create discussions');
+    if (!currentUser) {
+        openAuthModal();
         return;
     }
-    document.getElementById('discussionModal').classList.add('active');
+    document.getElementById('discussionModal').style.display = 'flex';
 }
 
 function closeDiscussionModal() {
-    document.getElementById('discussionModal').classList.remove('active');
-    document.getElementById('discussionFormElement').reset();
+    document.getElementById('discussionModal').style.display = 'none';
+    const form = document.getElementById('discussionForm');
+    if (form) form.reset();
 }
 
 function closeMovieModal() {
