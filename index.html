@@ -223,16 +223,17 @@
         <!-- 🎮 TELUGU POP-CULTURE GAME HUB               -->
         <!-- ============================================ -->
         <section id="play" class="section">
-            <!-- Compact, Mobile-First Hero -->
-            <div class="game-hub-hero">
-                <div class="hero-top-row">
-                    <span class="hero-badge">🎮 TELUGU CINEMA ARENA</span>
+            <!-- Ultra-Clean, Mobile-First Game Hub Topbar -->
+            <div class="game-hub-topbar">
+                <div class="game-hub-header-row">
+                    <div class="game-hub-title-wrap">
+                        <span class="hub-pill-tag">🎮 TELUGU ARENA</span>
+                        <span class="hub-title-text">Pop-Culture Hub</span>
+                    </div>
                     <span class="hero-streak-indicator" id="heroStreakIndicator">🍿 Play & Win</span>
                 </div>
-                <h1 class="hero-title">Pop-Culture Game Hub</h1>
-                <p class="hero-subtitle">Test your Telugu cinema knowledge solo or challenge friends in real-time!</p>
                 
-                <!-- Touch-Friendly Segmented Controller -->
+                <!-- Native Touch Segmented Controller -->
                 <div class="game-segmented-control" role="tablist">
                     <button class="seg-btn active" data-tab="games" role="tab">🎮 Games</button>
                     <button class="seg-btn" data-tab="multiplayer" role="tab">🔑 Join Room</button>
@@ -368,12 +369,10 @@
             <!-- ACTIVE QUESTION SCREEN (ARENA) -->
             <div id="activeQuestionScreen" class="game-screen" style="display: none;">
                 <div class="game-arena-card">
-                    <!-- Top Status Bar -->
+                    <!-- Top Status Bar (Non-wrapping clean single row) -->
                     <div class="arena-top-bar">
-                        <div class="arena-info">
-                            <span class="arena-badge" id="arenaGameBadge">🎬 Movie</span>
-                            <span class="arena-round" id="arenaRoundProgress">1/10</span>
-                        </div>
+                        <span class="arena-badge" id="arenaGameBadge">🎬 Movie</span>
+                        <span class="arena-round-chip" id="arenaRoundProgress">Round 1/10</span>
                         <div class="arena-stats">
                             <div class="stat-pill score-pill">
                                 <span>⭐</span> <strong id="arenaScore">0</strong>

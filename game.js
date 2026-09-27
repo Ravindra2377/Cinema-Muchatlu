@@ -406,11 +406,10 @@
                     <div class="card-top">
                         <div class="card-icon-frame">${game.icon || '🎮'}</div>
                         <div class="card-headings">
-                            <div class="card-tag-row">
+                            <div class="card-title-row">
+                                <h3 class="card-title">${escapeHtml(game.title)}</h3>
                                 <span class="card-count-pill">${count}</span>
-                                <span class="card-mode-pill">⚡ Solo & MP</span>
                             </div>
-                            <h3 class="card-title">${escapeHtml(game.title)}</h3>
                             <p class="card-tagline">${escapeHtml(game.description)}</p>
                         </div>
                     </div>
@@ -506,7 +505,7 @@
 
         // Update headers
         if (elements.arenaGameBadge) elements.arenaGameBadge.textContent = `${gameState.selectedGame.icon || '🎬'} ${gameState.selectedGame.title}`;
-        if (elements.arenaRoundProgress) elements.arenaRoundProgress.textContent = `Round ${gameState.currentRound} / ${gameState.totalRounds}`;
+        if (elements.arenaRoundProgress) elements.arenaRoundProgress.textContent = `Round ${gameState.currentRound}/${gameState.totalRounds}`;
         if (elements.arenaScore) elements.arenaScore.textContent = gameState.currentScore;
         if (elements.arenaStreak) elements.arenaStreak.textContent = gameState.currentStreak;
 
@@ -836,7 +835,7 @@
         if (elements.arenaMpWaiting) elements.arenaMpWaiting.style.display = 'none';
 
         if (elements.arenaGameBadge) elements.arenaGameBadge.textContent = `${gameState.selectedGame?.icon || '🎮'} ${gameState.selectedGame?.title || 'Multiplayer'}`;
-        if (elements.arenaRoundProgress) elements.arenaRoundProgress.textContent = `Round ${data.currentRound} / ${data.totalRounds}`;
+        if (elements.arenaRoundProgress) elements.arenaRoundProgress.textContent = `Round ${data.currentRound}/${data.totalRounds}`;
         if (elements.arenaScore) elements.arenaScore.textContent = gameState.currentScore;
         if (elements.arenaStreak) elements.arenaStreak.textContent = gameState.currentStreak;
 
