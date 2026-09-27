@@ -751,6 +751,24 @@ body {
     box-shadow: var(--shadow-xl);
 }
 
+.trending-music-card {
+    min-width: 250px;
+    max-width: 260px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: var(--transition-normal);
+    border: 1px solid var(--glass-border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.trending-music-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
 /* Watchlist Grid */
 .watchlist-grid {
     display: grid;

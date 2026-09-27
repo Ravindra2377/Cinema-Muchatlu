@@ -348,4 +348,12 @@ Eliminated the fragile external microservice dependency (`jiosaavn-api` on port 
   - Ensured `showSection('music')` automatically triggers initial fetch if empty.
   - Enhanced fallback tracks with verified, working audio streams.
 
+## 24. 🔥 Trending Songs Integration
+Extended the Trending experience across the application to feature trending Telugu hit songs alongside trending movies.
+
+- **Trending Section Songs Carousel (`index.html` & `styles.css`):** Added a dedicated "🎵 Trending Telugu Songs" horizontal carousel within the main `#trending` view, styled with `.trending-music-card` and interactive HTML5 audio controls.
+- **Dynamic Carousel Renderer (`app.js`):** Added `renderTrendingSongs()` that populates the top 15 trending songs, wired into `showSection('trending')` and `init()`.
+- **Discussion Feed Music Spotlight:** When the "Trending" or "Music" filter chips are active in the Muchatlu discussion feed, a horizontal trending Telugu songs player strip is seamlessly injected at the top of the feed.
+
+
 
