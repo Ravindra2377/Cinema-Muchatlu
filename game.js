@@ -211,9 +211,9 @@
     // Bind UI Tab & Navigation Events
     function bindGlobalEvents() {
         // Tab switching
-        document.querySelectorAll('.game-tab-btn').forEach(btn => {
+        document.querySelectorAll('.seg-btn, .game-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.game-tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.seg-btn, .game-tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
                 const tab = btn.dataset.tab;
@@ -235,9 +235,15 @@
             });
         });
 
-        // Setup modal close
+        // Setup modal close (close button + backdrop tap)
         if (elements.closeSetupModalBtn) {
             elements.closeSetupModalBtn.addEventListener('click', () => {
+                elements.gameSetupModal.style.display = 'none';
+            });
+        }
+        const setupModalBackdrop = document.getElementById('setupModalBackdrop');
+        if (setupModalBackdrop) {
+            setupModalBackdrop.addEventListener('click', () => {
                 elements.gameSetupModal.style.display = 'none';
             });
         }
@@ -378,27 +384,47 @@
 
     function renderGameCards(games) {
         if (!elements.gameCardsContainer) return;
-        elements.gameCardsContainer.innerHTML = games.map(game => `
-            <div class="game-card" data-game-type="${game.gameType}">
-                <div class="game-card-icon">${game.icon || '🎮'}</div>
-                <div class="game-card-body">
-                    <h3 class="game-card-title">${game.title}</h3>
-                    <p class="game-card-desc">${game.description}</p>
-                    <div class="game-card-modes">
-                        <span class="mode-badge">🕹️ Solo</span>
-                        <span class="mode-badge">👥 With Friends</span>
+
+        const themeMap = {
+            'guess_movie': 'theme-movie',
+            'guess_dialogue': 'theme-dialogue',
+            'guess_song': 'theme-song'
+        };
+
+        const countMap = {
+            'guess_movie': '30+ Questions',
+            'guess_dialogue': '25+ Dialogues',
+            'guess_song': '25+ Tracks'
+        };
+
+        elements.gameCardsContainer.innerHTML = games.map(game => {
+            const theme = themeMap[game.gameType] || 'theme-movie';
+            const count = countMap[game.gameType] || `${game.defaultRounds || 10} Rounds`;
+
+            return `
+                <div class="arcade-game-card ${theme}" data-game-type="${game.gameType}">
+                    <div class="card-top">
+                        <div class="card-icon-frame">${game.icon || '🎮'}</div>
+                        <div class="card-headings">
+                            <div class="card-tag-row">
+                                <span class="card-count-pill">${count}</span>
+                                <span class="card-mode-pill">⚡ Solo & MP</span>
+                            </div>
+                            <h3 class="card-title">${escapeHtml(game.title)}</h3>
+                            <p class="card-tagline">${escapeHtml(game.description)}</p>
+                        </div>
+                    </div>
+                    <div class="card-actions-row">
+                        <button class="btn-arcade-play" onclick="window.gameEngine.openSetup('${game.gameType}', 'SOLO')">
+                            <span>▶ Play Solo</span>
+                        </button>
+                        <button class="btn-arcade-friends" onclick="window.gameEngine.openSetup('${game.gameType}', 'PRIVATE_MULTIPLAYER')">
+                            <span>👥 With Friends</span>
+                        </button>
                     </div>
                 </div>
-                <div class="game-card-actions">
-                    <button class="btn-card-solo" onclick="window.gameEngine.openSetup('${game.gameType}', 'SOLO')">
-                        Play Solo
-                    </button>
-                    <button class="btn-card-mp" onclick="window.gameEngine.openSetup('${game.gameType}', 'PRIVATE_MULTIPLAYER')">
-                        With Friends
-                    </button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // Open Setup Modal for a Game

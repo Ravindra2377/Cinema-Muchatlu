@@ -223,21 +223,27 @@
         <!-- 🎮 TELUGU POP-CULTURE GAME HUB               -->
         <!-- ============================================ -->
         <section id="play" class="section">
+            <!-- Compact, Mobile-First Hero -->
             <div class="game-hub-hero">
-                <div class="hero-badge">🎮 TELUGU POP-CULTURE ARENA</div>
-                <h1 class="hero-title">How well do you know Telugu Cinema?</h1>
-                <p class="hero-subtitle">Challenge yourself solo or invite friends to real-time multiplayer showdowns with movies, dialogues, and songs!</p>
-                <div class="game-nav-tabs">
-                    <button class="game-tab-btn active" data-tab="games">🎮 Games</button>
-                    <button class="game-tab-btn" data-tab="multiplayer">👥 Join Room</button>
-                    <button class="game-tab-btn" data-tab="leaderboard">🏆 Leaderboards</button>
+                <div class="hero-top-row">
+                    <span class="hero-badge">🎮 TELUGU CINEMA ARENA</span>
+                    <span class="hero-streak-indicator" id="heroStreakIndicator">🍿 Play & Win</span>
+                </div>
+                <h1 class="hero-title">Pop-Culture Game Hub</h1>
+                <p class="hero-subtitle">Test your Telugu cinema knowledge solo or challenge friends in real-time!</p>
+                
+                <!-- Touch-Friendly Segmented Controller -->
+                <div class="game-segmented-control" role="tablist">
+                    <button class="seg-btn active" data-tab="games" role="tab">🎮 Games</button>
+                    <button class="seg-btn" data-tab="multiplayer" role="tab">🔑 Join Room</button>
+                    <button class="seg-btn" data-tab="leaderboard" role="tab">🏆 Leaders</button>
                 </div>
             </div>
 
             <!-- TAB 1: GAME SELECTION -->
             <div id="gameHubSelectionTab" class="game-tab-content active">
                 <div class="game-cards-container" id="gameCardsContainer">
-                    <!-- Cards will be populated by game.js -->
+                    <!-- Injected by game.js with mobile-responsive arcade cards -->
                 </div>
             </div>
 
@@ -245,11 +251,11 @@
             <div id="gameHubJoinTab" class="game-tab-content">
                 <div class="join-room-card">
                     <div class="join-icon">🔑</div>
-                    <h3>Join a Private Match</h3>
-                    <p>Enter the 5-character code shared by your friend to join their game room.</p>
+                    <h3>Join Private Match</h3>
+                    <p>Enter the 5-character room code shared by your friend.</p>
                     <div class="join-input-group">
-                        <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="e.g. K7P42" style="text-transform: uppercase;">
-                        <button class="btn-primary" id="submitJoinRoomBtn">Join Room</button>
+                        <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="K7P42" autocomplete="off" autocapitalize="characters" style="text-transform: uppercase;">
+                        <button class="btn-primary join-action-btn" id="submitJoinRoomBtn">Join</button>
                     </div>
                     <div id="joinRoomError" class="game-error-text" style="display: none;"></div>
                 </div>
@@ -262,7 +268,7 @@
                         <h2>🏆 Telugu Cinema Champions</h2>
                         <div class="leaderboard-filters">
                             <button class="lb-filter-btn active" data-timeframe="all">All Time</button>
-                            <button class="lb-filter-btn" data-timeframe="weekly">This Week</button>
+                            <button class="lb-filter-btn" data-timeframe="weekly">Week</button>
                             <button class="lb-filter-btn" data-timeframe="daily">Today</button>
                         </div>
                     </div>
@@ -272,15 +278,18 @@
                 </div>
             </div>
 
-            <!-- GAME SETUP MODAL -->
+            <!-- GAME SETUP MODAL / MOBILE BOTTOM SHEET -->
             <div id="gameSetupModal" class="game-modal" style="display: none;">
-                <div class="game-modal-content">
-                    <button class="game-modal-close" id="closeSetupModalBtn">&times;</button>
+                <div class="game-modal-backdrop" id="setupModalBackdrop"></div>
+                <div class="game-modal-content game-bottom-sheet">
+                    <div class="sheet-drag-handle"></div>
+                    <button class="game-modal-close" id="closeSetupModalBtn" aria-label="Close">&times;</button>
+                    
                     <div class="setup-header">
-                        <span id="setupGameIcon" style="font-size: 2.5rem;">🎬</span>
+                        <div class="setup-icon-box" id="setupGameIcon">🎬</div>
                         <div>
                             <h3 id="setupGameTitle">Guess the Movie</h3>
-                            <p id="setupGameDesc" style="color: var(--text-secondary); font-size: 0.9rem;">Test your cinema skills</p>
+                            <p id="setupGameDesc">Test your Telugu cinema knowledge</p>
                         </div>
                     </div>
 
@@ -288,7 +297,7 @@
                         <label>Game Mode</label>
                         <div class="setup-toggle-group" id="setupModeGroup">
                             <button type="button" class="setup-toggle-btn active" data-mode="SOLO">🕹️ Solo</button>
-                            <button type="button" class="setup-toggle-btn" data-mode="PRIVATE_MULTIPLAYER">👥 Play with Friends</button>
+                            <button type="button" class="setup-toggle-btn" data-mode="PRIVATE_MULTIPLAYER">👥 With Friends</button>
                         </div>
                     </div>
 
@@ -302,7 +311,7 @@
                     </div>
 
                     <div class="setup-section">
-                        <label>Rounds</label>
+                        <label>Number of Rounds</label>
                         <div class="setup-toggle-group" id="setupRoundsGroup">
                             <button type="button" class="setup-toggle-btn" data-rounds="5">5 Rounds</button>
                             <button type="button" class="setup-toggle-btn active" data-rounds="10">10 Rounds</button>
@@ -311,7 +320,7 @@
                     </div>
 
                     <div class="setup-actions">
-                        <button class="btn-primary" id="confirmStartGameBtn" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                        <button class="btn-primary start-match-btn" id="confirmStartGameBtn">
                             🚀 Start Match
                         </button>
                     </div>
@@ -321,15 +330,14 @@
             <!-- MULTIPLAYER LOBBY SCREEN -->
             <div id="multiplayerLobbyScreen" class="game-screen" style="display: none;">
                 <div class="lobby-card">
-                    <div class="lobby-header">
-                        <div class="lobby-meta">
-                            <span class="lobby-tag" id="lobbyGameTypeTag">🎬 Guess the Movie</span>
-                            <span class="lobby-tag" id="lobbyDifficultyTag">🟡 Medium</span>
-                            <span class="lobby-tag" id="lobbyRoundsTag">10 Rounds</span>
-                        </div>
-                        <h2 style="margin: 0.5rem 0;">Multiplayer Game Lobby</h2>
-                        <p style="color: var(--text-secondary);">Share this code with your friends to join the match:</p>
+                    <div class="lobby-meta">
+                        <span class="lobby-tag" id="lobbyGameTypeTag">🎬 Guess the Movie</span>
+                        <span class="lobby-tag" id="lobbyDifficultyTag">🟡 MEDIUM</span>
+                        <span class="lobby-tag" id="lobbyRoundsTag">10 Rounds</span>
                     </div>
+                    
+                    <h2 class="lobby-title">Multiplayer Lobby</h2>
+                    <p class="lobby-sub">Share this code with friends to join your match:</p>
 
                     <div class="room-code-box">
                         <div class="room-code-label">ROOM CODE</div>
@@ -338,90 +346,92 @@
                     </div>
 
                     <div class="lobby-players-section">
-                        <h3>Connected Players (<span id="lobbyPlayerCount">1</span>)</h3>
+                        <div class="players-section-head">
+                            <h3>Connected Players</h3>
+                            <span class="player-count-badge" id="lobbyPlayerCount">1</span>
+                        </div>
                         <div class="lobby-players-grid" id="lobbyPlayersGrid">
                             <!-- Players list injected here -->
                         </div>
                     </div>
 
                     <div class="lobby-footer">
-                        <button class="btn-secondary" id="leaveLobbyBtn">🚪 Leave Room</button>
-                        <button class="btn-primary" id="hostStartGameBtn" style="display: none; padding: 0.8rem 2rem; font-size: 1.1rem;">🚀 START GAME</button>
+                        <button class="btn-secondary lobby-exit-btn" id="leaveLobbyBtn">🚪 Exit</button>
+                        <button class="btn-primary lobby-start-btn" id="hostStartGameBtn" style="display: none;">🚀 START GAME</button>
                         <div id="waitingForHostNotice" class="waiting-notice" style="display: none;">
-                            <span class="pulse-dot"></span> Waiting for host to start the game...
+                            <span class="pulse-dot"></span> Waiting for host to launch...
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ACTIVE QUESTION SCREEN -->
+            <!-- ACTIVE QUESTION SCREEN (ARENA) -->
             <div id="activeQuestionScreen" class="game-screen" style="display: none;">
                 <div class="game-arena-card">
+                    <!-- Top Status Bar -->
                     <div class="arena-top-bar">
                         <div class="arena-info">
-                            <span class="arena-badge" id="arenaGameBadge">🎬 Guess the Movie</span>
-                            <span class="arena-round" id="arenaRoundProgress">Round 1 / 10</span>
+                            <span class="arena-badge" id="arenaGameBadge">🎬 Movie</span>
+                            <span class="arena-round" id="arenaRoundProgress">1/10</span>
                         </div>
                         <div class="arena-stats">
                             <div class="stat-pill score-pill">
-                                <span>⭐</span> <strong id="arenaScore">0</strong> pts
+                                <span>⭐</span> <strong id="arenaScore">0</strong>
                             </div>
                             <div class="stat-pill streak-pill">
-                                <span>🔥</span> <strong id="arenaStreak">0</strong> streak
+                                <span>🔥</span> <strong id="arenaStreak">0</strong>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Authoritative Timer Bar -->
+                    <!-- Glowing Timer Bar & Digital Clock -->
                     <div class="timer-container">
                         <div class="timer-bar" id="arenaTimerBar"></div>
                         <div class="timer-label" id="arenaTimerLabel">⏱️ 15s</div>
                     </div>
 
-                    <!-- Question Content Area -->
+                    <!-- Clue Spotlight Box -->
                     <div class="question-content-box">
-                        <div class="question-type-pill" id="arenaQuestionType">Emoji Clue</div>
+                        <div class="question-type-pill" id="arenaQuestionType">EMOJI CLUE</div>
                         <h2 class="question-prompt" id="arenaPrompt">Which movie matches these clues?</h2>
 
-                        <!-- Clues display (Emojis, text clues, etc.) -->
+                        <!-- Clues display (Emojis, text chips) -->
                         <div class="clues-container" id="arenaCluesContainer"></div>
 
-                        <!-- Song / Audio Player Clue Component -->
+                        <!-- Audio Clue Player -->
                         <div class="audio-clue-box" id="arenaAudioBox" style="display: none;">
                             <div class="audio-wave-anim">
                                 <span></span><span></span><span></span><span></span><span></span>
                             </div>
-                            <div class="audio-controls-row">
-                                <button type="button" class="audio-play-btn" id="arenaAudioPlayBtn">▶ Play Preview</button>
-                                <span class="audio-hint-text">🎵 Listen to the clue & guess!</span>
-                            </div>
+                            <button type="button" class="audio-play-btn" id="arenaAudioPlayBtn">▶ Play Song Preview</button>
+                            <span class="audio-hint-text">Listen closely to the tune!</span>
                             <audio id="arenaAudioPlayer" preload="auto"></audio>
                         </div>
 
                         <!-- Media / Poster Clue -->
                         <div class="media-clue-box" id="arenaMediaBox" style="display: none;">
-                            <img id="arenaMediaImg" src="" alt="Game clue image">
+                            <img id="arenaMediaImg" src="" alt="Clue image">
                         </div>
                     </div>
 
-                    <!-- 4 Options Grid -->
+                    <!-- 4 Options (Mobile-First Full Width Tap Targets) -->
                     <div class="options-grid" id="arenaOptionsGrid">
                         <!-- Options injected dynamically -->
                     </div>
 
-                    <!-- Round Result / Feedback Overlay -->
+                    <!-- Instant Feedback Banner -->
                     <div class="answer-feedback-banner" id="arenaFeedbackBanner" style="display: none;">
                         <div class="feedback-icon" id="feedbackIcon">🎉</div>
                         <div class="feedback-text">
                             <h4 id="feedbackTitle">Correct!</h4>
                             <p id="feedbackExplanation"></p>
                         </div>
-                        <div class="feedback-points" id="feedbackPoints">+140 pts</div>
+                        <div class="feedback-points" id="feedbackPoints">+140</div>
                     </div>
 
-                    <!-- Multiplayer Waiting Indicator -->
+                    <!-- Multiplayer Waiting State -->
                     <div class="mp-waiting-state" id="arenaMpWaiting" style="display: none;">
-                        <span class="pulse-dot"></span> Waiting for other players to answer (<span id="mpAnsweredCount">1</span>/<span id="mpTotalPlayers">2</span>)...
+                        <span class="pulse-dot"></span> Waiting for others (<span id="mpAnsweredCount">1</span>/<span id="mpTotalPlayers">2</span>)...
                     </div>
                 </div>
             </div>
@@ -429,22 +439,22 @@
             <!-- RESULTS & PODIUM SCREEN -->
             <div id="gameResultsScreen" class="game-screen" style="display: none;">
                 <div class="results-card">
-                    <div class="results-confetti-header">
+                    <div class="results-header">
                         <div class="trophy-icon">🏆</div>
                         <h1 class="results-title">MATCH FINISHED!</h1>
-                        <p id="resultsGameSubtitle" style="color: var(--text-secondary);">Guess the Movie Results</p>
+                        <p id="resultsGameSubtitle" class="results-subtitle">Telugu Pop-Culture Standings</p>
                     </div>
 
-                    <!-- Podium / Leaderboard for the match -->
+                    <!-- Match Podium Cards -->
                     <div class="match-podium" id="matchPodiumContainer">
-                        <!-- Podium items injected dynamically -->
+                        <!-- Injected dynamically -->
                     </div>
 
-                    <!-- Player Performance Breakdown -->
+                    <!-- 3 Performance Metrics -->
                     <div class="results-metrics-grid">
                         <div class="result-metric-box">
                             <div class="metric-num" id="resFinalScore">0</div>
-                            <div class="metric-lbl">Total Score</div>
+                            <div class="metric-lbl">Score</div>
                         </div>
                         <div class="result-metric-box">
                             <div class="metric-num" id="resAccuracy">0%</div>
@@ -456,11 +466,11 @@
                         </div>
                     </div>
 
-                    <!-- Next Actions -->
+                    <!-- Touch-Friendly Actions Stack -->
                     <div class="results-actions">
-                        <button class="btn-primary" id="resRematchBtn">🔄 Rematch</button>
-                        <button class="btn-secondary" id="resNewGameBtn">🎮 New Game</button>
-                        <button class="btn-discuss" id="resDiscussBtn">💬 Discuss on Muchatlu</button>
+                        <button class="btn-primary res-action-btn" id="resRematchBtn">🔄 Play Again</button>
+                        <button class="btn-discuss res-action-btn" id="resDiscussBtn">💬 Discuss on Muchatlu</button>
+                        <button class="btn-secondary res-action-btn" id="resNewGameBtn">🎮 Back to Games</button>
                     </div>
                 </div>
             </div>
