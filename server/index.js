@@ -10,11 +10,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const axios = require('axios');
-const fs = require('fs');
-const net = require('net');
-const { spawn } = require('child_process');
-
-const JIOSAAVN_API_URL = process.env.JIOSAAVN_API_URL || 'http://127.0.0.1:3000';
+const { searchSongs, FALLBACK_TRACKS } = require('./jiosaavnService');
 
 const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
@@ -777,113 +773,33 @@ app.get('/api/feed', optionalAuth, async (req, res) => {
 });
 
 // ============================================
-// MUSIC ROUTES (JIOSAAVN INTEGRATION)
+// MUSIC ROUTES (NATIVE JIOSAAVN ENGINE)
 // ============================================
 
 let cachedMusic = [];
 let lastMusicFetch = 0;
 
-// Helper to ensure local JioSaavn microservice is running
-function ensureJioSaavnService() {
-    if (process.env.JIOSAAVN_API_URL && !process.env.JIOSAAVN_API_URL.includes('localhost') && !process.env.JIOSAAVN_API_URL.includes('127.0.0.1')) {
-        return;
-    }
-
-    const jioDir = path.join(__dirname, '..', 'jiosaavn-api');
-    const jioScript = path.join(jioDir, 'node-server.mjs');
-
-    if (!fs.existsSync(jioScript)) {
-        return;
-    }
-
-    const socket = new net.Socket();
-    socket.setTimeout(1000);
-    socket.once('connect', () => {
-        socket.destroy();
-    });
-    socket.once('error', (err) => {
-        socket.destroy();
-        if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
-            console.log('🎵 JioSaavn microservice on port 3000 is not active. Auto-starting...');
-            try {
-                const child = spawn(process.execPath, ['node-server.mjs'], {
-                    cwd: jioDir,
-                    stdio: 'ignore',
-                    detached: true
-                });
-                child.unref();
-            } catch (spawnErr) {
-                console.warn('⚠️ Could not auto-start JioSaavn service:', spawnErr.message);
-            }
-        }
-    });
-    socket.connect(3000, '127.0.0.1');
-}
-
-// GET /api/music - Get popular Telugu music live from local JioSaavn API
+// GET /api/music - Get popular Telugu music directly via native in-process engine
 app.get('/api/music', async (req, res) => {
     try {
-        const searchQuery = req.query.search || 'telugu+hit+songs';
+        const searchQuery = req.query.search || 'telugu hit songs';
         
         // Cache results for 1 hour to prevent excessive requests (only cache default hits, not search)
         if (!req.query.search && cachedMusic.length > 0 && (Date.now() - lastMusicFetch) < 3600000) {
             return res.json(cachedMusic);
         }
 
-        // Search JioSaavn via API instance
-        const response = await axios.get(`${JIOSAAVN_API_URL}/api/search/songs?query=${encodeURIComponent(searchQuery)}&limit=40`, { timeout: 8000 });
+        const songs = await searchSongs(searchQuery, 40);
         
-        // Handle different response structures for jiosaavn-api
-        const songs = response.data.data?.results || response.data.results || [];
+        if (!req.query.search && songs.length > 0) {
+            cachedMusic = songs;
+            lastMusicFetch = Date.now();
+        }
         
-        cachedMusic = songs.map(song => {
-            // Find highest resolution image
-            let bestImage = '';
-            if (Array.isArray(song.image)) {
-                bestImage = song.image[song.image.length - 1]?.url || song.image[0]?.link || '';
-            } else {
-                bestImage = song.image;
-            }
-
-            // Find highest quality audio stream URL
-            let bestMedia = '';
-            const downloadUrls = song.downloadUrl || song.media_url;
-            if (Array.isArray(downloadUrls)) {
-                bestMedia = downloadUrls[downloadUrls.length - 1]?.url || downloadUrls[0]?.link || '';
-            } else {
-                bestMedia = downloadUrls;
-            }
-            
-            return {
-                title: song.name || song.title || song.song,
-                artist: song.primaryArtists || song.primary_artists || 'Unknown Artist',
-                thumbnailUrl: bestImage,
-                mediaUrl: bestMedia,
-                providerId: song.id
-            };
-        });
-        
-        lastMusicFetch = Date.now();
-        res.json(cachedMusic);
+        res.json(songs);
     } catch (err) {
-        console.warn(`⚠️ JioSaavn API unavailable (${err.message}). Serving fallback music.`);
-        
-        // Fallback to static mock data if scraping fails
-        const fallbackMusic = [
-            {
-                title: "Naa Roja Nuvve (From Kushi)",
-                artist: "Hesham Abdul Wahab",
-                thumbnailUrl: "https://c.saavncdn.com/712/Kushi-Telugu-2023-20230829141042-500x500.jpg",
-                mediaUrl: "https://www.youtube.com/embed/bQd0Dk8Wz6M"
-            },
-            {
-                title: "Srivalli (From Pushpa)",
-                artist: "Sid Sriram, Devi Sri Prasad",
-                thumbnailUrl: "https://c.saavncdn.com/188/Srivalli-From-Pushpa-The-Rise-Part-01-Telugu-2021-20211013110903-500x500.jpg",
-                mediaUrl: "https://www.youtube.com/embed/hcMzwMrr1tE"
-            }
-        ];
-        res.json(fallbackMusic);
+        console.warn(`⚠️ JioSaavn service issue (${err.message}). Serving fallback tracks.`);
+        res.json(FALLBACK_TRACKS);
     }
 });
 
@@ -1121,7 +1037,6 @@ app.get('/api/analytics/recommendations', async (req, res) => {
 
 // ============================================
 connectDB().then(() => {
-    ensureJioSaavnService();
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🎬 Cinema Muchatlu server running on http://localhost:${PORT}`);
         console.log(`📡 API available at http://localhost:${PORT}/api`);

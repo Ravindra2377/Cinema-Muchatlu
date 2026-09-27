@@ -336,11 +336,16 @@ Prepared the application for external testing via Render deployment.
 - **Modal DOM Cleanup:** Refactored `index.html` to remove duplicate/legacy `discussionModal` components. Standardized the active modal to ensure all inputs (Category, Title, Content, Media URL, Movie/Actor bindings) correctly bind to the `app.js` event listeners.
 - **Cascading JS Bug Fix:** Fixed a critical bug where deleting the legacy discussion modal elements from the DOM caused `app.js` initialization to crash (null reference on `addEventListener`). This previously halted script execution and broke the main Login/Signup buttons.
 
-## 22. 🎵 JioSaavn Microservice Auto-Start & Music API Resilience
-Resolved `ECONNREFUSED` errors when accessing the Telugu music streaming tab by introducing auto-spawning and network resilience to the backend.
+## 23. 🎶 Native In-Process JioSaavn Music Engine & Production Fix
+Eliminated the fragile external microservice dependency (`jiosaavn-api` on port 3000) by building a fully native, in-process JioSaavn search and decryption engine directly into the backend.
 
-- **Auto-Start Microservice:** Added a port probe in `server/index.js` on boot. If port 3000 is inactive, the Express backend automatically spawns `node-server.mjs` in the background, eliminating manual dual-terminal startup steps.
-- **Configurable Endpoints:** Added `JIOSAAVN_API_URL` environment variable support (defaulting to `http://127.0.0.1:3000`) for seamless remote or containerized deployments.
-- **Network Resilience:** Added query URL-encoding (`encodeURIComponent`), an 8-second request timeout, and friendly fallback caching to prevent hanging requests or unhandled crashes.
-- **NPM Script:** Added `npm run jiosaavn` to `server/package.json` to allow independent service execution and inspection.
+- **Native In-Process Service (`server/jiosaavnService.js`):** Integrated `node-forge` DES-ECB decryption directly into the Express server. Songs, high-res covers, and 320kbps MP4 audio stream URLs are now fetched and decrypted in-process with zero external processes or port bindings required.
+- **Production / Render Compatibility:** Completely fixed the root cause of `ECONNREFUSED 127.0.0.1:3000` on production/Render where the external submodule process could not run.
+- **Frontend Player & UI Enhancements (`app.js`):**
+  - Added loading indicator spinner when entering the Music tab.
+  - Bound audio `src` directly to HTML5 `<audio>` elements for reliable cross-browser playback (Chrome, Safari, iOS, Android).
+  - Added mutual exclusion playback logic (playing one track automatically pauses all other active players).
+  - Ensured `showSection('music')` automatically triggers initial fetch if empty.
+  - Enhanced fallback tracks with verified, working audio streams.
+
 

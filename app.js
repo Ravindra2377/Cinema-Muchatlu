@@ -783,7 +783,20 @@ function renderFeed() {
 // Music Functions
 // ============================================
 
-async function initMusic() {
+async function initMusic(force = false) {
+    if (musicTracks.length > 0 && !force) {
+        renderMusic();
+        return;
+    }
+    const musicGrid = document.getElementById('musicGrid');
+    if (musicGrid) {
+        musicGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: var(--text-secondary);">
+                <div style="margin: 0 auto 1.5rem; width: 44px; height: 44px; border: 3px solid rgba(229,9,20,0.2); border-top-color: #e50914; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                <p style="font-size: 1rem; font-weight: 500;">Loading Telugu hits...</p>
+            </div>
+        `;
+    }
     try {
         musicTracks = await apiFetch('/music');
     } catch (err) {
@@ -797,15 +810,20 @@ function renderMusic() {
     const musicGrid = document.getElementById('musicGrid');
     if (!musicGrid) return;
     
-    if (musicTracks.length === 0) {
-        musicGrid.innerHTML = '<p style="padding: 2rem; color: var(--text-secondary);">No trending music available at the moment.</p>';
+    if (!musicTracks || musicTracks.length === 0) {
+        musicGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+                <p style="font-size: 1.1rem; margin-bottom: 1rem;">No trending music available at the moment.</p>
+                <button onclick="initMusic(true)" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">🔄 Retry</button>
+            </div>
+        `;
         return;
     }
     
     musicGrid.innerHTML = musicTracks.map(track => `
         <div class="movie-card" style="display: flex; flex-direction: column;">
             <div style="position: relative; width: 100%; padding-top: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; overflow: hidden; background: #111;">
-                <img src="${track.thumbnailUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" alt="${track.title}">
+                <img src="${track.thumbnailUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" alt="${track.title}" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Telugu+Music'">
             </div>
             <div class="movie-info" style="padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
@@ -814,13 +832,23 @@ function renderMusic() {
                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">🎵 ${track.artist}</span>
                     </div>
                 </div>
-                <audio controls preload="none" style="width: 100%; height: 36px; border-radius: 20px;">
-                    <source src="${track.mediaUrl}" type="audio/mp4">
+                <audio controls src="${track.mediaUrl}" preload="none" class="music-audio-player" style="width: 100%; height: 36px; border-radius: 20px;">
                     Your browser does not support the audio element.
                 </audio>
             </div>
         </div>
     `).join('');
+
+    // Ensure only one audio element plays at a time
+    document.querySelectorAll('.music-audio-player').forEach(player => {
+        player.addEventListener('play', (e) => {
+            document.querySelectorAll('.music-audio-player').forEach(other => {
+                if (other !== e.target && !other.paused) {
+                    other.pause();
+                }
+            });
+        });
+    });
 }
 
 async function showMovieDetail(movieId) {
@@ -1450,7 +1478,10 @@ function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(section => {
         section.classList.remove('active');
     });
-    document.getElementById(sectionId).classList.add('active');
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
 
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
@@ -1458,6 +1489,12 @@ function showSection(sectionId) {
             link.classList.add('active');
         }
     });
+
+    if (sectionId === 'music') {
+        if (!musicTracks || musicTracks.length === 0) {
+            initMusic();
+        }
+    }
 }
 
 function openAuthModal() {
