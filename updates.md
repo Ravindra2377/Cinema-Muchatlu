@@ -353,7 +353,13 @@ Extended the Trending experience across the application to feature trending Telu
 
 - **Trending Section Songs Carousel (`index.html` & `styles.css`):** Added a dedicated "🎵 Trending Telugu Songs" horizontal carousel within the main `#trending` view, styled with `.trending-music-card` and interactive HTML5 audio controls.
 - **Dynamic Carousel Renderer (`app.js`):** Added `renderTrendingSongs()` that populates the top 15 trending songs, wired into `showSection('trending')` and `init()`.
-- **Discussion Feed Music Spotlight:** When the "Trending" or "Music" filter chips are active in the Muchatlu discussion feed, a horizontal trending Telugu songs player strip is seamlessly injected at the top of the feed.
+
+## 25. 🎧 Music Screen Layout Refinement
+Dedicated the Music screen for all music browsing and trending tracks while keeping the Muchatlu screen exclusively focused on community discussions.
+
+- **Muchatlu Feed Cleanup (`app.js`):** Removed trending music injection from `renderDiscussions()`, restoring the Muchatlu screen to a pure, uncluttered discussion feed.
+- **Dedicated Music Screen Carousel (`index.html` & `app.js`):** Elevated "🔥 Trending Telugu Hits" to a top-level spotlight carousel on the Music page (`#musicTrendingCarousel`), followed directly by the complete Telugu tracks grid.
+
 
 
 

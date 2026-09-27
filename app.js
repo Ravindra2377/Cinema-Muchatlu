@@ -855,13 +855,11 @@ async function initMusic(force = false) {
     }
     renderMusic();
     renderTrendingSongs();
-    if (currentDiscussionCategory === 'Trending' || currentDiscussionCategory === 'Music') {
-        renderDiscussions();
-    }
 }
 
 function renderMusic() {
     const musicGrid = document.getElementById('musicGrid');
+    const musicTrendingCarousel = document.getElementById('musicTrendingCarousel');
     if (!musicGrid) return;
     
     if (!musicTracks || musicTracks.length === 0) {
@@ -871,9 +869,34 @@ function renderMusic() {
                 <button onclick="initMusic(true)" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">🔄 Retry</button>
             </div>
         `;
+        if (musicTrendingCarousel) {
+            musicTrendingCarousel.innerHTML = '';
+        }
         return;
     }
+
+    // Render Trending Songs Carousel at top of Music screen
+    if (musicTrendingCarousel) {
+        musicTrendingCarousel.innerHTML = musicTracks.slice(0, 10).map(track => `
+            <div class="trending-music-card">
+                <div style="position: relative; width: 100%; padding-top: 100%; background: #111; overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Telugu+Music'">
+                    <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); color: #ffd700; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; backdrop-filter: blur(4px);">🔥 Trending</span>
+                </div>
+                <div style="padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
+                    <div style="margin-bottom: 0.75rem;">
+                        <h4 style="margin: 0 0 0.35rem 0; font-size: 0.95rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;" title="${track.title}">${track.title}</h4>
+                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎵 ${track.artist}</p>
+                    </div>
+                    <audio controls src="${track.mediaUrl}" preload="none" class="music-audio-player" style="width: 100%; height: 32px; border-radius: 16px;">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            </div>
+        `).join('');
+    }
     
+    // Render full tracks grid
     musicGrid.innerHTML = musicTracks.map(track => `
         <div class="movie-card" style="display: flex; flex-direction: column;">
             <div style="position: relative; width: 100%; padding-top: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; overflow: hidden; background: #111;">
@@ -893,7 +916,7 @@ function renderMusic() {
         </div>
     `).join('');
 
-    // Ensure only one audio element plays at a time
+    // Ensure only one audio element plays at a time across all active players
     document.querySelectorAll('.music-audio-player').forEach(player => {
         player.addEventListener('play', (e) => {
             document.querySelectorAll('.music-audio-player').forEach(other => {
@@ -1177,38 +1200,9 @@ function renderDiscussions() {
     document.getElementById('discussionDetailContainer').style.display = 'none';
     const feedContainer = document.getElementById('feedContainer');
     feedContainer.style.display = 'flex';
-    
-    let trendingMusicHtml = '';
-    if ((currentDiscussionCategory === 'Trending' || currentDiscussionCategory === 'Music') && musicTracks && musicTracks.length > 0) {
-        trendingMusicHtml = `
-            <div style="background: linear-gradient(135deg, rgba(229,9,20,0.12), rgba(15,23,42,0.85)); border: 1px solid rgba(229,9,20,0.3); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 1.2rem;">🎵</span>
-                        <h4 style="margin: 0; color: #fff; font-size: 1rem; font-weight: 700;">Trending Telugu Songs</h4>
-                    </div>
-                    <a href="#music" onclick="showSection('music')" style="color: var(--primary); font-size: 0.85rem; font-weight: 600; text-decoration: none; cursor: pointer;">Explore All &rarr;</a>
-                </div>
-                <div style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: thin;">
-                    ${musicTracks.slice(0, 6).map(track => `
-                        <div style="min-width: 210px; max-width: 230px; background: rgba(0,0,0,0.6); border-radius: 10px; padding: 0.85rem; border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
-                                <img src="${track.thumbnailUrl}" alt="${track.title}" style="width: 46px; height: 46px; border-radius: 6px; object-fit: cover; flex-shrink: 0;" onerror="this.src='https://via.placeholder.com/100x100?text=Music'">
-                                <div style="overflow: hidden;">
-                                    <div style="color: #fff; font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${track.title}">${track.title}</div>
-                                    <div style="color: #aaa; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${track.artist}</div>
-                                </div>
-                            </div>
-                            <audio controls src="${track.mediaUrl}" preload="none" class="music-audio-player" style="width: 100%; height: 30px; border-radius: 15px;"></audio>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
 
     if (discussions.length === 0) {
-        feedContainer.innerHTML = trendingMusicHtml + `
+        feedContainer.innerHTML = `
             <div style="text-align: center; padding: 4rem; color: #888; width: 100%;">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">🗣️</div>
                 <h3 style="color: white; margin-bottom: 0.5rem;">No Discussions found</h3>
@@ -1218,7 +1212,7 @@ function renderDiscussions() {
         return;
     }
 
-    feedContainer.innerHTML = trendingMusicHtml + discussions.map(discussion => `
+    feedContainer.innerHTML = discussions.map(discussion => `
         <div class="feed-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;" onclick="viewDiscussion('${discussion._id}')">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                 <div>
