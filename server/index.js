@@ -10,6 +10,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const axios = require('axios');
+const fs = require('fs');
+const net = require('net');
+const { spawn } = require('child_process');
+
+const JIOSAAVN_API_URL = process.env.JIOSAAVN_API_URL || 'http://127.0.0.1:3000';
 
 const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
@@ -778,6 +783,43 @@ app.get('/api/feed', optionalAuth, async (req, res) => {
 let cachedMusic = [];
 let lastMusicFetch = 0;
 
+// Helper to ensure local JioSaavn microservice is running
+function ensureJioSaavnService() {
+    if (process.env.JIOSAAVN_API_URL && !process.env.JIOSAAVN_API_URL.includes('localhost') && !process.env.JIOSAAVN_API_URL.includes('127.0.0.1')) {
+        return;
+    }
+
+    const jioDir = path.join(__dirname, '..', 'jiosaavn-api');
+    const jioScript = path.join(jioDir, 'node-server.mjs');
+
+    if (!fs.existsSync(jioScript)) {
+        return;
+    }
+
+    const socket = new net.Socket();
+    socket.setTimeout(1000);
+    socket.once('connect', () => {
+        socket.destroy();
+    });
+    socket.once('error', (err) => {
+        socket.destroy();
+        if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+            console.log('🎵 JioSaavn microservice on port 3000 is not active. Auto-starting...');
+            try {
+                const child = spawn(process.execPath, ['node-server.mjs'], {
+                    cwd: jioDir,
+                    stdio: 'ignore',
+                    detached: true
+                });
+                child.unref();
+            } catch (spawnErr) {
+                console.warn('⚠️ Could not auto-start JioSaavn service:', spawnErr.message);
+            }
+        }
+    });
+    socket.connect(3000, '127.0.0.1');
+}
+
 // GET /api/music - Get popular Telugu music live from local JioSaavn API
 app.get('/api/music', async (req, res) => {
     try {
@@ -788,8 +830,8 @@ app.get('/api/music', async (req, res) => {
             return res.json(cachedMusic);
         }
 
-        // Search JioSaavn via local API instance
-        const response = await axios.get(`http://localhost:3000/api/search/songs?query=${searchQuery}&limit=40`);
+        // Search JioSaavn via API instance
+        const response = await axios.get(`${JIOSAAVN_API_URL}/api/search/songs?query=${encodeURIComponent(searchQuery)}&limit=40`, { timeout: 8000 });
         
         // Handle different response structures for jiosaavn-api
         const songs = response.data.data?.results || response.data.results || [];
@@ -824,7 +866,7 @@ app.get('/api/music', async (req, res) => {
         lastMusicFetch = Date.now();
         res.json(cachedMusic);
     } catch (err) {
-        console.error('Error fetching music from JioSaavn API:', err.message);
+        console.warn(`⚠️ JioSaavn API unavailable (${err.message}). Serving fallback music.`);
         
         // Fallback to static mock data if scraping fails
         const fallbackMusic = [
@@ -1079,6 +1121,7 @@ app.get('/api/analytics/recommendations', async (req, res) => {
 
 // ============================================
 connectDB().then(() => {
+    ensureJioSaavnService();
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🎬 Cinema Muchatlu server running on http://localhost:${PORT}`);
         console.log(`📡 API available at http://localhost:${PORT}/api`);

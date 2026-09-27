@@ -335,3 +335,12 @@ Prepared the application for external testing via Render deployment.
 - **Discussion Access:** Removed the strict `isAdmin` requirement for creating new discussions in `app.js`. The "Start Discussion" button is now accessible to all authenticated users, allowing beta testers to populate the Muchatlu community feed.
 - **Modal DOM Cleanup:** Refactored `index.html` to remove duplicate/legacy `discussionModal` components. Standardized the active modal to ensure all inputs (Category, Title, Content, Media URL, Movie/Actor bindings) correctly bind to the `app.js` event listeners.
 - **Cascading JS Bug Fix:** Fixed a critical bug where deleting the legacy discussion modal elements from the DOM caused `app.js` initialization to crash (null reference on `addEventListener`). This previously halted script execution and broke the main Login/Signup buttons.
+
+## 22. 🎵 JioSaavn Microservice Auto-Start & Music API Resilience
+Resolved `ECONNREFUSED` errors when accessing the Telugu music streaming tab by introducing auto-spawning and network resilience to the backend.
+
+- **Auto-Start Microservice:** Added a port probe in `server/index.js` on boot. If port 3000 is inactive, the Express backend automatically spawns `node-server.mjs` in the background, eliminating manual dual-terminal startup steps.
+- **Configurable Endpoints:** Added `JIOSAAVN_API_URL` environment variable support (defaulting to `http://127.0.0.1:3000`) for seamless remote or containerized deployments.
+- **Network Resilience:** Added query URL-encoding (`encodeURIComponent`), an 8-second request timeout, and friendly fallback caching to prevent hanging requests or unhandled crashes.
+- **NPM Script:** Added `npm run jiosaavn` to `server/package.json` to allow independent service execution and inspection.
+

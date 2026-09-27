@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
+    "jiosaavn": "node ../jiosaavn-api/node-server.mjs",
     "seed": "node seed.js"
   },
   "dependencies": {
