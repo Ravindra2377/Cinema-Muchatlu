@@ -364,7 +364,36 @@ Refined the layout hierarchy so that the Music tab hosts both trending hits and 
 - **Muchatlu Feed Cleanup (`app.js`):** Removed trending music player strips from `renderDiscussions()`, restoring the Muchatlu screen to a pure, distraction-free movie discussion forum.
 - **Dedicated Music Screen Carousel (`index.html` & `app.js`):** Elevated "🔥 Trending Telugu Hits" to a top-level spotlight carousel on the Music page (`#musicTrendingCarousel`), followed directly by the complete Telugu tracks grid (`#musicGrid`).
 
+## 26. 🎮 Reusable Telugu Pop-Culture Game Hub (Phase 1–10 Complete)
+Implemented a server-authoritative, real-time Telugu pop-culture game engine under the `🎮 Play` navigation tab, designed for beta testing with friends.
 
-
-
-
+- **Reusable Game Engine Architecture (`server/gameEngine.js` & `server/gameModels.js`):**
+  - Built unified schemas: `Game`, `GameQuestion`, `GameSession`, `GameLeaderboard`.
+  - Reusable scoring system: 100 base points for correct answers, up to +50 speed bonus based on answer latency, +25 streak bonus for 3+ consecutive correct answers.
+  - Server-authoritative logic: client never receives `correctAnswer` until after submission. Duplicate answers and late answers are blocked.
+  - 5-character short room codes (e.g. `K7P42`) generated with unambiguous characters.
+- **Three Initial Pop-Culture Games (`server/seedGames.js` with 113 Curated Questions):**
+  - 🎬 **Guess the Movie (52 questions):** Multiple choice with emoji clues (e.g. 🪓🪵🔴 for Pushpa, 🪰🕶️ for Eega, 🏏❤️ for Jersey), actor clues, plot clues, and release-year clues.
+  - 🗣️ **Guess the Dialogue (30 questions):** Curated iconic punchlines and dialogues ("Evadu kodithe dimma thirigi...", "Taggede le!", "Flute jinka mundu oodu..."), with modes for *Who said it?*, *Which movie?*, *Complete the dialogue*, and *Which character?*.
+  - 🎵 **Guess the Song (31 questions):** Reuses the native in-process JioSaavn service with playable audio preview clues. Supports *Guess the song*, *Song → movie*, *Song → singer*, and *Song → composer*, respecting app-wide audio mutual exclusion.
+- **Solo Mode Flow (`game.js` & `index.html`):**
+  - Choose Game → Difficulty (Easy/Medium/Hard) → Rounds (5/10/15) → Instant start without requiring any room code.
+  - Live progress display, interactive options, instant feedback banner with points breakdown, and animated countdown timer.
+- **Real-Time Multiplayer with Socket.IO (`server/gameSocket.js`):**
+  - Integrated Socket.IO on Express HTTP server at `/game` namespace.
+  - Host creates room → gets copyable 5-character code → friends join from the SPA using the code.
+  - Synchronized lobby with real-time connected player list and host indicators.
+  - Authoritative round progression: synchronized countdown timer, live "waiting for other players" state, immediate reveal when all players submit, and automatic progression.
+  - Resilient connection handling: host disconnect transfers host privileges to another connected player; clean disconnect broadcasts.
+  - Synchronized Rematch: host or player can restart the room with fresh randomized questions without recreating the room.
+- **Results, Podium & Muchatlu Community Integration (`game.js`):**
+  - Winner podium (🥇, 🥈, 🥉) displaying final score, accuracy percentage, and best streak.
+  - `[ 💬 Discuss on Muchatlu ]` button automatically navigates to Muchatlu and pre-populates a community discussion with score and streak for community bragging rights.
+  - Leaderboard view with Daily, Weekly, and All-Time filters.
+- **Recommendation & Telemetry Pipeline Integration (`server/recommendationEngine.js` & `server/gameRoutes.js`):**
+  - Emits telemetry events: `game_open`, `game_start`, `game_answer`, `game_answer_correct`, `game_answer_wrong`, `game_complete`, `game_room_created`, `game_room_joined`, `game_rematch`.
+  - Propagates entity signals (`movieId`, `actorId`, `songId`, `genre`) into `UserInterest` to personalize cinema recommendations based on gameplay.
+- **Admin Management Section (`admin.html`):**
+  - Added dedicated Game Hub Management to `admin.html`: view analytics (total sessions, completed sessions, average score, accuracy), filter questions by game type, add new questions via form, and delete questions.
+- **Automated Verification (`server/test-games-e2e.js`):**
+  - 25/25 automated tests passing across REST endpoints, solo anti-cheat, Socket.IO multi-client synchronization, and admin APIs.

@@ -12,7 +12,16 @@ const SIGNAL_WEIGHTS = {
   save: 6,
   share: 7,
   follow: 8,
-  not_interested: -10
+  not_interested: -10,
+  game_open: 1,
+  game_start: 2,
+  game_answer: 2,
+  game_answer_correct: 5,
+  game_answer_wrong: 1,
+  game_complete: 6,
+  game_room_created: 3,
+  game_room_joined: 3,
+  game_rematch: 4
 };
 
 // Configurable constants
@@ -25,7 +34,15 @@ const PROPAGATION_MULTIPLIERS = {
     GENRE: 0.5
 };
 
-async function processUserEvent(userId, eventType, targetType, targetId, metadata) {
+async function processUserEvent(userIdOrEvent, eventType, targetType, targetId, metadata) {
+    let userId = userIdOrEvent;
+    if (typeof userIdOrEvent === 'object' && userIdOrEvent !== null) {
+        userId = userIdOrEvent.userId;
+        eventType = userIdOrEvent.eventType;
+        targetType = userIdOrEvent.targetType;
+        targetId = userIdOrEvent.targetId;
+        metadata = userIdOrEvent.metadata;
+    }
     if (!userId) return; // Skip anonymous for now, but ready for sessionId logic later
 
     try {
@@ -91,6 +108,26 @@ async function processUserEvent(userId, eventType, targetType, targetId, metadat
         } else if (targetType === 'song') {
             const currSong = interest.entities.songs.get(targetId) || 0;
             interest.entities.songs.set(targetId, currSong + (baseScore * PROPAGATION_MULTIPLIERS.DIRECT));
+        } else if (targetType === 'game' || targetType === 'gameQuestion' || targetType === 'gameSession') {
+            // Game Entity Propagation (e.g. answering question about Mahesh Babu or Pushpa)
+            if (metadata && typeof metadata === 'object') {
+                if (metadata.movieId) {
+                    const curr = interest.entities.movies.get(String(metadata.movieId)) || 0;
+                    interest.entities.movies.set(String(metadata.movieId), curr + (baseScore * PROPAGATION_MULTIPLIERS.MOVIE));
+                }
+                if (metadata.actorId) {
+                    const curr = interest.entities.actors.get(String(metadata.actorId)) || 0;
+                    interest.entities.actors.set(String(metadata.actorId), curr + (baseScore * PROPAGATION_MULTIPLIERS.ACTOR));
+                }
+                if (metadata.songId) {
+                    const curr = interest.entities.songs.get(String(metadata.songId)) || 0;
+                    interest.entities.songs.set(String(metadata.songId), curr + (baseScore * PROPAGATION_MULTIPLIERS.SONG));
+                }
+                if (metadata.genre) {
+                    const curr = interest.genres.get(String(metadata.genre)) || 0;
+                    interest.genres.set(String(metadata.genre), curr + (baseScore * PROPAGATION_MULTIPLIERS.GENRE));
+                }
+            }
         }
 
         await interest.save();

@@ -67,6 +67,20 @@ function mapTMDBMovie(m) {
 }
 
 const app = express();
+const http = require('http');
+const { Server } = require('socket.io');
+const gameRoutes = require('./gameRoutes');
+const gameSocket = require('./gameSocket');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    }
+});
+gameSocket(io);
+
 const PORT = process.env.PORT || 5000;
 
 // ============================================
@@ -74,6 +88,9 @@ const PORT = process.env.PORT || 5000;
 // ============================================
 app.use(cors());
 app.use(express.json());
+
+// Mount Game API Routes
+app.use('/api/games', gameRoutes);
 
 // Serve frontend static files from parent directory
 app.use(express.static(path.join(__dirname, '..')));
@@ -1037,8 +1054,9 @@ app.get('/api/analytics/recommendations', async (req, res) => {
 
 // ============================================
 connectDB().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
+    server.listen(PORT, '0.0.0.0', () => {
         console.log(`🎬 Cinema Muchatlu server running on http://localhost:${PORT}`);
         console.log(`📡 API available at http://localhost:${PORT}/api`);
+        console.log(`🎮 Game Engine & Socket.IO active`);
     });
 });

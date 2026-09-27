@@ -244,8 +244,21 @@ const userEventSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Nullable for anonymous tracking
     sessionId: { type: String }, // For anonymous users before registration
     experimentGroup: { type: String, enum: ['A', 'B', 'C'], default: 'A' }, // A/B testing cohort
-    eventType: { type: String, enum: ['feed_impression', 'post_open', 'movie_open', 'song_play', 'reaction', 'comment', 'reply', 'save', 'share', 'not_interested', 'poll_vote'], required: true },
-    targetType: { type: String, enum: ['culturePost', 'movie', 'song', 'comment', 'discussion', 'reply'] },
+    eventType: { 
+        type: String, 
+        enum: [
+            'feed_impression', 'post_open', 'movie_open', 'song_play', 'reaction', 
+            'comment', 'reply', 'save', 'share', 'not_interested', 'poll_vote',
+            'game_open', 'game_start', 'game_answer', 'game_answer_correct', 
+            'game_answer_wrong', 'game_complete', 'game_room_created', 
+            'game_room_joined', 'game_room_left', 'game_rematch'
+        ], 
+        required: true 
+    },
+    targetType: { 
+        type: String, 
+        enum: ['culturePost', 'movie', 'song', 'comment', 'discussion', 'reply', 'game', 'gameSession', 'gameQuestion'] 
+    },
     targetId: { type: String },
     
     // For propagation (e.g., reacting to a post propagating to a movie)
@@ -299,4 +312,10 @@ const UserEvent = mongoose.model('UserEvent', userEventSchema);
 const UserInterest = mongoose.model('UserInterest', userInterestSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
 
-module.exports = { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification };
+const { Game, GameQuestion, GameSession, GameLeaderboard } = require('./gameModels');
+
+module.exports = { 
+    User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, 
+    UserEvent, UserInterest, Notification,
+    Game, GameQuestion, GameSession, GameLeaderboard
+};

@@ -1574,6 +1574,11 @@ function showSection(sectionId) {
     } else if (sectionId === 'trending') {
         renderTrendingMovies();
         renderTrendingSongs();
+    } else if (sectionId === 'play') {
+        trackEvent('game_open', 'game', 'play_hub');
+        if (window.gameEngine && window.gameEngine.init) {
+            window.gameEngine.init();
+        }
     }
 }
 
