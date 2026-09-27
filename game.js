@@ -359,6 +359,36 @@
                 discussGameOnMuchatlu(gameTitle, gameState.currentScore, gameState.currentStreak, gameState.totalRounds);
             });
         }
+
+        // Desktop Keyboard Shortcuts (Keys 1-4 or A-D for options, Esc for modal)
+        window.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName ? e.target.tagName : '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+            if (e.key === 'Escape') {
+                if (elements.gameSetupModal && elements.gameSetupModal.style.display !== 'none') {
+                    elements.gameSetupModal.style.display = 'none';
+                }
+                return;
+            }
+
+            if (elements.activeQuestionScreen && elements.activeQuestionScreen.style.display !== 'none' && !gameState.isAnswerLocked) {
+                const key = (e.key || '').toUpperCase();
+                let optionIndex = -1;
+
+                if (key === '1' || key === 'A') optionIndex = 0;
+                else if (key === '2' || key === 'B') optionIndex = 1;
+                else if (key === '3' || key === 'C') optionIndex = 2;
+                else if (key === '4' || key === 'D') optionIndex = 3;
+
+                if (optionIndex !== -1 && elements.arenaOptionsGrid) {
+                    const buttons = elements.arenaOptionsGrid.querySelectorAll('.option-btn');
+                    if (buttons[optionIndex]) {
+                        buttons[optionIndex].click();
+                    }
+                }
+            }
+        });
     }
 
     // ============================================
