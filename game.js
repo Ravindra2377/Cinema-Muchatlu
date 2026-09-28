@@ -51,6 +51,7 @@
             
             // Join tab
             joinRoomCodeInput: document.getElementById('joinRoomCodeInput'),
+            joinPasteBtn: document.getElementById('joinPasteBtn'),
             submitJoinRoomBtn: document.getElementById('submitJoinRoomBtn'),
             joinRoomError: document.getElementById('joinRoomError'),
 
@@ -286,9 +287,40 @@
             elements.confirmStartGameBtn.addEventListener('click', onConfirmStartGame);
         }
 
-        // Join room button
+        // Join room button & input handlers
         if (elements.submitJoinRoomBtn) {
             elements.submitJoinRoomBtn.addEventListener('click', onJoinRoomSubmit);
+        }
+
+        if (elements.joinRoomCodeInput) {
+            elements.joinRoomCodeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onJoinRoomSubmit();
+                }
+            });
+            elements.joinRoomCodeInput.addEventListener('input', (e) => {
+                const val = (e.target.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+                e.target.value = val;
+            });
+        }
+
+        if (elements.joinPasteBtn) {
+            elements.joinPasteBtn.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text && elements.joinRoomCodeInput) {
+                        const clean = text.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+                        elements.joinRoomCodeInput.value = clean;
+                        elements.joinRoomCodeInput.focus();
+                        elements.joinPasteBtn.textContent = '✅';
+                        setTimeout(() => { elements.joinPasteBtn.textContent = '📋 Paste'; }, 1500);
+                    }
+                } catch (err) {
+                    console.warn('Clipboard read permission denied or unavailable:', err);
+                    if (elements.joinRoomCodeInput) elements.joinRoomCodeInput.focus();
+                }
+            });
         }
 
         // Copy room code

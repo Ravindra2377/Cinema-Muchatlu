@@ -1834,60 +1834,160 @@ body {
 .join-room-card {
     max-width: 440px;
     margin: 1rem auto;
-    background: var(--surface, #141419);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: radial-gradient(circle at 50% 0%, rgba(255, 45, 85, 0.12) 0%, rgba(18, 18, 23, 0.95) 75%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 20px;
-    padding: 2rem 1.5rem;
+    padding: 1.75rem 1.4rem;
     text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+}
+
+.join-icon-badge {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 0.75rem;
+    background: rgba(255, 45, 85, 0.15);
+    border: 1px solid rgba(255, 45, 85, 0.35);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(255, 45, 85, 0.25);
 }
 
 .join-icon {
-    font-size: 2.8rem;
-    margin-bottom: 0.6rem;
+    font-size: 2rem;
+    display: inline-block;
+    line-height: 1;
 }
 
-.join-room-card h3 {
-    font-size: 1.35rem;
-    margin: 0 0 0.4rem 0;
-}
-
-.join-room-card p {
-    color: var(--text-secondary, #94a3b8);
-    font-size: 0.9rem;
-    margin-bottom: 1.4rem;
-}
-
-.join-input-group {
-    display: flex;
-    gap: 0.6rem;
-}
-
-.join-input-group input {
-    flex: 1;
-    min-height: 50px;
-    padding: 0.6rem 1rem;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1.5px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    color: #ffffff;
-    font-size: 1.4rem;
+.join-card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(1.15rem, 3.5vw, 1.35rem);
     font-weight: 800;
-    letter-spacing: 5px;
-    text-align: center;
+    color: #ffffff;
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.3px;
 }
 
-.join-input-group input:focus {
+.join-card-desc {
+    color: var(--text-secondary, #94a3b8);
+    font-size: 0.86rem;
+    line-height: 1.4;
+    margin: 0 0 1.25rem 0;
+}
+
+.join-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.join-code-input-wrap {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#joinRoomCodeInput {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    min-height: 52px;
+    padding: 0.6rem 3.8rem 0.6rem 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    color: #ffffff;
+    font-family: 'Outfit', 'Inter', monospace, sans-serif;
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: 6px;
+    text-align: center;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+#joinRoomCodeInput:focus {
     border-color: #ff2d55;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 45, 85, 0.25);
+    box-shadow: 0 0 0 4px rgba(255, 45, 85, 0.25), 0 4px 20px rgba(255, 45, 85, 0.2);
+    background: rgba(10, 10, 15, 0.95);
 }
 
-.join-action-btn {
-    min-height: 50px;
-    padding: 0 1.5rem;
-    border-radius: 12px;
-    font-size: 1rem;
+.join-paste-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
     font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.join-paste-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.join-paste-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.join-submit-btn {
+    width: 100%;
+    min-height: 50px;
+    padding: 0.75rem 1.25rem;
+    border-radius: 14px;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    background: linear-gradient(135deg, #ff2d55 0%, #e50914 100%);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 18px rgba(255, 45, 85, 0.4);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.join-submit-btn:hover {
+    background: linear-gradient(135deg, #ff476d 0%, #f0141f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(255, 45, 85, 0.5);
+}
+
+.join-submit-btn:active {
+    transform: scale(0.98);
+}
+
+.join-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.join-quick-tips {
+    margin-top: 1rem;
+    font-size: 0.76rem;
+    color: var(--text-secondary, #94a3b8);
+    opacity: 0.85;
 }
 
 /* ============================================ */
@@ -2866,6 +2966,102 @@ body {
         width: 22px;
         height: 22px;
         font-size: 0.72rem;
+    }
+
+    /* Mobile Topbar Ergonomics */
+    .game-hub-topbar {
+        padding: 0.3rem 0.45rem;
+        margin-bottom: 0.5rem;
+        border-radius: 14px;
+        background: rgba(14, 14, 18, 0.85);
+    }
+    .game-hub-header-row {
+        display: none; /* Hide top decorative banner row on small screens to save 45px vertical space */
+    }
+    .game-segmented-control {
+        padding: 0.2rem;
+        border-radius: 18px;
+        background: rgba(8, 8, 12, 0.95);
+    }
+    .seg-btn {
+        min-height: 34px;
+        padding: 0.35rem 0.25rem;
+        font-size: 0.76rem;
+    }
+
+    /* Mobile Join Room Screen */
+    .join-room-card {
+        padding: 1.15rem 0.9rem 1.25rem;
+        margin: 0.25rem auto 1rem;
+        border-radius: 16px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    }
+    .join-icon-badge {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        margin-bottom: 0.5rem;
+    }
+    .join-icon {
+        font-size: 1.6rem;
+    }
+    .join-card-title {
+        font-size: 1.12rem;
+        margin-bottom: 0.2rem;
+    }
+    .join-card-desc {
+        font-size: 0.78rem;
+        margin-bottom: 0.85rem;
+        line-height: 1.35;
+    }
+    .join-form-wrapper {
+        gap: 0.6rem;
+    }
+    #joinRoomCodeInput {
+        min-height: 48px;
+        font-size: 1.35rem;
+        letter-spacing: 5px;
+        padding: 0.5rem 3.4rem 0.5rem 0.8rem;
+        border-radius: 12px;
+    }
+    .join-paste-btn {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.72rem;
+    }
+    .join-submit-btn {
+        min-height: 46px;
+        font-size: 0.95rem;
+        border-radius: 12px;
+    }
+    .join-quick-tips {
+        margin-top: 0.65rem;
+        font-size: 0.72rem;
+    }
+
+    /* Mobile Leaderboard */
+    .leaderboard-wrapper {
+        padding: 0.25rem;
+    }
+    .leaderboard-header {
+        margin-bottom: 0.65rem;
+    }
+    .leaderboard-header h2 {
+        font-size: 1.05rem;
+    }
+    .leaderboard-item {
+        padding: 0.65rem 0.75rem;
+        border-radius: 10px;
+        gap: 0.6rem;
+    }
+    .lb-rank {
+        width: 26px;
+        font-size: 1rem;
+    }
+    .lb-player-name {
+        font-size: 0.88rem;
+    }
+    .score-num {
+        font-size: 0.95rem;
     }
 }
 

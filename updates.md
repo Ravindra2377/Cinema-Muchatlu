@@ -294,3 +294,23 @@ Resolved an issue where all curated questions had their correct answer positione
   - Added Test 6 asserting that across multiple sessions and rounds, correct answers are evenly spread across multiple option letters (A, B, C, D) and not locked to option A.
   - 41/41 tests passing across the test suite.
 
+## 30. 📱 Pixel-Accurate Mobile Layout Optimization for Join Room Screen
+Fixed a mobile layout defect where the "Join Private Match" room code entry card overflowed narrow mobile viewports, pushing and clipping the Join button off-screen:
+
+- **Root Cause Resolution (`index.html` & `styles.css`):**
+  - Previously, `.join-input-group` used a horizontal flex layout with intrinsic `min-width: auto` on `<input>`, exceeding the 310px available mobile card width and forcing the Join action button into the horizontal overflow clip area.
+  - Converted the layout into a clean vertical form stack (`.join-form-wrapper`):
+    - Full-width, centered, bold letter-spaced room code input (`#joinRoomCodeInput`) with `min-width: 0`, `letter-spacing: 6px`, and dynamic focus glow.
+    - Integrated one-tap clipboard paste button (`.join-paste-btn` / `#joinPasteBtn`) embedded directly inside the input wrapper.
+    - Prominent, thumb-friendly full-width action button (`.join-submit-btn` / `#submitJoinRoomBtn`) with gradient styling (`linear-gradient(135deg, #ff2d55, #e50914)`) and active press feedback.
+- **Vertical Viewport Optimization for Mobile Devices ($\le 480\text{px}$):**
+  - Automatically hidden the top decorative header row (`.game-hub-header-row`) on mobile devices, recovering 45px of vertical screen height.
+  - Sits the segmented tab switcher (`[🎮 Games] [🔑 Join Room] [🏆 Leaders]`) right at the top of the viewport.
+  - Reduced excessive card padding from `2rem 1.5rem` down to `1.15rem 0.9rem` and icon badge size to 46px.
+  - **Zero-Scroll Fit:** The entire Join Room interface (segmented buttons, badge, title, code input, paste button, and submit button) fits 100% above the fold on all standard mobile screens (320px–430px width, 600px–850px height).
+- **Mobile Keyboard & Interaction Ergonomics (`game.js`):**
+  - Added native `Enter` keypress listener on `#joinRoomCodeInput` to submit the room code immediately without leaving the on-screen keyboard.
+  - Added input sanitization filtering input values strictly to uppercase alphanumeric characters up to 6 characters.
+  - Added native clipboard paste support (`navigator.clipboard.readText()`) with visual confirmation animation.
+
+

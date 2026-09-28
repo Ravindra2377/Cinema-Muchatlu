@@ -251,14 +251,27 @@
             <!-- TAB 2: JOIN MULTIPLAYER ROOM -->
             <div id="gameHubJoinTab" class="game-tab-content">
                 <div class="join-room-card">
-                    <div class="join-icon">🔑</div>
-                    <h3>Join Private Match</h3>
-                    <p>Enter the 5-character room code shared by your friend.</p>
-                    <div class="join-input-group">
-                        <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="K7P42" autocomplete="off" autocapitalize="characters" style="text-transform: uppercase;">
-                        <button class="btn-primary join-action-btn" id="submitJoinRoomBtn">Join</button>
+                    <div class="join-icon-badge">
+                        <span class="join-icon">🔑</span>
                     </div>
+                    <h3 class="join-card-title">Join Private Match</h3>
+                    <p class="join-card-desc">Enter the 5-character room code shared by your friend.</p>
+                    
+                    <div class="join-form-wrapper">
+                        <div class="join-code-input-wrap">
+                            <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="K7P42" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform: uppercase;">
+                            <button type="button" class="join-paste-btn" id="joinPasteBtn" title="Paste from clipboard">📋 Paste</button>
+                        </div>
+                        <button type="button" class="btn-primary join-submit-btn" id="submitJoinRoomBtn">
+                            <span>🚀 Join Game</span>
+                        </button>
+                    </div>
+                    
                     <div id="joinRoomError" class="game-error-text" style="display: none;"></div>
+                    
+                    <div class="join-quick-tips">
+                        <span>💡 Tip: Ask the host for their 5-character room code</span>
+                    </div>
                 </div>
             </div>
 
