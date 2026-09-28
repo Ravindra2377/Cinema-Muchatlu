@@ -257,7 +257,7 @@ const userEventSchema = new mongoose.Schema({
     },
     targetType: { 
         type: String, 
-        enum: ['culturePost', 'movie', 'song', 'comment', 'discussion', 'reply', 'game', 'gameSession', 'gameQuestion'] 
+        enum: ['culturePost', 'movie', 'song', 'comment', 'discussion', 'reply', 'game', 'gameSession', 'gameQuestion', 'game_question', 'game_session'] 
     },
     targetId: { type: String },
     

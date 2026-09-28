@@ -23,6 +23,17 @@ function generateRoomCode() {
     return code;
 }
 
+// Fisher-Yates array shuffle for unbiased random distribution of options
+function shuffleArray(arr) {
+    if (!Array.isArray(arr)) return [];
+    const shuffled = [...arr];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 // Sanitize question before sending to clients (NEVER expose correctAnswer!)
 function sanitizeQuestion(q) {
     if (!q) return null;
@@ -34,7 +45,7 @@ function sanitizeQuestion(q) {
         clues: q.clues || [],
         mediaUrl: q.mediaUrl || null,
         audioPreviewUrl: q.audioPreviewUrl || null,
-        options: q.options || [],
+        options: shuffleArray(q.options || []),
         difficulty: q.difficulty || 'medium',
         movieId: q.movieId || null,
         actorId: q.actorId || null,
@@ -252,6 +263,7 @@ async function submitSoloAnswer({ sessionId, playerKey, selectedOption, timeTake
 module.exports = {
     SCORING,
     generateRoomCode,
+    shuffleArray,
     sanitizeQuestion,
     calculateScore,
     startSoloGame,

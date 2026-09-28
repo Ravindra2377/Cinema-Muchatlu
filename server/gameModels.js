@@ -142,7 +142,7 @@ const gameSessionSchema = new mongoose.Schema({
     rounds: [roundSubSchema],
     createdAt: { type: Date, default: Date.now },
     completedAt: { type: Date }
-});
+}, { versionKey: false });
 
 // ============================================
 // Leaderboard Schema

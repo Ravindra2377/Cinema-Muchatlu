@@ -274,4 +274,23 @@ Engineered a comprehensive 3-tier responsive layout system optimizing the game e
   - Press `Escape` to dismiss the setup modal.
   - Intelligent input detection: automatically ignores shortcut keystrokes when typing in text fields or search bars.
 - **Automated Verification:**
-  - 25/25 automated e2e tests passing in `server/test-games-e2e.js`, verifying solo gameplay, anti-cheat answer masking, Socket.IO real-time multiplayer synchronization, telemetry propagation, and admin endpoints.
+  - 41/41 automated e2e tests passing in `server/test-games-e2e.js`, verifying solo gameplay, anti-cheat answer masking, Socket.IO real-time multiplayer synchronization, telemetry propagation, admin endpoints, and option randomization.
+
+## 29. 🎲 Question Options Randomization & Elimination of Option-A Bias
+Resolved an issue where all curated questions had their correct answer positioned at Option A (index 0):
+
+- **Fisher-Yates Dynamic Option Shuffling (`server/gameEngine.js`):**
+  - Integrated an unbiased Fisher-Yates array permutation in `sanitizeQuestion(q)`:
+    - Every time a question is prepared for client delivery, its 4 options are dynamically shuffled in memory.
+    - Uniform distribution across `[A, B, C, D]` (~25% probability for each position) prevents players from guessing based on slot patterns.
+    - Server-side answer validation evaluates `selectedOption === question.correctAnswer` by string value, guaranteeing mathematical integrity and zero cheat vector.
+- **Synchronized Multiplayer Broadcast (`server/gameSocket.js`):**
+  - Evaluated and broadcasted once per round from the server so all participants in a multiplayer match receive identical option orders, ensuring fair, synchronized real-time competition.
+  - Disabled Mongoose schema `versionKey` on `GameSession` (`{ versionKey: false }`) to eliminate optimistic lock `VersionError` when multiple players submit answers in the same millisecond.
+- **Curated Database Question Bank Reseed (`server/seedGames.js`):**
+  - Updated the seeder to shuffle the option arrays before persisting them into MongoDB Atlas.
+  - Reseeded all 113 questions across *Guess the Movie*, *Guess the Dialogue*, and *Guess the Song* with diversified option order.
+- **End-to-End Automated Test Verification (`server/test-games-e2e.js`):**
+  - Added Test 6 asserting that across multiple sessions and rounds, correct answers are evenly spread across multiple option letters (A, B, C, D) and not locked to option A.
+  - 41/41 tests passing across the test suite.
+

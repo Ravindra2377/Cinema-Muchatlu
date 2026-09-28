@@ -1490,7 +1490,20 @@ async function seedGames() {
         await GameQuestion.deleteMany({});
         console.log('🗑️  Cleared existing GameQuestions');
 
-        const allQuestions = [...MOVIE_QUESTIONS, ...DIALOGUE_QUESTIONS, ...SONG_QUESTIONS];
+        function shuffleArray(arr) {
+            if (!Array.isArray(arr)) return [];
+            const shuffled = [...arr];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        const allQuestions = [...MOVIE_QUESTIONS, ...DIALOGUE_QUESTIONS, ...SONG_QUESTIONS].map(q => ({
+            ...q,
+            options: shuffleArray(q.options)
+        }));
         const inserted = await GameQuestion.insertMany(allQuestions);
         console.log(`✅ Seeded ${inserted.length} GameQuestions total:`);
         console.log(`   - 🎬 Guess the Movie: ${MOVIE_QUESTIONS.length}`);

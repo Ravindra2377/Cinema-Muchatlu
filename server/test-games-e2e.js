@@ -225,6 +225,46 @@ async function runTests() {
         assert(false, `Admin API test failed: ${e.message}`);
     }
 
+    // ============================================
+    // TEST 6: Option Randomization & Distribution Check
+    // ============================================
+    console.log('\n🎲 Test 6: Option Randomization & Slot Distribution');
+    try {
+        const optionSlotsFound = new Set();
+        let totalTested = 0;
+
+        for (let i = 0; i < 5; i++) {
+            const startRes = await axios.post(`${API_BASE}/solo/start`, {
+                gameType: 'guess_movie',
+                difficulty: 'easy',
+                totalRounds: 5,
+                displayName: `RandomCheck_${i}`
+            });
+
+            const q = startRes.data.question;
+            assert(q.options.length === 4, `Round has exactly 4 options`);
+            const uniqueOptions = new Set(q.options);
+            assert(uniqueOptions.size === 4, `All 4 options are distinct (no duplicate choices)`);
+
+            // Submit an answer (option at index 1) to test non-index-0 answering
+            const ansRes = await axios.post(`${API_BASE}/solo/answer`, {
+                sessionId: startRes.data.sessionId,
+                playerKey: 'solo_player',
+                selectedOption: q.options[1],
+                timeTakenSeconds: 2.0
+            });
+
+            const correctIdx = q.options.indexOf(ansRes.data.correctAnswer);
+            assert(correctIdx !== -1, `Revealed correctAnswer is present in the delivered options list`);
+            optionSlotsFound.add(correctIdx);
+            totalTested++;
+        }
+
+        assert(optionSlotsFound.size > 1, `Correct answers are distributed across multiple option slots (found slots: ${Array.from(optionSlotsFound).map(i => ['A','B','C','D'][i]).join(', ')}), NOT always option-A`);
+    } catch (e) {
+        assert(false, `Option randomization test failed: ${e.message}`);
+    }
+
     console.log(`\n============================================`);
     console.log(`Test Results: ${passed} Passed, ${failed} Failed`);
     console.log(`============================================\n`);
