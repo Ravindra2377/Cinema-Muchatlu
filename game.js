@@ -49,10 +49,18 @@
             setupRoundsGroup: document.getElementById('setupRoundsGroup'),
             confirmStartGameBtn: document.getElementById('confirmStartGameBtn'),
             
-            // Join tab
+            // Multiplayer tab (Host & Join)
+            mpTabJoin: document.getElementById('mpTabJoin'),
+            mpTabHost: document.getElementById('mpTabHost'),
+            mpViewJoin: document.getElementById('mpViewJoin'),
+            mpViewHost: document.getElementById('mpViewHost'),
             joinRoomCodeInput: document.getElementById('joinRoomCodeInput'),
-            joinPasteBtn: document.getElementById('joinPasteBtn'),
             submitJoinRoomBtn: document.getElementById('submitJoinRoomBtn'),
+            generateRoomCodeBtn: document.getElementById('generateRoomCodeBtn'),
+            switchToHostLink: document.getElementById('switchToHostLink'),
+            switchToJoinLink: document.getElementById('switchToJoinLink'),
+            hostGamePicker: document.getElementById('hostGamePicker'),
+            hostRoundsPicker: document.getElementById('hostRoundsPicker'),
             joinRoomError: document.getElementById('joinRoomError'),
 
             // Lobby
@@ -287,6 +295,20 @@
             elements.confirmStartGameBtn.addEventListener('click', onConfirmStartGame);
         }
 
+        // Multiplayer mode tab switcher (Join vs Host)
+        const switchMpSubView = (view) => {
+            if (elements.mpTabJoin) elements.mpTabJoin.classList.toggle('active', view === 'join');
+            if (elements.mpTabHost) elements.mpTabHost.classList.toggle('active', view === 'host');
+            if (elements.mpViewJoin) elements.mpViewJoin.style.display = view === 'join' ? 'block' : 'none';
+            if (elements.mpViewHost) elements.mpViewHost.style.display = view === 'host' ? 'block' : 'none';
+            if (elements.joinRoomError) elements.joinRoomError.style.display = 'none';
+        };
+
+        if (elements.mpTabJoin) elements.mpTabJoin.addEventListener('click', () => switchMpSubView('join'));
+        if (elements.mpTabHost) elements.mpTabHost.addEventListener('click', () => switchMpSubView('host'));
+        if (elements.switchToHostLink) elements.switchToHostLink.addEventListener('click', () => switchMpSubView('host'));
+        if (elements.switchToJoinLink) elements.switchToJoinLink.addEventListener('click', () => switchMpSubView('join'));
+
         // Join room button & input handlers
         if (elements.submitJoinRoomBtn) {
             elements.submitJoinRoomBtn.addEventListener('click', onJoinRoomSubmit);
@@ -305,20 +327,57 @@
             });
         }
 
-        if (elements.joinPasteBtn) {
-            elements.joinPasteBtn.addEventListener('click', async () => {
+        // Host Mode: Game Selection Chips
+        let hostSelectedGameType = 'guess_movie';
+        let hostSelectedRounds = 10;
+
+        if (elements.hostGamePicker) {
+            elements.hostGamePicker.querySelectorAll('.host-game-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    elements.hostGamePicker.querySelectorAll('.host-game-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    hostSelectedGameType = chip.dataset.game || 'guess_movie';
+                });
+            });
+        }
+
+        // Host Mode: Rounds Selection Chips
+        if (elements.hostRoundsPicker) {
+            elements.hostRoundsPicker.querySelectorAll('.host-round-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    elements.hostRoundsPicker.querySelectorAll('.host-round-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    hostSelectedRounds = parseInt(btn.dataset.rounds, 10) || 10;
+                });
+            });
+        }
+
+        // Host Mode: Generate Room Code Button
+        if (elements.generateRoomCodeBtn) {
+            elements.generateRoomCodeBtn.addEventListener('click', async () => {
+                const targetGame = gameState.games.find(g => g.gameType === hostSelectedGameType) || gameState.games[0] || {
+                    gameType: hostSelectedGameType,
+                    title: hostSelectedGameType === 'guess_movie' ? 'Guess the Movie' : (hostSelectedGameType === 'guess_dialogue' ? 'Guess the Dialogue' : 'Guess the Song'),
+                    icon: hostSelectedGameType === 'guess_movie' ? '🎬' : (hostSelectedGameType === 'guess_dialogue' ? '🗣️' : '🎵')
+                };
+
+                gameState.selectedGame = targetGame;
+                gameState.selectedDifficulty = 'medium';
+                gameState.selectedRounds = hostSelectedRounds;
+                gameState.selectedMode = 'PRIVATE_MULTIPLAYER';
+
+                elements.generateRoomCodeBtn.disabled = true;
+                elements.generateRoomCodeBtn.innerHTML = '<span>⏳ Generating Room Code...</span>';
                 try {
-                    const text = await navigator.clipboard.readText();
-                    if (text && elements.joinRoomCodeInput) {
-                        const clean = text.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-                        elements.joinRoomCodeInput.value = clean;
-                        elements.joinRoomCodeInput.focus();
-                        elements.joinPasteBtn.textContent = '✅';
-                        setTimeout(() => { elements.joinPasteBtn.textContent = '📋 Paste'; }, 1500);
-                    }
+                    await createMultiplayerRoom();
                 } catch (err) {
-                    console.warn('Clipboard read permission denied or unavailable:', err);
-                    if (elements.joinRoomCodeInput) elements.joinRoomCodeInput.focus();
+                    console.error('Error creating room:', err);
+                    alert('Failed to generate room code: ' + (err.message || 'Server error'));
+                } finally {
+                    if (elements.generateRoomCodeBtn) {
+                        elements.generateRoomCodeBtn.disabled = false;
+                        elements.generateRoomCodeBtn.innerHTML = '<span>✨ Generate Room Code</span>';
+                    }
                 }
             });
         }

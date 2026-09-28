@@ -1828,7 +1828,7 @@ body {
 }
 
 /* ============================================ */
-/* Join Room Screen                             */
+/* Multiplayer Hub (Join Room & Host Match)     */
 /* ============================================ */
 
 .join-room-card {
@@ -1837,27 +1837,82 @@ body {
     background: radial-gradient(circle at 50% 0%, rgba(255, 45, 85, 0.12) 0%, rgba(18, 18, 23, 0.95) 75%);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 20px;
-    padding: 1.75rem 1.4rem;
+    padding: 1.5rem 1.35rem;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     box-sizing: border-box;
 }
 
-.join-icon-badge {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 0.75rem;
-    background: rgba(255, 45, 85, 0.15);
-    border: 1px solid rgba(255, 45, 85, 0.35);
-    border-radius: 18px;
+/* Sub-Mode Switcher: Join vs Host */
+.multiplayer-mode-switch {
+    display: flex;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 0.25rem;
+    gap: 0.25rem;
+    margin-bottom: 1.15rem;
+    box-sizing: border-box;
+}
+
+.mp-mode-btn {
+    flex: 1;
+    padding: 0.45rem 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: var(--text-secondary, #94a3b8);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 20px rgba(255, 45, 85, 0.25);
+    gap: 0.35rem;
+    min-height: 36px;
+}
+
+.mp-mode-btn:hover {
+    color: #ffffff;
+}
+
+.mp-mode-btn.active {
+    background: #ff2d55;
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(255, 45, 85, 0.35);
+}
+
+.mp-sub-view {
+    display: none;
+}
+
+.mp-sub-view.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+.join-icon-badge {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 0.65rem;
+    background: rgba(255, 45, 85, 0.15);
+    border: 1px solid rgba(255, 45, 85, 0.35);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px rgba(255, 45, 85, 0.25);
+}
+
+.join-icon-badge.badge-host {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 4px 18px rgba(245, 158, 11, 0.25);
 }
 
 .join-icon {
-    font-size: 2rem;
+    font-size: 1.85rem;
     display: inline-block;
     line-height: 1;
 }
@@ -1873,9 +1928,9 @@ body {
 
 .join-card-desc {
     color: var(--text-secondary, #94a3b8);
-    font-size: 0.86rem;
-    line-height: 1.4;
-    margin: 0 0 1.25rem 0;
+    font-size: 0.84rem;
+    line-height: 1.35;
+    margin: 0 0 1.15rem 0;
 }
 
 .join-form-wrapper {
@@ -1897,7 +1952,7 @@ body {
     min-width: 0;
     box-sizing: border-box;
     min-height: 52px;
-    padding: 0.6rem 3.8rem 0.6rem 1rem;
+    padding: 0.6rem 1rem;
     background: rgba(0, 0, 0, 0.6);
     border: 2px solid rgba(255, 255, 255, 0.18);
     border-radius: 14px;
@@ -1916,34 +1971,6 @@ body {
     outline: none;
     box-shadow: 0 0 0 4px rgba(255, 45, 85, 0.25), 0 4px 20px rgba(255, 45, 85, 0.2);
     background: rgba(10, 10, 15, 0.95);
-}
-
-.join-paste-btn {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    padding: 0.35rem 0.6rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.join-paste-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
-    border-color: rgba(255, 255, 255, 0.4);
-}
-
-.join-paste-btn:active {
-    transform: translateY(-50%) scale(0.95);
 }
 
 .join-submit-btn {
@@ -1983,8 +2010,146 @@ body {
     transform: none;
 }
 
+/* Host Mode Pickers */
+.host-game-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+    box-sizing: border-box;
+}
+
+.host-game-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 0.65rem 0.35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #ffffff;
+}
+
+.host-game-chip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.host-game-chip.active {
+    background: rgba(255, 45, 85, 0.15);
+    border-color: #ff2d55;
+    box-shadow: 0 0 15px rgba(255, 45, 85, 0.3);
+}
+
+.host-chip-icon {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.host-chip-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.host-rounds-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+    padding: 0.45rem 0.75rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.host-rounds-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary, #94a3b8);
+}
+
+.host-rounds-chips {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.host-round-btn {
+    padding: 0.28rem 0.65rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.host-round-btn.active {
+    background: #ff2d55;
+    border-color: #ff2d55;
+    box-shadow: 0 2px 8px rgba(255, 45, 85, 0.35);
+}
+
+.host-generate-btn {
+    width: 100%;
+    min-height: 50px;
+    padding: 0.75rem 1.25rem;
+    border-radius: 14px;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 18px rgba(245, 158, 11, 0.4);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.host-generate-btn:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(245, 158, 11, 0.5);
+}
+
+.host-generate-btn:active {
+    transform: scale(0.98);
+}
+
+.host-generate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.link-switch-btn {
+    background: transparent;
+    border: none;
+    color: #ff2d55;
+    font-size: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    display: inline;
+}
+
+.link-switch-btn:hover {
+    color: #ff476d;
+}
+
 .join-quick-tips {
-    margin-top: 1rem;
+    margin-top: 0.9rem;
     font-size: 0.76rem;
     color: var(--text-secondary, #94a3b8);
     opacity: 0.85;
@@ -3021,17 +3186,31 @@ body {
         min-height: 48px;
         font-size: 1.35rem;
         letter-spacing: 5px;
-        padding: 0.5rem 3.4rem 0.5rem 0.8rem;
+        padding: 0.5rem 0.8rem;
         border-radius: 12px;
     }
-    .join-paste-btn {
-        padding: 0.3rem 0.5rem;
-        font-size: 0.72rem;
-    }
-    .join-submit-btn {
+    .join-submit-btn, .host-generate-btn {
         min-height: 46px;
         font-size: 0.95rem;
         border-radius: 12px;
+    }
+    .host-game-chip {
+        padding: 0.5rem 0.25rem;
+        border-radius: 10px;
+    }
+    .host-chip-icon {
+        font-size: 1.2rem;
+    }
+    .host-chip-name {
+        font-size: 0.72rem;
+    }
+    .host-rounds-row {
+        margin-bottom: 0.85rem;
+        padding: 0.35rem 0.65rem;
+    }
+    .host-round-btn {
+        padding: 0.25rem 0.55rem;
+        font-size: 0.75rem;
     }
     .join-quick-tips {
         margin-top: 0.65rem;

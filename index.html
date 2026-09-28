@@ -236,7 +236,7 @@
                 <!-- Native Touch Segmented Controller -->
                 <div class="game-segmented-control" role="tablist">
                     <button class="seg-btn active" data-tab="games" role="tab">🎮 Games</button>
-                    <button class="seg-btn" data-tab="multiplayer" role="tab">🔑 Join Room</button>
+                    <button class="seg-btn" data-tab="multiplayer" role="tab">👥 Multiplayer</button>
                     <button class="seg-btn" data-tab="leaderboard" role="tab">🏆 Leaders</button>
                 </div>
             </div>
@@ -248,29 +248,80 @@
                 </div>
             </div>
 
-            <!-- TAB 2: JOIN MULTIPLAYER ROOM -->
+            <!-- TAB 2: MULTIPLAYER (HOST OR JOIN) -->
             <div id="gameHubJoinTab" class="game-tab-content">
                 <div class="join-room-card">
-                    <div class="join-icon-badge">
-                        <span class="join-icon">🔑</span>
+                    <!-- Sub-mode switcher: Join vs Host -->
+                    <div class="multiplayer-mode-switch" role="tablist">
+                        <button type="button" class="mp-mode-btn active" id="mpTabJoin" data-mp-view="join">🔑 Join Game</button>
+                        <button type="button" class="mp-mode-btn" id="mpTabHost" data-mp-view="host">✨ Generate Code</button>
                     </div>
-                    <h3 class="join-card-title">Join Private Match</h3>
-                    <p class="join-card-desc">Enter the 5-character room code shared by your friend.</p>
-                    
-                    <div class="join-form-wrapper">
-                        <div class="join-code-input-wrap">
-                            <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="K7P42" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform: uppercase;">
-                            <button type="button" class="join-paste-btn" id="joinPasteBtn" title="Paste from clipboard">📋 Paste</button>
+
+                    <!-- VIEW 1: JOIN WITH CODE -->
+                    <div id="mpViewJoin" class="mp-sub-view active">
+                        <div class="join-icon-badge">
+                            <span class="join-icon">🔑</span>
                         </div>
-                        <button type="button" class="btn-primary join-submit-btn" id="submitJoinRoomBtn">
-                            <span>🚀 Join Game</span>
-                        </button>
+                        <h3 class="join-card-title">Join Private Match</h3>
+                        <p class="join-card-desc">Enter the 5-character room code shared by your friend.</p>
+                        
+                        <div class="join-form-wrapper">
+                            <div class="join-code-input-wrap">
+                                <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="K7P42" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform: uppercase;">
+                            </div>
+                            <button type="button" class="btn-primary join-submit-btn" id="submitJoinRoomBtn">
+                                <span>🚀 Join Game</span>
+                            </button>
+                        </div>
+                        
+                        <div id="joinRoomError" class="game-error-text" style="display: none;"></div>
+                        
+                        <div class="join-quick-tips">
+                            <span>Want to host instead? <button type="button" class="link-switch-btn" id="switchToHostLink">Generate a room code</button></span>
+                        </div>
                     </div>
-                    
-                    <div id="joinRoomError" class="game-error-text" style="display: none;"></div>
-                    
-                    <div class="join-quick-tips">
-                        <span>💡 Tip: Ask the host for their 5-character room code</span>
+
+                    <!-- VIEW 2: HOST MATCH / GENERATE ROOM CODE -->
+                    <div id="mpViewHost" class="mp-sub-view" style="display: none;">
+                        <div class="join-icon-badge badge-host">
+                            <span class="join-icon">🎲</span>
+                        </div>
+                        <h3 class="join-card-title">Host a Private Match</h3>
+                        <p class="join-card-desc">Pick a Telugu game and generate a room code for your friends.</p>
+                        
+                        <!-- Quick Game Selector -->
+                        <div class="host-game-picker" id="hostGamePicker">
+                            <button type="button" class="host-game-chip active" data-game="guess_movie">
+                                <span class="host-chip-icon">🎬</span>
+                                <span class="host-chip-name">Movie</span>
+                            </button>
+                            <button type="button" class="host-game-chip" data-game="guess_dialogue">
+                                <span class="host-chip-icon">🗣️</span>
+                                <span class="host-chip-name">Dialogue</span>
+                            </button>
+                            <button type="button" class="host-game-chip" data-game="guess_song">
+                                <span class="host-chip-icon">🎵</span>
+                                <span class="host-chip-name">Song</span>
+                            </button>
+                        </div>
+
+                        <!-- Rounds Picker -->
+                        <div class="host-rounds-row">
+                            <span class="host-rounds-label">Rounds:</span>
+                            <div class="host-rounds-chips" id="hostRoundsPicker">
+                                <button type="button" class="host-round-btn" data-rounds="5">5</button>
+                                <button type="button" class="host-round-btn active" data-rounds="10">10</button>
+                                <button type="button" class="host-round-btn" data-rounds="15">15</button>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-primary host-generate-btn" id="generateRoomCodeBtn">
+                            <span>✨ Generate Room Code</span>
+                        </button>
+
+                        <div class="join-quick-tips">
+                            <span>Have a code? <button type="button" class="link-switch-btn" id="switchToJoinLink">Join your friend's game</button></span>
+                        </div>
                     </div>
                 </div>
             </div>

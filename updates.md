@@ -311,6 +311,22 @@ Fixed a mobile layout defect where the "Join Private Match" room code entry card
 - **Mobile Keyboard & Interaction Ergonomics (`game.js`):**
   - Added native `Enter` keypress listener on `#joinRoomCodeInput` to submit the room code immediately without leaving the on-screen keyboard.
   - Added input sanitization filtering input values strictly to uppercase alphanumeric characters up to 6 characters.
-  - Added native clipboard paste support (`navigator.clipboard.readText()`) with visual confirmation animation.
+
+## 31. 🎲 Host Match & Room Code Generation System + UI Streamlining
+Added the ability to directly host private matches and generate room codes from the Multiplayer tab, while removing the unnecessary paste button:
+
+- **Dedicated Host Match & Room Code Generator (`index.html` & `game.js`):**
+  - Introduced a clean segmented switcher (`[🔑 Join Game]  [✨ Generate Code]`) inside the multiplayer hub.
+  - **Host View (`#mpViewHost`):**
+    - Quick game selector chips (`🎬 Movie`, `🗣️ Dialogue`, `🎵 Song`) allowing hosts to choose the game type instantly.
+    - Quick rounds selector pills (`5`, `10`, `15` rounds).
+    - One-tap **"✨ Generate Room Code"** button (`#generateRoomCodeBtn`).
+    - Connects directly to Socket.IO authoritative engine, generates a unique 5-character room code (e.g. `K7P42`), and opens the real-time lobby where players gather before the host starts the match.
+  - **Join View (`#mpViewJoin`):**
+    - Cleaned up room code entry field: removed the paste button for an uncluttered, centered, wide typography experience with balanced padding.
+    - Added reciprocal quick links (`Generate a room code` / `Join your friend's game`) for effortless one-tap switching between hosting and joining.
+- **Top Bar Alignment:**
+  - Renamed the second tab from `🔑 Join Room` to `👥 Multiplayer` to accurately reflect both **Host (Generate Code)** and **Join** capabilities.
+
 
 
