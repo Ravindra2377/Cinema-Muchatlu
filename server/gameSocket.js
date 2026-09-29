@@ -29,10 +29,14 @@ function gameSocket(io) {
         // 1. CREATE ROOM
         socket.on('create_room', async (data, callback) => {
             try {
-                const { gameType, difficulty = 'medium', totalRounds = 10, displayName = 'Host Player', avatarUrl = '', userId = null } = data;
+                const { gameType, difficulty = 'medium', totalRounds = 10, displayName = 'Host Player', avatarUrl = '', userId = null, maxPlayers = 10 } = data;
 
                 let roundsCount = parseInt(totalRounds, 10) || 10;
                 if (![5, 10, 15].includes(roundsCount)) roundsCount = 10;
+
+                let parsedMaxPlayers = parseInt(maxPlayers, 10);
+                if (isNaN(parsedMaxPlayers) || parsedMaxPlayers < 2) parsedMaxPlayers = 10;
+                if (parsedMaxPlayers > 10) parsedMaxPlayers = 10;
 
                 // Pick questions
                 let questions = await GameQuestion.aggregate([
@@ -66,6 +70,7 @@ function gameSocket(io) {
                     status: 'waiting',
                     difficulty,
                     totalRounds: questions.length,
+                    maxPlayers: parsedMaxPlayers,
                     currentRoundIndex: 0,
                     roundTimeLimit: SCORING.DEFAULT_ROUND_TIME,
                     questions: questions.map(q => q._id),
@@ -96,7 +101,7 @@ function gameSocket(io) {
                         eventType: 'game_room_created',
                         targetType: 'game',
                         targetId: roomCode,
-                        metadata: { gameType, roomCode, difficulty, totalRounds: questions.length }
+                        metadata: { gameType, roomCode, difficulty, totalRounds: questions.length, maxPlayers: parsedMaxPlayers }
                     });
                 } catch (e) {}
 
@@ -110,6 +115,7 @@ function gameSocket(io) {
                             roomCode: session.roomCode,
                             difficulty: session.difficulty,
                             totalRounds: session.totalRounds,
+                            maxPlayers: session.maxPlayers || 10,
                             status: session.status,
                             players: session.players
                         }
@@ -142,6 +148,10 @@ function gameSocket(io) {
                 // Check if player already exists in session
                 let player = session.players.find(p => (userId && p.userId === userId) || p.sessionId === socket.id);
                 if (!player) {
+                    const maxAllowed = session.maxPlayers || 10;
+                    if (session.players.length >= maxAllowed) {
+                        return callback && callback({ error: `Room is full! Maximum ${maxAllowed} players allowed.` });
+                    }
                     player = {
                         userId: userId || null,
                         sessionId: socket.id,
@@ -181,6 +191,7 @@ function gameSocket(io) {
                 gameNamespace.to(cleanCode).emit('room_updated', {
                     roomCode: cleanCode,
                     status: session.status,
+                    maxPlayers: session.maxPlayers || 10,
                     players: session.players,
                     hostSocketId: session.players.find(p => p.isHost)?.socketId
                 });
@@ -194,6 +205,7 @@ function gameSocket(io) {
                             roomCode: session.roomCode,
                             difficulty: session.difficulty,
                             totalRounds: session.totalRounds,
+                            maxPlayers: session.maxPlayers || 10,
                             status: session.status,
                             players: session.players
                         }

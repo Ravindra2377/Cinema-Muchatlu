@@ -138,6 +138,7 @@ const gameSessionSchema = new mongoose.Schema({
     roundTimeLimit: { type: Number, default: 15 },
     roundStartedAt: { type: Date },
     questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'GameQuestion' }],
+    maxPlayers: { type: Number, default: 10, min: 2, max: 10 },
     players: [playerSubSchema],
     rounds: [roundSubSchema],
     createdAt: { type: Date, default: Date.now },

@@ -14,6 +14,7 @@
         selectedMode: 'SOLO',
         selectedDifficulty: 'medium',
         selectedRounds: 10,
+        selectedMaxPlayers: 4,
         activeSession: null,
         currentRound: 1,
         totalRounds: 10,
@@ -61,6 +62,11 @@
             switchToJoinLink: document.getElementById('switchToJoinLink'),
             hostGamePicker: document.getElementById('hostGamePicker'),
             hostRoundsPicker: document.getElementById('hostRoundsPicker'),
+            hostMembersPicker: document.getElementById('hostMembersPicker'),
+            hostMembersBadge: document.getElementById('hostMembersBadge'),
+            setupMembersSection: document.getElementById('setupMembersSection'),
+            setupMembersBadge: document.getElementById('setupMembersBadge'),
+            setupMembersGroup: document.getElementById('setupMembersGroup'),
             joinRoomError: document.getElementById('joinRoomError'),
 
             // Lobby
@@ -68,6 +74,7 @@
             lobbyGameTypeTag: document.getElementById('lobbyGameTypeTag'),
             lobbyDifficultyTag: document.getElementById('lobbyDifficultyTag'),
             lobbyRoundsTag: document.getElementById('lobbyRoundsTag'),
+            lobbyMaxPlayersTag: document.getElementById('lobbyMaxPlayersTag'),
             lobbyRoomCode: document.getElementById('lobbyRoomCode'),
             copyRoomCodeBtn: document.getElementById('copyRoomCodeBtn'),
             lobbyPlayerCount: document.getElementById('lobbyPlayerCount'),
@@ -264,6 +271,24 @@
                     elements.setupModeGroup.querySelectorAll('.setup-toggle-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     gameState.selectedMode = btn.dataset.mode;
+                    if (elements.setupMembersSection) {
+                        elements.setupMembersSection.style.display = gameState.selectedMode === 'PRIVATE_MULTIPLAYER' ? 'block' : 'none';
+                    }
+                });
+            });
+        }
+
+        // Setup Members / Capacity buttons
+        if (elements.setupMembersGroup) {
+            elements.setupMembersGroup.querySelectorAll('.setup-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    elements.setupMembersGroup.querySelectorAll('.setup-toggle-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const members = parseInt(btn.dataset.members, 10) || 4;
+                    gameState.selectedMaxPlayers = members;
+                    if (elements.setupMembersBadge) {
+                        elements.setupMembersBadge.textContent = `${members} Players`;
+                    }
                 });
             });
         }
@@ -330,6 +355,7 @@
         // Host Mode: Game Selection Chips
         let hostSelectedGameType = 'guess_movie';
         let hostSelectedRounds = 10;
+        let hostSelectedMembers = 4;
 
         if (elements.hostGamePicker) {
             elements.hostGamePicker.querySelectorAll('.host-game-chip').forEach(chip => {
@@ -352,6 +378,21 @@
             });
         }
 
+        // Host Mode: Members Capacity Chips (2 to 10 players)
+        if (elements.hostMembersPicker) {
+            elements.hostMembersPicker.querySelectorAll('.host-member-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    elements.hostMembersPicker.querySelectorAll('.host-member-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    hostSelectedMembers = parseInt(btn.dataset.members, 10) || 4;
+                    gameState.selectedMaxPlayers = hostSelectedMembers;
+                    if (elements.hostMembersBadge) {
+                        elements.hostMembersBadge.textContent = `${hostSelectedMembers} Players`;
+                    }
+                });
+            });
+        }
+
         // Host Mode: Generate Room Code Button
         if (elements.generateRoomCodeBtn) {
             elements.generateRoomCodeBtn.addEventListener('click', async () => {
@@ -364,6 +405,7 @@
                 gameState.selectedGame = targetGame;
                 gameState.selectedDifficulty = 'medium';
                 gameState.selectedRounds = hostSelectedRounds;
+                gameState.selectedMaxPlayers = hostSelectedMembers;
                 gameState.selectedMode = 'PRIVATE_MULTIPLAYER';
 
                 elements.generateRoomCodeBtn.disabled = true;
@@ -564,6 +606,11 @@
             elements.setupModeGroup.querySelectorAll('.setup-toggle-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === mode);
             });
+        }
+
+        // Toggle members section visibility based on mode
+        if (elements.setupMembersSection) {
+            elements.setupMembersSection.style.display = mode === 'PRIVATE_MULTIPLAYER' ? 'block' : 'none';
         }
 
         if (elements.gameSetupModal) {
@@ -850,6 +897,7 @@
             gameType: gameState.selectedGame.gameType,
             difficulty: gameState.selectedDifficulty,
             totalRounds: gameState.selectedRounds,
+            maxPlayers: gameState.selectedMaxPlayers || 10,
             displayName: user ? (user.name || user.username) : 'Host Player',
             avatarUrl: user ? (user.avatar || '') : '',
             userId: user ? user.id : null
@@ -861,6 +909,7 @@
             gameState.isHost = true;
             gameState.roomCode = res.roomCode;
             gameState.totalRounds = res.session.totalRounds;
+            gameState.selectedMaxPlayers = res.session.maxPlayers || gameState.selectedMaxPlayers || 10;
 
             showLobbyScreen(res.session);
         });
@@ -890,6 +939,7 @@
             gameState.roomCode = res.session.roomCode;
             gameState.selectedGame = gameState.games.find(g => g.gameType === res.session.gameType) || { title: 'Multiplayer Match', icon: '🎮' };
             gameState.totalRounds = res.session.totalRounds;
+            gameState.selectedMaxPlayers = res.session.maxPlayers || 10;
 
             showLobbyScreen(res.session);
         });
@@ -907,12 +957,16 @@
         hideAllGameScreens();
         if (elements.multiplayerLobbyScreen) elements.multiplayerLobbyScreen.style.display = 'block';
 
+        const maxPlayers = session.maxPlayers || gameState.selectedMaxPlayers || 10;
+        gameState.selectedMaxPlayers = maxPlayers;
+
         if (elements.lobbyGameTypeTag) elements.lobbyGameTypeTag.textContent = `${gameState.selectedGame?.icon || '🎮'} ${gameState.selectedGame?.title || session.gameType}`;
         if (elements.lobbyDifficultyTag) elements.lobbyDifficultyTag.textContent = (session.difficulty || 'medium').toUpperCase();
         if (elements.lobbyRoundsTag) elements.lobbyRoundsTag.textContent = `${session.totalRounds} Rounds`;
+        if (elements.lobbyMaxPlayersTag) elements.lobbyMaxPlayersTag.textContent = `👥 Max ${maxPlayers}`;
         if (elements.lobbyRoomCode) elements.lobbyRoomCode.textContent = session.roomCode;
 
-        updateLobbyPlayersList(session.players || []);
+        updateLobbyPlayersList(session.players || [], maxPlayers);
 
         if (gameState.isHost) {
             if (elements.hostStartGameBtn) elements.hostStartGameBtn.style.display = 'block';
@@ -925,12 +979,15 @@
 
     function updateLobbyUI(data) {
         if (elements.lobbyRoomCode) elements.lobbyRoomCode.textContent = data.roomCode;
-        updateLobbyPlayersList(data.players || []);
+        const maxPlayers = data.maxPlayers || gameState.selectedMaxPlayers || 10;
+        gameState.selectedMaxPlayers = maxPlayers;
+        if (elements.lobbyMaxPlayersTag) elements.lobbyMaxPlayersTag.textContent = `👥 Max ${maxPlayers}`;
+        updateLobbyPlayersList(data.players || [], maxPlayers);
     }
 
-    function updateLobbyPlayersList(players) {
+    function updateLobbyPlayersList(players, maxPlayers = gameState.selectedMaxPlayers || 10) {
         const connectedPlayers = (players || []).filter(p => p.connected);
-        if (elements.lobbyPlayerCount) elements.lobbyPlayerCount.textContent = connectedPlayers.length;
+        if (elements.lobbyPlayerCount) elements.lobbyPlayerCount.textContent = `${connectedPlayers.length} / ${maxPlayers}`;
 
         if (elements.lobbyPlayersGrid) {
             elements.lobbyPlayersGrid.innerHTML = connectedPlayers.map(p => `

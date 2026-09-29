@@ -328,5 +328,25 @@ Added the ability to directly host private matches and generate room codes from 
 - **Top Bar Alignment:**
   - Renamed the second tab from `🔑 Join Room` to `👥 Multiplayer` to accurately reflect both **Host (Generate Code)** and **Join** capabilities.
 
+## 32. 👥 10-Player Capacity Expansion & Room Member Prompting
+Expanded multiplayer room capacity up to 10 players, and added interactive member count prompting whenever generating or configuring a private room:
 
-
+- **Extended Room Capacity to 10 Players (`server/gameModels.js` & `server/gameSocket.js`):**
+  - Updated `gameSessionSchema` to support `maxPlayers` with minimum 2 and maximum 10 players (defaulting to 10).
+  - Updated Socket.IO `create_room` handler to parse and persist the host's selected member capacity (`maxPlayers`).
+  - Added authoritative room capacity enforcement in Socket.IO `join_room`: if the number of joined players reaches or exceeds `maxPlayers`, the server cleanly rejects additional join attempts with `Room is full! Maximum X players allowed.`
+  - Broadcasts `maxPlayers` in `room_updated` event and socket callbacks so all connected participants stay synchronized with the room's total capacity.
+- **Interactive Members Prompt During Room Code Generation (`index.html` & `game.js`):**
+  - **Multiplayer Hub Host Screen (`#mpViewHost`):** Added a dedicated "👥 Members Joining:" capacity selector with chip buttons ranging from `2` to `10` players, complete with a live badge counter (`#hostMembersBadge`).
+  - **Game Setup Modal (`#gameSetupModal`):** Added a dynamic `#setupMembersSection` with chip buttons `2` to `10` and live badge counter (`#setupMembersBadge`), automatically displayed whenever the host chooses "With Friends" mode.
+  - When the host clicks **"✨ Generate Room Code"** or **"🚀 Start Match"**, the selected member count is transmitted to the authoritative server and assigned to the game session.
+- **Real-Time Lobby Capacity Display (`index.html` & `styles.css`):**
+  - Added a `#lobbyMaxPlayersTag` metadata pill in the multiplayer lobby (e.g. `👥 Max 10`).
+  - Updated the connected player count badge (`#lobbyPlayerCount`) to display current occupancy against room capacity (e.g. `2 / 10 Connected`).
+  - Styled chips with responsive flex wraps, neon accent border on active state, and smooth micro-interactions optimized for both mobile and desktop viewports.
+- **End-to-End Automated Test Verification (`server/test-games-e2e.js`):**
+  - Added Test 6 covering:
+    - Creation of rooms with custom player capacity (e.g. 2 players and 10 players).
+    - Validation that 10 players can be accommodated.
+    - Automatic rejection of overflow players when room capacity is exceeded.
+  - 47/47 tests passing across the entire test suite.

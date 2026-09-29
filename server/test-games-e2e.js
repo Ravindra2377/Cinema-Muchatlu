@@ -265,6 +265,81 @@ async function runTests() {
         assert(false, `Option randomization test failed: ${e.message}`);
     }
 
+    // ============================================
+    // TEST 6: Room Capacity (2 to 10 players) & Capacity Enforcement
+    // ============================================
+    console.log('\n🔟 Test 6: Room Capacity (up to 10 players) & Overflow Enforcement');
+    try {
+        await new Promise((resolve) => {
+            const socketH = io(SOCKET_URL, { transports: ['websocket'] });
+            let p2 = null;
+            let p3 = null;
+
+            socketH.on('connect', () => {
+                // Create room with capacity of 2
+                socketH.emit('create_room', {
+                    gameType: 'guess_song',
+                    difficulty: 'medium',
+                    totalRounds: 5,
+                    maxPlayers: 2,
+                    displayName: 'Host_Two'
+                }, (res) => {
+                    assert(res && res.roomCode, 'Created room with custom capacity limit');
+                    assert(res.session && res.session.maxPlayers === 2, 'Room capacity correctly set to 2');
+
+                    const rCode = res.roomCode;
+                    // Second player joins (should succeed)
+                    p2 = io(SOCKET_URL, { transports: ['websocket'] });
+                    p2.on('connect', () => {
+                        p2.emit('join_room', {
+                            roomCode: rCode,
+                            displayName: 'Player_Two'
+                        }, (joinRes) => {
+                            assert(joinRes && !joinRes.error, 'Second player successfully joined 2-player room');
+                            assert(joinRes.session && joinRes.session.players.length === 2, 'Room now has 2 connected players');
+
+                            // Third player attempts to join (should be rejected because max is 2)
+                            p3 = io(SOCKET_URL, { transports: ['websocket'] });
+                            p3.on('connect', () => {
+                                p3.emit('join_room', {
+                                    roomCode: rCode,
+                                    displayName: 'Player_Three_Overflow'
+                                }, (p3Res) => {
+                                    assert(p3Res && p3Res.error && p3Res.error.includes('Room is full'), 'Third player rejected with "Room is full" error');
+
+                                    socketH.disconnect();
+                                    p2.disconnect();
+                                    p3.disconnect();
+                                    resolve();
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        // Also test room creation with 10 max players
+        await new Promise((resolve) => {
+            const socket10 = io(SOCKET_URL, { transports: ['websocket'] });
+            socket10.on('connect', () => {
+                socket10.emit('create_room', {
+                    gameType: 'guess_movie',
+                    difficulty: 'hard',
+                    totalRounds: 10,
+                    maxPlayers: 10,
+                    displayName: 'Host_Ten'
+                }, (res) => {
+                    assert(res && res.session && res.session.maxPlayers === 10, 'Created room supporting up to 10 players');
+                    socket10.disconnect();
+                    resolve();
+                });
+            });
+        });
+    } catch (e) {
+        assert(false, `Room capacity test failed: ${e.message}`);
+    }
+
     console.log(`\n============================================`);
     console.log(`Test Results: ${passed} Passed, ${failed} Failed`);
     console.log(`============================================\n`);
@@ -273,3 +348,4 @@ async function runTests() {
 }
 
 runTests();
+

@@ -2095,6 +2095,74 @@ body {
     box-shadow: 0 2px 8px rgba(255, 45, 85, 0.35);
 }
 
+/* Members / Room Capacity Selectors (2 to 10 players) */
+.host-members-row {
+    margin-bottom: 1.15rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+}
+
+.host-section-label-row, .setup-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.45rem;
+}
+
+.host-members-badge, .setup-members-badge {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #ff2d55;
+    background: rgba(255, 45, 85, 0.15);
+    border: 1px solid rgba(255, 45, 85, 0.35);
+    padding: 0.15rem 0.55rem;
+    border-radius: 10px;
+}
+
+.host-members-chips, .setup-members-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    justify-content: space-between;
+}
+
+.host-member-btn {
+    flex: 1;
+    min-width: 28px;
+    padding: 0.35rem 0.2rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+.host-member-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.host-member-btn.active {
+    background: #ff2d55;
+    border-color: #ff2d55;
+    box-shadow: 0 2px 10px rgba(255, 45, 85, 0.4);
+    color: #ffffff;
+}
+
+.setup-members-chips .setup-toggle-btn {
+    flex: 1;
+    min-width: 28px;
+    padding: 0.45rem 0.2rem;
+    font-size: 0.84rem;
+}
+
 .host-generate-btn {
     width: 100%;
     min-height: 50px;
@@ -3211,6 +3279,20 @@ body {
     .host-round-btn {
         padding: 0.25rem 0.55rem;
         font-size: 0.75rem;
+    }
+    .host-members-row {
+        margin-bottom: 0.85rem;
+        padding: 0.35rem 0.65rem;
+    }
+    .host-member-btn {
+        min-width: 25px;
+        padding: 0.28rem 0.15rem;
+        font-size: 0.76rem;
+    }
+    .setup-members-chips .setup-toggle-btn {
+        min-width: 25px;
+        padding: 0.35rem 0.15rem;
+        font-size: 0.78rem;
     }
     .join-quick-tips {
         margin-top: 0.65rem;

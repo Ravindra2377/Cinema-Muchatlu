@@ -315,6 +315,25 @@
                             </div>
                         </div>
 
+                        <!-- Members / Room Capacity Picker (2 to 10 players) -->
+                        <div class="host-members-row">
+                            <div class="host-section-label-row">
+                                <span class="host-rounds-label">👥 Members Joining:</span>
+                                <span class="host-members-badge" id="hostMembersBadge">4 Players</span>
+                            </div>
+                            <div class="host-members-chips" id="hostMembersPicker">
+                                <button type="button" class="host-member-btn" data-members="2">2</button>
+                                <button type="button" class="host-member-btn" data-members="3">3</button>
+                                <button type="button" class="host-member-btn active" data-members="4">4</button>
+                                <button type="button" class="host-member-btn" data-members="5">5</button>
+                                <button type="button" class="host-member-btn" data-members="6">6</button>
+                                <button type="button" class="host-member-btn" data-members="7">7</button>
+                                <button type="button" class="host-member-btn" data-members="8">8</button>
+                                <button type="button" class="host-member-btn" data-members="9">9</button>
+                                <button type="button" class="host-member-btn" data-members="10">10</button>
+                            </div>
+                        </div>
+
                         <button type="button" class="btn-primary host-generate-btn" id="generateRoomCodeBtn">
                             <span>✨ Generate Room Code</span>
                         </button>
@@ -384,6 +403,25 @@
                         </div>
                     </div>
 
+                    <!-- Members / Room Capacity Section (Only shown when mode is With Friends) -->
+                    <div class="setup-section" id="setupMembersSection" style="display: none;">
+                        <div class="setup-label-row">
+                            <label>Members Joining (Capacity)</label>
+                            <span class="setup-members-badge" id="setupMembersBadge">4 Players</span>
+                        </div>
+                        <div class="setup-toggle-group setup-members-chips" id="setupMembersGroup">
+                            <button type="button" class="setup-toggle-btn" data-members="2">2</button>
+                            <button type="button" class="setup-toggle-btn" data-members="3">3</button>
+                            <button type="button" class="setup-toggle-btn active" data-members="4">4</button>
+                            <button type="button" class="setup-toggle-btn" data-members="5">5</button>
+                            <button type="button" class="setup-toggle-btn" data-members="6">6</button>
+                            <button type="button" class="setup-toggle-btn" data-members="7">7</button>
+                            <button type="button" class="setup-toggle-btn" data-members="8">8</button>
+                            <button type="button" class="setup-toggle-btn" data-members="9">9</button>
+                            <button type="button" class="setup-toggle-btn" data-members="10">10</button>
+                        </div>
+                    </div>
+
                     <div class="setup-actions">
                         <button class="btn-primary start-match-btn" id="confirmStartGameBtn">
                             🚀 Start Match
@@ -399,6 +437,7 @@
                         <span class="lobby-tag" id="lobbyGameTypeTag">🎬 Guess the Movie</span>
                         <span class="lobby-tag" id="lobbyDifficultyTag">🟡 MEDIUM</span>
                         <span class="lobby-tag" id="lobbyRoundsTag">10 Rounds</span>
+                        <span class="lobby-tag" id="lobbyMaxPlayersTag">👥 Max 4</span>
                     </div>
                     
                     <h2 class="lobby-title">Multiplayer Lobby</h2>
