@@ -350,3 +350,7 @@ Expanded multiplayer room capacity up to 10 players, and added interactive membe
     - Validation that 10 players can be accommodated.
     - Automatic rejection of overflow players when room capacity is exceeded.
   - 47/47 tests passing across the entire test suite.
+- Added Where-to-Watch functionality with TMDB providers in movie detail modal
+- Created Release Calendar (Upcoming) tab in the Cinema section with a Remind Me button
+- Implemented Daily Telugu Puzzle feature in the game hub with WhatsApp sharing
+- Added Song of the Day pinned card to the Music section

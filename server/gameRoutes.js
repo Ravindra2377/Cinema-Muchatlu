@@ -41,6 +41,54 @@ router.get('/', async (req, res) => {
     }
 });
 
+// 1.5 Get Daily Puzzle
+router.get('/puzzle/daily', async (req, res) => {
+    try {
+        const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        let hash = 0;
+        for (let i = 0; i < dateStr.length; i++) {
+            hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+            hash |= 0;
+        }
+        
+        const allQuestions = await GameQuestion.find({ isActive: true }).lean();
+        if (allQuestions.length === 0) return res.status(404).json({ error: 'No questions available' });
+        
+        const dailyQuestion = allQuestions[Math.abs(hash) % allQuestions.length];
+        
+        // Remove correct answer before sending to client
+        const safeQuestion = {
+            id: dailyQuestion._id,
+            gameType: dailyQuestion.gameType,
+            questionType: dailyQuestion.questionType,
+            prompt: dailyQuestion.prompt,
+            clues: dailyQuestion.clues,
+            mediaUrl: dailyQuestion.mediaUrl,
+            audioPreviewUrl: dailyQuestion.audioPreviewUrl,
+            options: dailyQuestion.options
+        };
+        
+        res.json({ date: dateStr, puzzle: safeQuestion });
+    } catch (err) {
+        console.error('Error fetching daily puzzle:', err);
+        res.status(500).json({ error: 'Failed to fetch daily puzzle' });
+    }
+});
+
+router.post('/puzzle/daily/answer', async (req, res) => {
+    try {
+        const { questionId, answer } = req.body;
+        const question = await GameQuestion.findById(questionId);
+        if (!question) return res.status(404).json({ error: 'Question not found' });
+        
+        const isCorrect = (question.correctAnswer === answer);
+        res.json({ isCorrect, correctAnswer: question.correctAnswer });
+    } catch (err) {
+        console.error('Error verifying puzzle answer:', err);
+        res.status(500).json({ error: 'Failed to verify answer' });
+    }
+});
+
 // 2. Start a Solo Game
 router.post('/solo/start', optionalAuth, async (req, res) => {
     try {

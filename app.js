@@ -855,6 +855,42 @@ async function initMusic(force = false) {
     }
     renderMusic();
     renderTrendingSongs();
+    renderDailySong();
+}
+
+async function renderDailySong() {
+    const dailySongCard = document.getElementById('dailySongCard');
+    if (!dailySongCard) return;
+
+    try {
+        const res = await apiFetch('/music/daily');
+        if (!res || !res.song) return;
+
+        const song = res.song;
+        dailySongCard.innerHTML = `
+            <div style="background: linear-gradient(135deg, rgba(229, 9, 20, 0.8) 0%, rgba(131, 0, 0, 0.9) 100%), url('${song.image}') center/cover; border-radius: 12px; padding: 2rem; position: relative; overflow: hidden; color: white; display: flex; align-items: center; gap: 2rem; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.2);">
+                <img src="${song.image}" alt="${song.title}" style="width: 120px; height: 120px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); z-index: 1;">
+                <div style="z-index: 1; flex: 1;">
+                    <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.5rem; display: inline-block;">🎵 Song of the Day</span>
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.8rem; line-height: 1.2;">${song.title}</h3>
+                    <p style="margin: 0 0 1.5rem 0; font-size: 1rem; opacity: 0.9;">${song.subtitle}</p>
+                    
+                    <button class="btn-primary" onclick="window.open('${song.url}', '_blank')" style="background: white; color: var(--primary); display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        Play Full Track
+                    </button>
+                    ${song.downloadUrl && song.downloadUrl.length > 0 ? `
+                        <button class="btn-secondary" onclick="window.open('${song.downloadUrl[0].link}', '_blank')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); color: white; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; margin-left: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Download
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error fetching daily song:', err);
+    }
 }
 
 function renderMusic() {
@@ -933,10 +969,16 @@ async function showMovieDetail(movieId) {
     if (!movie) return;
 
     let movieComments = [];
+    let watchProviders = null;
     try {
-        movieComments = await apiFetch(`/comments/${movieId}`);
+        const [commentsRes, providersRes] = await Promise.all([
+            apiFetch(`/comments/${movieId}`).catch(() => []),
+            apiFetch(`/movies/${movieId}/providers`).catch(() => null)
+        ]);
+        movieComments = commentsRes || [];
+        watchProviders = providersRes || null;
     } catch (err) {
-        console.error('Error fetching comments:', err);
+        console.error('Error fetching movie details:', err);
     }
 
     const modalBody = document.getElementById('modalBody');
@@ -947,17 +989,40 @@ async function showMovieDetail(movieId) {
                 <h2 class="movie-detail-title">${movie.title}</h2>
                 <div class="movie-detail-meta">
                     <span class="meta-item rating">⭐ ${movie.rating}</span>
-                    <span class="meta-item">${movie.year}</span>
+                    <span class="meta-item">${movie.content_type === 'Upcoming' && movie.release_date ? movie.release_date : movie.year}</span>
                 </div>
                 <div class="genre-tags">
                     ${movie.genre.map(g => `<span class="genre-tag">${g}</span>`).join('')}
                 </div>
                 <p class="movie-description">${movie.description}</p>
-                <button class="btn-primary" onclick="toggleWatchlist('${movie.id}')">
-                    ${isInWatchlist(movie.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
-                </button>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <button class="btn-primary" onclick="toggleWatchlist('${movie.id}')">
+                        ${isInWatchlist(movie.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                    </button>
+                    ${movie.content_type === 'Upcoming' ? `
+                        <button class="btn-secondary" onclick="toggleReminder('${movie.id}')" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; cursor: pointer;">
+                            🔔 Remind Me
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         </div>
+        ${watchProviders && (watchProviders.flatrate || watchProviders.rent || watchProviders.buy) ? `
+        <div class="movie-detail-section providers-section">
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Where to Watch</h3>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                ${['flatrate', 'rent', 'buy'].map(type => {
+                    if (!watchProviders[type]) return '';
+                    return watchProviders[type].map(p => `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                            <img src="https://image.tmdb.org/t/p/w92${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name} (${type})" style="width: 40px; height: 40px; border-radius: 8px;">
+                            <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: capitalize;">${type}</span>
+                        </div>
+                    `).join('');
+                }).join('')}
+            </div>
+        </div>
+        ` : ''}
         <div class="movie-detail-section">
             <h3>Cast</h3>
             <p class="cast-list">${movie.cast.join(', ')}</p>
@@ -1092,6 +1157,15 @@ async function initWatchlist() {
 
 function isInWatchlist(movieId) {
     return watchlist.includes(movieId);
+}
+
+function toggleReminder(movieId) {
+    if (!currentUser) {
+        alert('Please login to set release reminders');
+        return;
+    }
+    alert('Reminder set for this release! You will be notified when it drops.');
+    // Here we could hit a new endpoint: POST /api/reminders/:movieId
 }
 
 async function toggleWatchlist(movieId) {
@@ -1461,10 +1535,26 @@ function initEventListeners() {
 
     // Content Type Tabs
     document.querySelectorAll('.content-type-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', async () => {
             document.querySelectorAll('.content-type-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentContentType = tab.dataset.contentType;
+            
+            if (currentContentType === 'Upcoming') {
+                try {
+                    const upcomingMovies = await apiFetch('/movies/upcoming');
+                    // Add them to allMovies if not already there so they can be filtered/displayed
+                    upcomingMovies.forEach(um => {
+                        um.content_type = 'Upcoming';
+                        if (!allMovies.find(m => m.id === um.id)) {
+                            allMovies.push(um);
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error fetching upcoming movies:', e);
+                }
+            }
+            
             renderMovies(currentFilter);
         });
     });

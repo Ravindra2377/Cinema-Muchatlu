@@ -57,6 +57,7 @@ function mapTMDBMovie(m) {
         id: m.id.toString(),
         title: m.title,
         year: m.release_date ? parseInt(m.release_date.split('-')[0]) : null,
+        release_date: m.release_date || null,
         genre: (m.genre_ids || []).map(id => TMDB_GENRES[id]).filter(Boolean), 
         rating: Math.round(m.vote_average * 10) / 10,
         poster: m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop',
@@ -289,6 +290,30 @@ app.get('/api/movies/:id', async (req, res) => {
         res.json(mapTMDBMovie(response.data));
     } catch (err) {
         res.status(500).json({ error: 'Error fetching movie details' });
+    }
+});
+
+// GET /api/movies/:id/providers - Get watch providers for a movie in India
+app.get('/api/movies/:id/providers', async (req, res) => {
+    try {
+        const url = `${TMDB_API}/movie/${req.params.id}/watch/providers?api_key=${process.env.TMDB_API_KEY}`;
+        const response = await axios.get(url);
+        const inProviders = response.data.results?.IN || {};
+        res.json(inProviders);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching watch providers' });
+    }
+});
+
+// GET /api/movies/upcoming - Get upcoming Telugu movies release calendar
+app.get('/api/movies/upcoming', async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+        const response = await axios.get(url);
+        res.json(response.data.results.slice(0, 10).map(mapTMDBMovie));
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching upcoming movies' });
     }
 });
 
@@ -792,6 +817,33 @@ app.get('/api/feed', optionalAuth, async (req, res) => {
 // ============================================
 // MUSIC ROUTES (NATIVE JIOSAAVN ENGINE)
 // ============================================
+
+// GET /api/music/daily - Get Song of the Day
+app.get('/api/music/daily', async (req, res) => {
+    try {
+        const dateStr = new Date().toISOString().split('T')[0];
+        let hash = 0;
+        for (let i = 0; i < dateStr.length; i++) {
+            hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+            hash |= 0;
+        }
+        
+        let songs = cachedMusic;
+        if (songs.length === 0) {
+            songs = await searchSongs('telugu trending');
+        }
+        
+        if (songs.length > 0) {
+            const dailySong = songs[Math.abs(hash) % songs.length];
+            res.json({ date: dateStr, song: dailySong });
+        } else {
+            res.status(404).json({ error: 'No songs available' });
+        }
+    } catch (err) {
+        console.error('Error fetching daily song:', err);
+        res.status(500).json({ error: 'Error fetching daily song' });
+    }
+});
 
 let cachedMusic = [];
 let lastMusicFetch = 0;

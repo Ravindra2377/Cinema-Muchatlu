@@ -615,8 +615,27 @@
 
         if (elements.gameSetupModal) {
             elements.gameSetupModal.style.display = 'flex';
-        }
     }
+
+    window.startDailyPuzzle = async function() {
+        try {
+            const res = await gameApiFetch('/puzzle/daily');
+            gameState.selectedGame = { icon: '🧩', title: 'Daily Telugu Puzzle', gameType: 'daily_puzzle' };
+            gameState.activeSession = { sessionId: 'daily', questionId: res.puzzle.id, date: res.date };
+            gameState.currentRound = 1;
+            gameState.totalRounds = 1;
+            gameState.currentScore = 0;
+            gameState.currentStreak = 0;
+            
+            hideAllGameScreens();
+            if (elements.activeQuestionScreen) elements.activeQuestionScreen.style.display = 'block';
+
+            renderSoloQuestion(res.puzzle);
+        } catch (err) {
+            console.error('Error starting daily puzzle:', err);
+            alert('Daily puzzle unavailable right now.');
+        }
+    };
 
     // ============================================
     // Start Game Confirm Handler
@@ -761,15 +780,29 @@
 
         const timeTakenSeconds = (Date.now() - gameState.roundStartTime) / 1000;
 
-        try {
-            const res = await gameApiFetch('/solo/answer', {
-                method: 'POST',
-                body: JSON.stringify({
-                    sessionId: gameState.activeSession.sessionId,
-                    selectedOption,
-                    timeTakenSeconds
-                })
-            });
+            let res;
+            if (gameState.selectedGame.gameType === 'daily_puzzle') {
+                res = await gameApiFetch('/puzzle/daily/answer', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        questionId: gameState.activeSession.questionId,
+                        answer: selectedOption
+                    })
+                });
+                res.totalScore = res.isCorrect ? 100 : 0;
+                res.currentStreak = res.isCorrect ? 1 : 0;
+                res.isComplete = true;
+                res.finalResults = { score: res.totalScore, totalRounds: 1, message: res.isCorrect ? 'Awesome! 🟩' : 'Oops! 🟥', date: gameState.activeSession.date };
+            } else {
+                res = await gameApiFetch('/solo/answer', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        sessionId: gameState.activeSession.sessionId,
+                        selectedOption,
+                        timeTakenSeconds
+                    })
+                });
+            }
 
             // Reveal answer on buttons
             elements.arenaOptionsGrid.querySelectorAll('.option-btn').forEach(btn => {
@@ -792,7 +825,11 @@
             // Wait 2.5 seconds then advance
             setTimeout(() => {
                 if (res.isComplete) {
-                    showSoloFinalResults(res.finalResults);
+                    if (gameState.selectedGame.gameType === 'daily_puzzle') {
+                        showDailyPuzzleResults(res.finalResults);
+                    } else {
+                        showSoloFinalResults(res.finalResults);
+                    }
                 } else {
                     gameState.currentRound++;
                     renderSoloQuestion(res.nextQuestion);
@@ -829,6 +866,37 @@
             pointsText = '+0 pts';
         }
         if (elements.feedbackPoints) elements.feedbackPoints.textContent = pointsText;
+    }
+
+    function showDailyPuzzleResults(results) {
+        hideAllGameScreens();
+        if (elements.gameFinalResultsModal) elements.gameFinalResultsModal.style.display = 'block';
+
+        const finalScore = document.getElementById('finalScore');
+        if (finalScore) finalScore.textContent = results.score > 0 ? "Correct!" : "Wrong!";
+
+        const summaryText = document.getElementById('finalSummaryText');
+        if (summaryText) summaryText.innerHTML = `You played the daily puzzle for ${results.date}.<br>${results.message}`;
+        
+        // Hide rematch button, show share button
+        const rematchBtn = document.getElementById('rematchBtn');
+        if (rematchBtn) rematchBtn.style.display = 'none';
+
+        const returnHubBtn = document.getElementById('returnHubBtn');
+        
+        const existingShareBtn = document.getElementById('sharePuzzleBtn');
+        if (!existingShareBtn && returnHubBtn) {
+            const shareBtn = document.createElement('button');
+            shareBtn.id = 'sharePuzzleBtn';
+            shareBtn.className = 'btn-primary';
+            shareBtn.textContent = 'Share to WhatsApp 📱';
+            shareBtn.onclick = () => {
+                const grid = results.score > 0 ? '🟩🟩🟩🟩' : '🟥🟥🟥🟥';
+                const text = `Cinema Muchatlu Daily Puzzle (${results.date})\\nResult: ${grid}\\nPlay at: ${window.location.href}`;
+                navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard! Ready to paste in WhatsApp.'));
+            };
+            returnHubBtn.parentNode.insertBefore(shareBtn, returnHubBtn);
+        }
     }
 
     function showSoloFinalResults(results) {

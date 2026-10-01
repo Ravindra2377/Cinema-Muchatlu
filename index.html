@@ -154,6 +154,15 @@
                     </svg>
                     TV Shows
                 </button>
+                <button class="content-type-tab" data-content-type="Upcoming">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Upcoming Releases
+                </button>
             </div>
 
             <div class="filters">
@@ -183,6 +192,9 @@
         </section>
 
         <section id="music" class="section">
+            <!-- SONG OF THE DAY PINNED CARD -->
+            <div id="dailySongCard" style="margin-bottom: 2rem;"></div>
+            
             <div style="margin-bottom: 3rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
                     <h2 class="section-title" style="margin: 0;">🔥 Trending Telugu Hits</h2>
@@ -243,6 +255,10 @@
 
             <!-- TAB 1: GAME SELECTION -->
             <div id="gameHubSelectionTab" class="game-tab-content active">
+                <div class="daily-puzzle-card" id="dailyPuzzleCard" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);" onclick="startDailyPuzzle()">
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.4rem;">🧩 Daily Telugu Puzzle</h3>
+                    <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">New puzzle every day! Tap to play and share your score.</p>
+                </div>
                 <div class="game-cards-container" id="gameCardsContainer">
                     <!-- Injected by game.js with mobile-responsive arcade cards -->
                 </div>
