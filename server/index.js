@@ -937,12 +937,7 @@ app.get('/api/music', async (req, res) => {
     }
 });
 
-// ============================================
-// Catch-all: serve frontend
-// ============================================
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'index.html'));
-});
+// (Catch-all moved to end of file)
 
 // ============================================
 // Start Server
@@ -1167,6 +1162,13 @@ app.get('/api/analytics/recommendations', async (req, res) => {
         console.error('Error fetching analytics:', err);
         res.status(500).json({ error: 'Failed to generate analytics report' });
     }
+});
+
+// ============================================
+// Catch-all: serve frontend
+// ============================================
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // ============================================

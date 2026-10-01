@@ -1746,11 +1746,12 @@ function init() {
     if (window.authFunctions && window.authFunctions.initAuth) {
         window.authFunctions.initAuth();
     }
-    // initFeed(); // Disabled for MVP Discussion testing
+    initFeed(); // Enabled for Culture Graph
     initMovies();
     initMusic();
     initWatchlist();
-    initDiscussions();
+    // initDiscussions(); // Disabled to prefer Culture Graph Feed
+
     initMemes();
 
     initEventListeners();
