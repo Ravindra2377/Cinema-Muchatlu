@@ -615,6 +615,7 @@
 
         if (elements.gameSetupModal) {
             elements.gameSetupModal.style.display = 'flex';
+        }
     }
 
     window.startDailyPuzzle = async function() {
@@ -780,6 +781,7 @@
 
         const timeTakenSeconds = (Date.now() - gameState.roundStartTime) / 1000;
 
+        try {
             let res;
             if (gameState.selectedGame.gameType === 'daily_puzzle') {
                 res = await gameApiFetch('/puzzle/daily/answer', {

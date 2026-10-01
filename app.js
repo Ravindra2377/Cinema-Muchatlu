@@ -868,23 +868,16 @@ async function renderDailySong() {
 
         const song = res.song;
         dailySongCard.innerHTML = `
-            <div style="background: linear-gradient(135deg, rgba(229, 9, 20, 0.8) 0%, rgba(131, 0, 0, 0.9) 100%), url('${song.image}') center/cover; border-radius: 12px; padding: 2rem; position: relative; overflow: hidden; color: white; display: flex; align-items: center; gap: 2rem; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.2);">
-                <img src="${song.image}" alt="${song.title}" style="width: 120px; height: 120px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); z-index: 1;">
+            <div style="background: linear-gradient(135deg, rgba(229, 9, 20, 0.8) 0%, rgba(131, 0, 0, 0.9) 100%), url('${song.thumbnailUrl}') center/cover; border-radius: 12px; padding: 2rem; position: relative; overflow: hidden; color: white; display: flex; align-items: center; gap: 2rem; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.2);">
+                <img src="${song.thumbnailUrl}" alt="${song.title}" style="width: 120px; height: 120px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); z-index: 1; object-fit: cover;">
                 <div style="z-index: 1; flex: 1;">
                     <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.5rem; display: inline-block;">🎵 Song of the Day</span>
                     <h3 style="margin: 0 0 0.5rem 0; font-size: 1.8rem; line-height: 1.2;">${song.title}</h3>
-                    <p style="margin: 0 0 1.5rem 0; font-size: 1rem; opacity: 0.9;">${song.subtitle}</p>
+                    <p style="margin: 0 0 1.5rem 0; font-size: 1rem; opacity: 0.9;">${song.artist}</p>
                     
-                    <button class="btn-primary" onclick="window.open('${song.url}', '_blank')" style="background: white; color: var(--primary); display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        Play Full Track
-                    </button>
-                    ${song.downloadUrl && song.downloadUrl.length > 0 ? `
-                        <button class="btn-secondary" onclick="window.open('${song.downloadUrl[0].link}', '_blank')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); color: white; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; margin-left: 0.5rem;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            Download
-                        </button>
-                    ` : ''}
+                    <audio controls src="${song.mediaUrl}" preload="none" style="width: 100%; max-width: 400px; height: 36px; border-radius: 20px; display: block;">
+                        Your browser does not support the audio element.
+                    </audio>
                 </div>
             </div>
         `;
@@ -1013,10 +1006,11 @@ async function showMovieDetail(movieId) {
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 ${['flatrate', 'rent', 'buy'].map(type => {
                     if (!watchProviders[type]) return '';
+                    let displayType = type === 'flatrate' ? 'Stream' : type;
                     return watchProviders[type].map(p => `
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
                             <img src="https://image.tmdb.org/t/p/w92${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name} (${type})" style="width: 40px; height: 40px; border-radius: 8px;">
-                            <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: capitalize;">${type}</span>
+                            <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: capitalize;">${displayType}</span>
                         </div>
                     `).join('');
                 }).join('')}

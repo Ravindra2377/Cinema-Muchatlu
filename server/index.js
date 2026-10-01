@@ -282,6 +282,18 @@ app.get('/api/movies/trending', async (req, res) => {
     }
 });
 
+// GET /api/movies/upcoming - Get upcoming Telugu movies release calendar
+app.get('/api/movies/upcoming', async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+        const response = await axios.get(url);
+        res.json(response.data.results.slice(0, 10).map(mapTMDBMovie));
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching upcoming movies' });
+    }
+});
+
 // GET /api/movies/:id - Get a single movie
 app.get('/api/movies/:id', async (req, res) => {
     try {
@@ -305,17 +317,7 @@ app.get('/api/movies/:id/providers', async (req, res) => {
     }
 });
 
-// GET /api/movies/upcoming - Get upcoming Telugu movies release calendar
-app.get('/api/movies/upcoming', async (req, res) => {
-    try {
-        const today = new Date().toISOString().split('T')[0];
-        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
-        const response = await axios.get(url);
-        res.json(response.data.results.slice(0, 10).map(mapTMDBMovie));
-    } catch (err) {
-        res.status(500).json({ error: 'Error fetching upcoming movies' });
-    }
-});
+
 
 // ============================================
 // WATCHLIST ROUTES
