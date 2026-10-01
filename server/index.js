@@ -12,8 +12,9 @@ const path = require('path');
 const axios = require('axios');
 const { searchSongs, FALLBACK_TRACKS } = require('./jiosaavnService');
 
-const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification } = require('./models');
+const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification, DailyFeature, Reminder } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
+const { generateCinemaWrapped } = require('./recommendationEngine');
 
 // Hash function for deterministic A/B assignment
 function getExperimentGroup(identifier) {
@@ -71,6 +72,7 @@ const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
 const gameRoutes = require('./gameRoutes');
+const cronRoutes = require('./jobs/cronRoutes');
 const gameSocket = require('./gameSocket');
 
 const server = http.createServer(app);
@@ -92,6 +94,7 @@ app.use(express.json());
 
 // Mount Game API Routes
 app.use('/api/games', gameRoutes);
+app.use('/api/cron', cronRoutes);
 
 // Serve frontend static files from parent directory
 app.use(express.static(path.join(__dirname, '..')));
@@ -285,6 +288,14 @@ app.get('/api/movies/trending', async (req, res) => {
 // GET /api/movies/upcoming - Get upcoming Telugu movies release calendar
 app.get('/api/movies/upcoming', async (req, res) => {
     try {
+        const dateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const feature = await DailyFeature.findOne({ dateKey, type: 'upcoming_movies' });
+        
+        if (feature) {
+            return res.json(feature.data.map(mapTMDBMovie));
+        }
+
+        // Fallback to live TMDB fetch
         const today = new Date().toISOString().split('T')[0];
         const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
         const response = await axios.get(url);
@@ -349,6 +360,46 @@ app.post('/api/watchlist/:movieId', authMiddleware, async (req, res) => {
         }
     } catch (err) {
         res.status(500).json({ error: 'Error updating watchlist' });
+    }
+});
+
+// ============================================
+// REMINDER ROUTES
+// ============================================
+
+// GET /api/reminders - Get user's active reminders
+app.get('/api/reminders', authMiddleware, async (req, res) => {
+    try {
+        const items = await Reminder.find({ userId: req.user.id });
+        const movieIds = items.map(w => w.movieId);
+        res.json(movieIds);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching reminders' });
+    }
+});
+
+// POST /api/reminders/:movieId - Add/remove release reminder (toggle)
+app.post('/api/reminders/:movieId', authMiddleware, async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        const { title, releaseDate } = req.body;
+        
+        const existing = await Reminder.findOne({ userId: req.user.id, movieId });
+
+        if (existing) {
+            await Reminder.deleteOne({ _id: existing._id });
+            res.json({ action: 'removed', movieId });
+        } else {
+            await Reminder.create({ 
+                userId: req.user.id, 
+                movieId, 
+                movieTitle: title || 'Unknown Title',
+                releaseDate: releaseDate || '1970-01-01'
+            });
+            res.json({ action: 'added', movieId });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error updating reminder' });
     }
 });
 
@@ -549,6 +600,17 @@ app.delete('/api/replies/:id', authMiddleware, async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Error deleting reply' });
+    }
+});
+
+// GET /api/user/wrapped - Spotify style wrapped summary
+app.get('/api/user/wrapped', authMiddleware, async (req, res) => {
+    try {
+        const wrapped = await generateCinemaWrapped(req.user.id);
+        res.json(wrapped);
+    } catch (err) {
+        console.error('Error generating wrapped:', err);
+        res.status(500).json({ error: 'Error generating wrapped summary' });
     }
 });
 
@@ -823,21 +885,22 @@ app.get('/api/feed', optionalAuth, async (req, res) => {
 // GET /api/music/daily - Get Song of the Day
 app.get('/api/music/daily', async (req, res) => {
     try {
-        const dateStr = new Date().toISOString().split('T')[0];
-        let hash = 0;
-        for (let i = 0; i < dateStr.length; i++) {
-            hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
-            hash |= 0;
+        const dateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        
+        const feature = await DailyFeature.findOne({ dateKey, type: 'song' });
+        if (feature) {
+            return res.json({ date: dateKey, song: feature.data });
         }
         
+        // Fallback if job hasn't run
         let songs = cachedMusic;
         if (songs.length === 0) {
             songs = await searchSongs('telugu trending');
         }
         
         if (songs.length > 0) {
-            const dailySong = songs[Math.abs(hash) % songs.length];
-            res.json({ date: dateStr, song: dailySong });
+            const dailySong = songs[0];
+            res.json({ date: dateKey, song: dailySong });
         } else {
             res.status(404).json({ error: 'No songs available' });
         }

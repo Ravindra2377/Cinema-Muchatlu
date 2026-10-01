@@ -4,7 +4,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { Game, GameQuestion, GameSession, GameLeaderboard, UserEvent } = require('./models');
+const { Game, GameQuestion, GameSession, GameLeaderboard, UserEvent, DailyFeature } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
 const { processUserEvent } = require('./recommendationEngine');
 const {
@@ -44,17 +44,26 @@ router.get('/', async (req, res) => {
 // 1.5 Get Daily Puzzle
 router.get('/puzzle/daily', async (req, res) => {
     try {
-        const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-        let hash = 0;
-        for (let i = 0; i < dateStr.length; i++) {
-            hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
-            hash |= 0;
+        const dateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        
+        let dailyQuestion;
+        
+        const feature = await DailyFeature.findOne({ dateKey, type: 'puzzle' });
+        if (feature) {
+            dailyQuestion = feature.data;
+        } else {
+            // Fallback if cron hasn't run
+            const allQuestions = await GameQuestion.find({ isActive: true }).lean();
+            if (allQuestions.length === 0) return res.status(404).json({ error: 'No questions available' });
+            
+            // Hash fallback
+            let hash = 0;
+            for (let i = 0; i < dateKey.length; i++) {
+                hash = ((hash << 5) - hash) + dateKey.charCodeAt(i);
+                hash |= 0;
+            }
+            dailyQuestion = allQuestions[Math.abs(hash) % allQuestions.length];
         }
-        
-        const allQuestions = await GameQuestion.find({ isActive: true }).lean();
-        if (allQuestions.length === 0) return res.status(404).json({ error: 'No questions available' });
-        
-        const dailyQuestion = allQuestions[Math.abs(hash) % allQuestions.length];
         
         // Remove correct answer before sending to client
         const safeQuestion = {
@@ -68,7 +77,7 @@ router.get('/puzzle/daily', async (req, res) => {
             options: dailyQuestion.options
         };
         
-        res.json({ date: dateStr, puzzle: safeQuestion });
+        res.json({ date: dateKey, puzzle: safeQuestion });
     } catch (err) {
         console.error('Error fetching daily puzzle:', err);
         res.status(500).json({ error: 'Failed to fetch daily puzzle' });

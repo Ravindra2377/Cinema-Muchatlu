@@ -247,6 +247,21 @@
                 <p style="color: var(--text-secondary);">Loading questions...</p>
             </div>
         </div>
+
+        <!-- ============================================ -->
+        <!-- ⏱️ SCHEDULED JOBS MANAGEMENT                -->
+        <!-- ============================================ -->
+        <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; font-weight: 500;">⏱️ Scheduled Jobs</h2>
+        <div class="card" style="margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Job Runs</h3>
+                <button id="refreshJobsBtn" style="background: var(--border-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;">🔄 Refresh</button>
+            </div>
+            <div id="jobRunsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <p style="color: var(--text-secondary);">Loading jobs...</p>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -476,13 +491,61 @@
         document.getElementById('filterGameType').addEventListener('change', fetchAdminQuestions);
         document.getElementById('refreshQuestionsBtn').addEventListener('click', fetchAdminQuestions);
         
+        async function fetchJobStatus() {
+            const container = document.getElementById('jobRunsList');
+            try {
+                const res = await fetch('/api/cron/status', { headers: ADMIN_HEADERS });
+                const jobs = await res.json();
+                
+                if (jobs.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-secondary);">No job runs recorded yet.</p>';
+                    return;
+                }
+                
+                container.innerHTML = jobs.map(job => {
+                    const statusColor = job.status === 'success' ? '#34c759' : (job.status === 'failed' ? '#ff3b30' : '#ff9f0a');
+                    const duration = job.finishedAt ? ((new Date(job.finishedAt) - new Date(job.startedAt))/1000).toFixed(1) + 's' : 'running...';
+                    return `
+                        <div style="background: #2a2a35; padding: 1rem; border-radius: 8px; border-left: 4px solid ${statusColor}; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0 0 0.25rem 0;">${job.name} <span style="font-size: 0.75rem; color: var(--text-secondary); margin-left: 0.5rem;">${job.runId}</span></h4>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">
+                                    Started: ${new Date(job.startedAt).toLocaleString()} | Duration: ${duration}
+                                </p>
+                                ${job.error ? `<p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #ff3b30;">Error: ${job.error}</p>` : ''}
+                            </div>
+                            <button onclick="runJobManually('${job.name}')" style="background: var(--primary-color); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">Run Now</button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error fetching jobs:', err);
+                container.innerHTML = '<p style="color: #ff3b30;">Failed to load jobs.</p>';
+            }
+        }
+
+        async function runJobManually(jobName) {
+            try {
+                const res = await fetch(`/api/cron/${jobName}`, { method: 'POST', headers: ADMIN_HEADERS });
+                const data = await res.json();
+                alert(data.message || (data.error ? 'Error: ' + data.error : 'Job executed'));
+                fetchJobStatus();
+            } catch (err) {
+                alert('Error triggering job: ' + err.message);
+            }
+        }
+
+        document.getElementById('refreshJobsBtn').addEventListener('click', fetchJobStatus);
+        
         fetchAnalytics();
         fetchPendingMemes();
         fetchGameAnalytics();
         fetchAdminQuestions();
+        fetchJobStatus();
         setInterval(fetchAnalytics, 5000);
         setInterval(fetchPendingMemes, 15000);
         setInterval(fetchGameAnalytics, 15000);
+        setInterval(fetchJobStatus, 30000);
     </script>
 </body>
 </html>

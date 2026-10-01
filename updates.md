@@ -354,3 +354,10 @@ Expanded multiplayer room capacity up to 10 players, and added interactive membe
 - Created Release Calendar (Upcoming) tab in the Cinema section with a Remind Me button
 - Implemented Daily Telugu Puzzle feature in the game hub with WhatsApp sharing
 - Added Song of the Day pinned card to the Music section
+
+### Bug Fixes (Wave 1 follow-up)
+- Replaced 'Play Full Track' button for the Daily Song with a native inline HTML5 audio player
+- Fixed the Daily Song subtitle to correctly show the artist name instead of 'undefined'
+- Restored arcade games in the Play tab by resolving a syntax error in the game engine
+- Fixed backend routing conflict to ensure the Upcoming Releases tab loads movies correctly
+- Replaced technical 'flatrate' label with 'Stream' under watch provider icons

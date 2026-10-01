@@ -286,6 +286,7 @@ const SAMPLE_DISCUSSIONS = [
 // currentUser is now declared in auth.js
 let allMovies = [];
 let watchlist = [];
+let reminders = [];
 let comments = [];
 let discussions = [];
 let replies = [];
@@ -440,7 +441,7 @@ function renderMovies(filter = 'all', searchQuery = '') {
                 <h3 class="movie-title">${movie.title}</h3>
                 <div class="movie-meta">
                     <span class="movie-rating">⭐ ${movie.rating}</span>
-                    <span>${movie.year}</span>
+                    <span>${movie.content_type === 'Upcoming' && movie.release_date ? movie.release_date : movie.year}</span>
                 </div>
             </div>
         </div>
@@ -994,7 +995,7 @@ async function showMovieDetail(movieId) {
                     </button>
                     ${movie.content_type === 'Upcoming' ? `
                         <button class="btn-secondary" onclick="toggleReminder('${movie.id}')" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; cursor: pointer;">
-                            🔔 Remind Me
+                            ${reminders.includes(movie.id) ? '✅ Reminder Set' : '🔔 Remind Me'}
                         </button>
                     ` : ''}
                 </div>
@@ -1136,15 +1137,22 @@ async function deleteComment(commentId, movieId) {
 async function initWatchlist() {
     if (!currentUser) {
         watchlist = [];
+        reminders = [];
         renderWatchlist();
         return;
     }
     
     try {
-        watchlist = await apiFetch('/watchlist');
+        const [wl, rem] = await Promise.all([
+            apiFetch('/watchlist').catch(() => []),
+            apiFetch('/reminders').catch(() => [])
+        ]);
+        watchlist = wl;
+        reminders = rem;
     } catch (err) {
-        console.error('Error fetching watchlist:', err);
+        console.error('Error fetching watchlist/reminders:', err);
         watchlist = [];
+        reminders = [];
     }
     renderWatchlist();
 }
@@ -1153,13 +1161,37 @@ function isInWatchlist(movieId) {
     return watchlist.includes(movieId);
 }
 
-function toggleReminder(movieId) {
+async function toggleReminder(movieId) {
     if (!currentUser) {
         alert('Please login to set release reminders');
         return;
     }
-    alert('Reminder set for this release! You will be notified when it drops.');
-    // Here we could hit a new endpoint: POST /api/reminders/:movieId
+    try {
+        const movie = allMovies.find(m => m.id === movieId);
+        const result = await apiFetch(`/reminders/${movieId}`, { 
+            method: 'POST',
+            body: JSON.stringify({ 
+                title: movie ? movie.title : 'Unknown Title',
+                releaseDate: movie ? movie.release_date : null
+            })
+        });
+        
+        if (result.action === 'added') {
+            reminders.push(movieId);
+            alert('Reminder set for this release! You will be notified when it drops.');
+        } else {
+            const index = reminders.indexOf(movieId);
+            if (index > -1) reminders.splice(index, 1);
+        }
+        
+        // Re-render modal if open
+        const modal = document.getElementById('movieModal');
+        if (modal.style.display === 'flex') {
+            showMovieDetail(movieId);
+        }
+    } catch (err) {
+        alert(err.message || 'Error updating reminder');
+    }
 }
 
 async function toggleWatchlist(movieId) {
@@ -1540,8 +1572,12 @@ function initEventListeners() {
                     // Add them to allMovies if not already there so they can be filtered/displayed
                     upcomingMovies.forEach(um => {
                         um.content_type = 'Upcoming';
-                        if (!allMovies.find(m => m.id === um.id)) {
+                        const existing = allMovies.find(m => m.id === um.id);
+                        if (!existing) {
                             allMovies.push(um);
+                        } else {
+                            existing.content_type = 'Upcoming';
+                            existing.release_date = um.release_date;
                         }
                     });
                 } catch (e) {

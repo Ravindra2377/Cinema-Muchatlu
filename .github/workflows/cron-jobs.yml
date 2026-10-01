@@ -1,0 +1,95 @@
+name: Scheduled Jobs
+on:
+  schedule:
+    # Hourly at minute 0 (cleanup_rooms)
+    - cron: '0 * * * *'
+    
+    # 12:00 AM IST (6:30 PM UTC) -> daily_puzzle, song_of_day
+    - cron: '30 18 * * *'
+    
+    # 2:00 AM IST (8:30 PM UTC) -> recommendation_decay
+    - cron: '30 20 * * *'
+    
+    # 3:00 AM IST (9:30 PM UTC) -> maintenance
+    - cron: '30 21 * * *'
+    
+    # 5:00 AM IST (11:30 PM UTC) -> upcoming_sync
+    - cron: '30 23 * * *'
+    
+    # 7:00 AM IST (1:30 AM UTC) -> muchatlu_autopost
+    - cron: '30 1 * * *'
+    
+    # 8:00 AM IST (2:30 AM UTC) -> send_reminders
+    - cron: '30 2 * * *'
+    
+    # 9:00 AM IST (3:30 AM UTC) -> meme_digest
+    - cron: '30 3 * * *'
+    
+    # 8:00 PM IST (2:30 PM UTC) -> streak_nudge
+    - cron: '30 14 * * *'
+
+jobs:
+  run-hourly-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 * * * *'
+    steps:
+      - name: Trigger Cleanup Rooms
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/cleanup_rooms?interval=hourly
+
+  run-midnight-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 18 * * *'
+    steps:
+      - name: Trigger Daily Puzzle
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/daily_puzzle
+      - name: Trigger Song of the Day
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/song_of_day
+
+  run-2am-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 20 * * *'
+    steps:
+      - name: Trigger Recommendation Decay
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/recommendation_decay
+
+  run-3am-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 21 * * *'
+    steps:
+      - name: Trigger Maintenance
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/maintenance
+
+  run-5am-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 23 * * *'
+    steps:
+      - name: Trigger Upcoming Sync
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/upcoming_sync
+
+  run-7am-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 1 * * *'
+    steps:
+      - name: Trigger Muchatlu Autopost
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/muchatlu_autopost
+
+  run-8am-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 2 * * *'
+    steps:
+      - name: Trigger Send Reminders
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/send_reminders
+
+  run-9am-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 3 * * *'
+    steps:
+      - name: Trigger Meme Digest
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/meme_digest
+
+  run-8pm-jobs:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '30 14 * * *'
+    steps:
+      - name: Trigger Streak Nudge
+        run: curl -X POST -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" -d "" https://cinema-muchatlu.onrender.com/api/cron/streak_nudge

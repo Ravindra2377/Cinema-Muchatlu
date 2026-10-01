@@ -289,13 +289,27 @@ const userInterestSchema = new mongoose.Schema({
 // ============================================
 const notificationSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Recipient
-    actorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Who triggered it
-    actorName: { type: String, required: true },
-    type: { type: String, enum: ['reply', 'reaction', 'mention'], required: true },
+    actorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Nullable for system
+    actorName: { type: String, default: 'System' },
+    type: { type: String, enum: ['reply', 'reaction', 'mention', 'reminder'], required: true },
     discussionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Discussion' },
     isRead: { type: Boolean, default: false },
     timestamp: { type: Date, default: Date.now }
 });
+
+// ============================================
+// Reminder Schema
+// ============================================
+const reminderSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    movieId: { type: String, required: true }, // TMDB Movie ID
+    movieTitle: { type: String, required: true },
+    releaseDate: { type: String, required: true }, // YYYY-MM-DD
+    isNotified: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Reminder = mongoose.model('Reminder', reminderSchema);
 
 // ============================================
 // Export Models
@@ -314,8 +328,35 @@ const Notification = mongoose.model('Notification', notificationSchema);
 
 const { Game, GameQuestion, GameSession, GameLeaderboard } = require('./gameModels');
 
+// ============================================
+// JobRun Schema (Cron & Scheduled Tasks)
+// ============================================
+const jobRunSchema = new mongoose.Schema({
+    runId: { type: String, required: true, unique: true }, // e.g., 'dailyPuzzle:2024-03-20'
+    name: { type: String, required: true },
+    status: { type: String, enum: ['running', 'success', 'failed'], default: 'running' },
+    startedAt: { type: Date, default: Date.now },
+    finishedAt: { type: Date },
+    result: { type: mongoose.Schema.Types.Mixed },
+    error: { type: String }
+});
+
+const JobRun = mongoose.model('JobRun', jobRunSchema);
+
+// ============================================
+// DailyFeature Schema (Pre-generated daily content)
+// ============================================
+const dailyFeatureSchema = new mongoose.Schema({
+    dateKey: { type: String, required: true }, // e.g., '2024-03-20'
+    type: { type: String, enum: ['puzzle', 'song'], required: true },
+    data: { type: mongoose.Schema.Types.Mixed, required: true }
+});
+dailyFeatureSchema.index({ dateKey: 1, type: 1 }, { unique: true });
+
+const DailyFeature = mongoose.model('DailyFeature', dailyFeatureSchema);
+
 module.exports = { 
     User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, 
-    UserEvent, UserInterest, Notification,
+    UserEvent, UserInterest, Notification, JobRun, DailyFeature, Reminder,
     Game, GameQuestion, GameSession, GameLeaderboard
 };

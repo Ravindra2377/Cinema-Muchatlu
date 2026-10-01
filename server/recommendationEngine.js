@@ -136,4 +136,56 @@ async function processUserEvent(userIdOrEvent, eventType, targetType, targetId, 
     }
 }
 
-module.exports = { processUserEvent, SIGNAL_WEIGHTS };
+async function generateCinemaWrapped(userId) {
+    const interest = await UserInterest.findOne({ userId });
+    
+    const getTop = (map) => {
+        if (!map || map.size === 0) return null;
+        let topKey = null;
+        let maxScore = -1;
+        for (const [key, score] of map.entries()) {
+            if (score > maxScore) {
+                maxScore = score;
+                topKey = key;
+            }
+        }
+        return topKey;
+    };
+    
+    const favoriteMovieId = interest && interest.entities ? getTop(interest.entities.movies) : null;
+    const favoriteActor = interest && interest.entities ? getTop(interest.entities.actors) : null;
+    const favoriteGenre = interest ? getTop(interest.genres) : null;
+    
+    const UserEvent = require('./models').UserEvent;
+    const reactionEvents = await UserEvent.find({ userId, eventType: 'reaction' });
+    
+    let massCount = 0;
+    let otherCount = 0;
+    
+    reactionEvents.forEach(e => {
+        if (e.metadata && e.metadata.reaction === 'mass') {
+            massCount++;
+        } else {
+            otherCount++;
+        }
+    });
+    
+    const totalReactions = massCount + otherCount;
+    let massPercent = 50;
+    let classPercent = 50;
+    
+    if (totalReactions > 0) {
+        massPercent = Math.round((massCount / totalReactions) * 100);
+        classPercent = 100 - massPercent;
+    }
+    
+    return {
+        favoriteMovieId,
+        favoriteActor,
+        favoriteGenre,
+        vibe: `You're ${massPercent}% Mass, ${classPercent}% Class`,
+        totalReactions
+    };
+}
+
+module.exports = { processUserEvent, SIGNAL_WEIGHTS, generateCinemaWrapped };
