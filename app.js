@@ -1694,11 +1694,6 @@ function showSection(sectionId) {
     } else if (sectionId === 'trending') {
         renderTrendingMovies();
         renderTrendingSongs();
-    } else if (sectionId === 'play') {
-        trackEvent('game_open', 'game', 'play_hub');
-        if (window.gameEngine && window.gameEngine.init) {
-            window.gameEngine.init();
-        }
     }
 }
 
@@ -1752,7 +1747,6 @@ function init() {
     initWatchlist();
     // initDiscussions(); // Disabled to prefer Culture Graph Feed
 
-    initMemes();
 
     initEventListeners();
 }
@@ -1764,116 +1758,4 @@ if (document.readyState === 'loading') {
     init();
 }
 
-// ============================================
-// Memes Section Logic
-// ============================================
 
-function initMemes() {
-    loadMemes('latest');
-}
-
-async function loadMemes(type) {
-    // Update pills
-    const section = document.getElementById('memes');
-    if (section) {
-        section.querySelectorAll('.pill-menu .pill').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.innerText.toLowerCase().includes(type.toLowerCase()) || 
-                (type === 'latest' && btn.innerText.includes('Latest'))) {
-                btn.classList.add('active');
-            }
-        });
-    }
-
-    try {
-        let endpoint = '/memes';
-        if (type === 'trending') endpoint = '/memes/trending';
-        
-        let memes = await apiFetch(endpoint);
-        
-        // Client side filter for specific reactions if needed
-        if (['mass', 'love', 'wtf'].includes(type)) {
-            memes = memes.filter(m => m.reactions && m.reactions[type] > 0)
-                         .sort((a, b) => b.reactions[type] - a.reactions[type]);
-        }
-        
-        renderMemes(memes);
-    } catch (err) {
-        console.error('Error loading memes:', err);
-    }
-}
-
-function renderMemes(memes) {
-    const grid = document.getElementById('memesGrid');
-    if (!grid) return;
-    
-    if (memes.length === 0) {
-        grid.innerHTML = '<div style="color: #888; grid-column: 1/-1; text-align: center; padding: 2rem;">No memes found for this category.</div>';
-        return;
-    }
-    
-    grid.innerHTML = memes.map(meme => `
-        <div class="feed-card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;">
-            <img src="${meme.media}" style="width: 100%; height: auto; object-fit: cover; display: block;" />
-            <div style="padding: 1.5rem;">
-                <p style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.1rem; line-height: 1.4;">${meme.content}</p>
-                
-                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-                    ${meme.movieId ? `<span style="background: #2a2a2a; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #aaa;">🎬 TMDB: ${meme.movieId}</span>` : ''}
-                    ${meme.actorId ? `<span style="background: #2a2a2a; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #aaa;">🌟 Actor: ${meme.actorId}</span>` : ''}
-                    ${meme.tags && meme.tags.length > 0 ? meme.tags.map(t => `<span style="color: #007aff; font-size: 0.8rem;">#${t.trim()}</span>`).join(' ') : ''}
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                    <div style="display: flex; gap: 1rem; color: #888; font-size: 0.9rem;">
-                        <span style="cursor:pointer;" onclick="handleReaction('${meme._id}', 'lol', this)">😂 <span>${meme.reactions?.lol || 0}</span></span>
-                        <span style="cursor:pointer;" onclick="handleReaction('${meme._id}', 'mass', this)">🔥 <span>${meme.reactions?.mass || 0}</span></span>
-                        <span style="cursor:pointer;" onclick="handleReaction('${meme._id}', 'love', this)">❤️ <span>${meme.reactions?.love || 0}</span></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function showCreateMemeModal() {
-    document.getElementById('memeModal').style.display = 'flex';
-}
-
-function closeMemeModal() {
-    document.getElementById('memeModal').style.display = 'none';
-    document.getElementById('memeForm').reset();
-}
-
-async function handleMemeSubmit(e) {
-    e.preventDefault();
-    
-    if (!currentUser) {
-        alert("Please login to create a meme!");
-        closeMemeModal();
-        openAuthModal();
-        return;
-    }
-    
-    const media = document.getElementById('memeImage').value;
-    const content = document.getElementById('memeCaption').value;
-    const movieId = document.getElementById('memeMovieId').value;
-    const actorId = document.getElementById('memeActorId').value;
-    const tagsInput = document.getElementById('memeTags').value;
-    
-    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
-    
-    try {
-        const res = await apiFetch('/memes', {
-            method: 'POST',
-            body: JSON.stringify({ content, media, movieId, actorId, tags })
-        });
-        
-        alert('Meme submitted successfully! It is pending approval.');
-        closeMemeModal();
-        loadMemes('latest'); 
-    } catch (err) {
-        console.error(err);
-        alert('Server error while submitting meme. ' + err.message);
-    }
-}
