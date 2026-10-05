@@ -246,7 +246,12 @@ const SAMPLE_MOVIES = [
 // State Management
 // ============================================
 
-// currentUser is now declared in auth.js
+// Get currentUser from auth.js
+Object.defineProperty(window, 'currentUser', {
+    get: function() {
+        return window.authFunctions ? window.authFunctions.getCurrentUser() : null;
+    }
+});
 let allMovies = [];
 let watchlist = [];
 let reminders = [];
@@ -664,20 +669,17 @@ async function showMovieDetail(movieId) {
     const movie = allMovies.find(m => m.id === movieId);
     if (!movie) return;
 
-    let movieComments = [];
     let watchProviders = null;
     let movieLogs = [];
     let userLog = null;
     let cmStats = null;
 
     try {
-        const [commentsRes, providersRes, logsRes, statsRes] = await Promise.all([
-            apiFetch(`/comments/${movieId}`).catch(() => []),
+        const [providersRes, logsRes, statsRes] = await Promise.all([
             apiFetch(`/movies/${movieId}/providers`).catch(() => null),
             apiFetch(`/films/${movieId}/logs`).catch(() => []),
             apiFetch(`/films/${movieId}/stats`).catch(() => null)
         ]);
-        movieComments = commentsRes || [];
         watchProviders = providersRes || null;
         movieLogs = logsRes || [];
         cmStats = statsRes || { count: 0, average: null, distribution: {1:0,2:0,3:0,4:0,5:0} };
@@ -758,26 +760,7 @@ async function showMovieDetail(movieId) {
             <h3>Cast</h3>
             <p class="cast-list">${movie.cast.join(', ')}</p>
         </div>
-        <div class="comments-section">
-            <div class="comments-header">
-                <h3>Comments (${movieComments.length})</h3>
-            </div>
-            ${currentUser ? `
-                <div class="comment-form">
-                    <textarea class="comment-input" id="commentInput" placeholder="Share your thoughts about this movie..."></textarea>
-                    <div class="comment-actions">
-                        <button class="btn-primary" onclick="addComment('${movieId}')">Post Comment</button>
-                    </div>
-                </div>
-            ` : `
-                <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
-                    Please <a href="#" onclick="openAuthModal()" style="color: var(--primary);">login</a> to comment
-                </p>
-            `}
-            <div class="comments-list" id="commentsList">
-                ${renderComments(movieComments)}
-            </div>
-        </div>
+
     `;
 
     document.getElementById('movieModal').classList.add('active');
