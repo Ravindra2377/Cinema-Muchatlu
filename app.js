@@ -1630,12 +1630,12 @@ async function loadTrackerEntries(trackerId) {
             else if (entry.metadata.note) details = entry.metadata.note + (entry.metadata.value ? ' - ₹' + entry.metadata.value : '');
             else details = JSON.stringify(entry.metadata);
 
-            return \`
+            return `
                 <div style="background: #1a1a1a; padding: 1rem; border-radius: 8px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
-                    <div>\${details}</div>
-                    <div style="color: #666; font-size: 0.8rem;">\${dateStr}</div>
+                    <div>${details}</div>
+                    <div style="color: #666; font-size: 0.8rem;">${dateStr}</div>
                 </div>
-            \`;
+            `;
         }).join('');
     } catch (err) {
         timelineEl.innerHTML = '<div style="color: red;">Error loading entries</div>';
