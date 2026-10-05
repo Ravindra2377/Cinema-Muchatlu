@@ -666,7 +666,7 @@ function renderMusic() {
 }
 
 async function showMovieDetail(movieId) {
-    const movie = allMovies.find(m => m.id === movieId);
+    const movie = allMovies.find(m => String(m.id) === String(movieId));
     if (!movie) return;
 
     let watchProviders = null;
@@ -721,9 +721,9 @@ async function showMovieDetail(movieId) {
                         ❤️
                     </button>
 
-                    <div style="display: flex; align-items: center; gap: 0.25rem; border: 1px solid #444; padding: 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                    <button onclick="openLogModal('${movie.id}')" style="background: transparent; border: 1px solid #444; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; font-weight: bold;">
                         <span style="color: #00e5ff;">⭐ ${userLog && userLog.rating ? userLog.rating : 'Rate'}</span>
-                    </div>
+                    </button>
 
                     <button onclick="openLogModal('${movie.id}')" style="background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: bold; margin-left: auto;">
                         📝 Log / Review
@@ -886,7 +886,7 @@ async function toggleReminder(movieId) {
         return;
     }
     try {
-        const movie = allMovies.find(m => m.id === movieId);
+        const movie = allMovies.find(m => String(m.id) === String(movieId));
         const result = await apiFetch(`/reminders/${movieId}`, { 
             method: 'POST',
             body: JSON.stringify({ 
@@ -1211,7 +1211,7 @@ async function toggleLogLike(movieId, currentlyLiked) {
 
 async function openLogModal(movieId) {
     if (!currentUser) return openAuthModal();
-    const movie = allMovies.find(m => m.id === movieId);
+    const movie = allMovies.find(m => String(m.id) === String(movieId));
     if (!movie) return;
 
     let userLog = null;
@@ -1426,7 +1426,7 @@ async function loadProfileAndDiary() {
             document.getElementById('cinemaDiaryList').innerHTML = '<p style="color: #888;">You haven\'t logged any movies yet.</p>';
         } else {
             document.getElementById('cinemaDiaryList').innerHTML = logs.map(log => {
-                const movie = allMovies.find(m => m.id === log.movieId);
+                const movie = allMovies.find(m => String(m.id) === String(log.movieId));
                 const movieTitle = movie ? movie.title : 'Unknown Movie';
                 const dateStr = new Date(log.watchedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 
