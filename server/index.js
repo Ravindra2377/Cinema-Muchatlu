@@ -12,7 +12,7 @@ const path = require('path');
 const axios = require('axios');
 const { searchSongs, FALLBACK_TRACKS } = require('./jiosaavnService');
 
-const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification, DailyFeature, Reminder } = require('./models');
+const { User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, UserEvent, UserInterest, Notification, DailyFeature, Reminder, FilmLog } = require('./models');
 const { authMiddleware, optionalAuth } = require('./middleware');
 const { generateCinemaWrapped } = require('./recommendationEngine');
 
@@ -328,6 +328,228 @@ app.get('/api/movies/:id/providers', async (req, res) => {
     }
 });
 
+
+
+// ============================================
+// FILM LOG ROUTES (Letterboxd Style)
+// ============================================
+
+// POST /api/films/:movieId/log - Create or update a film log
+app.post('/api/films/:movieId/log', authMiddleware, async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        const { rating, liked, review, containsSpoilers, rewatch, tags, watchMethod, theatre, ott, visibility, watchedAt } = req.body;
+        
+        const log = new FilmLog({
+            userId: req.user.id,
+            movieId,
+            rating,
+            liked,
+            review,
+            containsSpoilers,
+            rewatch,
+            tags,
+            watchMethod,
+            theatre,
+            ott,
+            visibility,
+            watchedAt: watchedAt || Date.now()
+        });
+        
+        await log.save();
+        
+        // Add UserEvent for recommendation telemetry
+        if (rating) {
+            await UserEvent.create({ userId: req.user.id, eventType: 'movie_rated', targetType: 'movie', targetId: movieId, metadata: { rating } });
+        } else {
+            await UserEvent.create({ userId: req.user.id, eventType: 'movie_watched', targetType: 'movie', targetId: movieId });
+        }
+        if (liked) {
+            await UserEvent.create({ userId: req.user.id, eventType: 'movie_liked', targetType: 'movie', targetId: movieId });
+        }
+        if (review) {
+            await UserEvent.create({ userId: req.user.id, eventType: 'review_created', targetType: 'movie', targetId: movieId });
+        }
+        if (rewatch) {
+            await UserEvent.create({ userId: req.user.id, eventType: 'movie_rewatched', targetType: 'movie', targetId: movieId });
+        }
+        if (watchMethod === 'THEATRE') {
+            await UserEvent.create({ userId: req.user.id, eventType: 'watch_method_theatre', targetType: 'movie', targetId: movieId });
+        } else if (watchMethod === 'OTT') {
+            await UserEvent.create({ userId: req.user.id, eventType: 'watch_method_ott', targetType: 'movie', targetId: movieId, metadata: { provider: ott?.provider } });
+        }
+        
+        res.status(201).json(log);
+    } catch (err) {
+        res.status(500).json({ error: 'Error creating film log' });
+    }
+});
+
+// GET /api/films/:movieId/logs - Get public/friends logs for a movie
+app.get('/api/films/:movieId/logs', optionalAuth, async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        // Basic query: public logs + user's own private logs
+        let query = { movieId, $or: [{ visibility: 'PUBLIC' }] };
+        if (req.user) {
+            query.$or.push({ userId: req.user.id });
+            // Add 'FRIENDS' visibility logic here later if friends system exists
+        }
+        
+        const logs = await FilmLog.find(query)
+            .populate('userId', 'username avatarUrl')
+            .sort({ watchedAt: -1 })
+            .limit(50);
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching logs' });
+    }
+});
+
+// GET /api/films/:movieId/stats - Get rating stats
+app.get('/api/films/:movieId/stats', async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        const logs = await FilmLog.find({ movieId, rating: { $ne: null } });
+        const count = logs.length;
+        const average = count > 0 ? (logs.reduce((sum, l) => sum + l.rating, 0) / count).toFixed(1) : null;
+        
+        // Distribution
+        const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        logs.forEach(l => {
+            const rounded = Math.ceil(l.rating); // bucket half stars up
+            if (distribution[rounded] !== undefined) distribution[rounded]++;
+        });
+
+        res.json({ count, average, distribution });
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching stats' });
+    }
+});
+
+// GET /api/films/:movieId/reviews - Get reviews for a movie
+app.get('/api/films/:movieId/reviews', optionalAuth, async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        let query = { movieId, review: { $ne: null }, $or: [{ visibility: 'PUBLIC' }] };
+        if (req.user) {
+            query.$or.push({ userId: req.user.id });
+        }
+        
+        const reviews = await FilmLog.find(query)
+            .populate('userId', 'username avatarUrl')
+            .sort({ watchedAt: -1 })
+            .limit(50);
+        res.json(reviews);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching reviews' });
+    }
+});
+
+// PUT /api/film-logs/:id - Update a log
+app.put('/api/film-logs/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const log = await FilmLog.findOne({ _id: id, userId: req.user.id });
+        if (!log) return res.status(404).json({ error: 'Log not found' });
+        
+        Object.assign(log, req.body);
+        await log.save();
+        res.json(log);
+    } catch (err) {
+        res.status(500).json({ error: 'Error updating log' });
+    }
+});
+
+// DELETE /api/film-logs/:id - Delete a log
+app.delete('/api/film-logs/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const log = await FilmLog.findOneAndDelete({ _id: id, userId: req.user.id });
+        if (!log) return res.status(404).json({ error: 'Log not found' });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Error deleting log' });
+    }
+});
+
+// POST /api/films/:movieId/rate - Quick rate
+app.post('/api/films/:movieId/rate', authMiddleware, async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        const { rating } = req.body;
+        // See if there's a log from today, otherwise create a new one
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let log = await FilmLog.findOne({ userId: req.user.id, movieId, watchedAt: { $gte: today } });
+        if (log) {
+            log.rating = rating;
+            await log.save();
+        } else {
+            log = await FilmLog.create({ userId: req.user.id, movieId, rating });
+        }
+        await UserEvent.create({ userId: req.user.id, eventType: 'movie_rated', targetType: 'movie', targetId: movieId, metadata: { rating } });
+        res.json(log);
+    } catch (err) {
+        res.status(500).json({ error: 'Error rating movie' });
+    }
+});
+
+// POST /api/films/:movieId/like - Quick like
+app.post('/api/films/:movieId/like', authMiddleware, async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        const { liked } = req.body;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let log = await FilmLog.findOne({ userId: req.user.id, movieId, watchedAt: { $gte: today } });
+        if (log) {
+            log.liked = liked;
+            await log.save();
+        } else {
+            log = await FilmLog.create({ userId: req.user.id, movieId, liked });
+        }
+        if (liked) await UserEvent.create({ userId: req.user.id, eventType: 'movie_liked', targetType: 'movie', targetId: movieId });
+        res.json(log);
+    } catch (err) {
+        res.status(500).json({ error: 'Error liking movie' });
+    }
+});
+
+// GET /api/users/me/diary - Get user's diary
+app.get('/api/users/me/diary', authMiddleware, async (req, res) => {
+    try {
+        const logs = await FilmLog.find({ userId: req.user.id })
+            .sort({ watchedAt: -1 });
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching diary' });
+    }
+});
+
+// GET /api/users/me/ratings - Get user's ratings
+app.get('/api/users/me/ratings', authMiddleware, async (req, res) => {
+    try {
+        const logs = await FilmLog.find({ userId: req.user.id, rating: { $ne: null } })
+            .sort({ watchedAt: -1 });
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching ratings' });
+    }
+});
+
+// GET /api/users/me/watched - Get user's watched list
+app.get('/api/users/me/watched', authMiddleware, async (req, res) => {
+    try {
+        const logs = await FilmLog.find({ userId: req.user.id })
+            .sort({ watchedAt: -1 });
+        // Extract unique movieIds
+        const uniqueMovies = [...new Set(logs.map(log => log.movieId))];
+        res.json({ logs, uniqueMovies });
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching watched list' });
+    }
+});
 
 
 // ============================================

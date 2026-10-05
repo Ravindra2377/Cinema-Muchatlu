@@ -666,13 +666,25 @@ async function showMovieDetail(movieId) {
 
     let movieComments = [];
     let watchProviders = null;
+    let movieLogs = [];
+    let userLog = null;
+    let cmStats = null;
+
     try {
-        const [commentsRes, providersRes] = await Promise.all([
+        const [commentsRes, providersRes, logsRes, statsRes] = await Promise.all([
             apiFetch(`/comments/${movieId}`).catch(() => []),
-            apiFetch(`/movies/${movieId}/providers`).catch(() => null)
+            apiFetch(`/movies/${movieId}/providers`).catch(() => null),
+            apiFetch(`/films/${movieId}/logs`).catch(() => []),
+            apiFetch(`/films/${movieId}/stats`).catch(() => null)
         ]);
         movieComments = commentsRes || [];
         watchProviders = providersRes || null;
+        movieLogs = logsRes || [];
+        cmStats = statsRes || { count: 0, average: null, distribution: {1:0,2:0,3:0,4:0,5:0} };
+        
+        if (currentUser) {
+            userLog = movieLogs.find(l => l.userId && l.userId._id === currentUser.id);
+        }
     } catch (err) {
         console.error('Error fetching movie details:', err);
     }
@@ -684,23 +696,45 @@ async function showMovieDetail(movieId) {
             <div class="movie-detail-info">
                 <h2 class="movie-detail-title">${movie.title}</h2>
                 <div class="movie-detail-meta">
-                    <span class="meta-item rating">⭐ ${movie.rating}</span>
+                    <span class="meta-item rating">TMDB: ⭐ ${movie.rating}</span>
+                    ${cmStats && cmStats.count > 0 ? `<span class="meta-item rating" style="color:#00e5ff;">CM: ⭐ ${cmStats.average} (${cmStats.count} logs)</span>` : ''}
                     <span class="meta-item">${movie.content_type === 'Upcoming' && movie.release_date ? movie.release_date : movie.year}</span>
                 </div>
                 <div class="genre-tags">
                     ${movie.genre.map(g => `<span class="genre-tag">${g}</span>`).join('')}
                 </div>
                 <p class="movie-description">${movie.description}</p>
-                <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
-                    <button class="btn-primary" onclick="toggleWatchlist('${movie.id}')">
-                        ${isInWatchlist(movie.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                
+                <!-- Action Bar (Letterboxd Style) -->
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; align-items: center; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
+                    <button onclick="toggleLogWatched('${movie.id}', ${userLog ? true : false})" style="background: ${userLog ? '#00e5ff' : 'transparent'}; color: ${userLog ? '#000' : '#fff'}; border: 1px solid ${userLog ? '#00e5ff' : '#444'}; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: bold;">
+                        👁 ${userLog ? 'Watched' : 'Watched'}
                     </button>
-                    ${movie.content_type === 'Upcoming' ? `
+                    
+                    <button onclick="toggleWatchlist('${movie.id}')" style="background: ${isInWatchlist(movie.id) ? '#34c759' : 'transparent'}; color: ${isInWatchlist(movie.id) ? '#000' : '#fff'}; border: 1px solid ${isInWatchlist(movie.id) ? '#34c759' : '#444'}; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: bold;">
+                        🔖 ${isInWatchlist(movie.id) ? 'Watchlist' : 'Watchlist'}
+                    </button>
+                    
+                    <button onclick="toggleLogLike('${movie.id}', ${userLog && userLog.liked ? true : false})" style="background: transparent; color: ${userLog && userLog.liked ? '#ff2d55' : '#555'}; border: 1px solid #444; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">
+                        ❤️
+                    </button>
+
+                    <div style="display: flex; align-items: center; gap: 0.25rem; border: 1px solid #444; padding: 0.5rem; border-radius: 4px; margin-left: 0.5rem;">
+                        <span style="color: #00e5ff;">⭐ ${userLog && userLog.rating ? userLog.rating : 'Rate'}</span>
+                    </div>
+
+                    <button onclick="openLogModal('${movie.id}')" style="background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: bold; margin-left: auto;">
+                        📝 Log / Review
+                    </button>
+                </div>
+                
+                ${movie.content_type === 'Upcoming' ? `
+                    <div style="margin-top: 1rem;">
                         <button class="btn-secondary" onclick="toggleReminder('${movie.id}')" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; cursor: pointer;">
                             ${reminders.includes(movie.id) ? '✅ Reminder Set' : '🔔 Remind Me'}
                         </button>
-                    ` : ''}
-                </div>
+                    </div>
+                ` : ''}
             </div>
         </div>
         ${watchProviders && (watchProviders.flatrate || watchProviders.rent || watchProviders.buy) ? `
@@ -1131,6 +1165,10 @@ function showSection(sectionId) {
     } else if (sectionId === 'trending') {
         renderTrendingMovies();
         renderTrendingSongs();
+    } else if (sectionId === 'watchlist') {
+        if (currentUser) {
+            loadProfileAndDiary();
+        }
     }
 }
 
@@ -1153,8 +1191,289 @@ function closeMovieModal() {
 }
 
 // ============================================
+// Film Logging (Letterboxd Style)
+// ============================================
+
+async function toggleLogWatched(movieId, currentlyWatched) {
+    if (!currentUser) return openAuthModal();
+    if (currentlyWatched) {
+        // Find user log and delete it if it only has watch status?
+        // Let's keep it simple: redirect to log modal if they want to edit.
+        openLogModal(movieId);
+    } else {
+        try {
+            await apiFetch(`/films/${movieId}/log`, {
+                method: 'POST',
+                body: JSON.stringify({ watchedAt: new Date() })
+            });
+            showMovieDetail(movieId);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+}
+
+async function toggleLogLike(movieId, currentlyLiked) {
+    if (!currentUser) return openAuthModal();
+    try {
+        await apiFetch(`/films/${movieId}/like`, {
+            method: 'POST',
+            body: JSON.stringify({ liked: !currentlyLiked })
+        });
+        showMovieDetail(movieId);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function openLogModal(movieId) {
+    if (!currentUser) return openAuthModal();
+    const movie = allMovies.find(m => m.id === movieId);
+    if (!movie) return;
+
+    let userLog = null;
+    try {
+        const logs = await apiFetch(`/films/${movieId}/logs`);
+        if (logs) {
+            userLog = logs.find(l => l.userId && l.userId._id === currentUser.id);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+
+    document.getElementById('logMovieId').value = movieId;
+    document.getElementById('logModalTitle').innerText = `I watched... ${movie.title}`;
+    
+    // Set defaults
+    document.getElementById('logDate').value = userLog && userLog.watchedAt ? new Date(userLog.watchedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    document.getElementById('logRating').value = userLog && userLog.rating ? userLog.rating : 0;
+    renderLogStars(userLog && userLog.rating ? userLog.rating : 0);
+    
+    document.getElementById('logLiked').value = userLog && userLog.liked ? 'true' : 'false';
+    document.getElementById('logLikeBtn').style.color = userLog && userLog.liked ? '#ff2d55' : '#555';
+    
+    document.getElementById('logReview').value = userLog && userLog.review ? userLog.review : '';
+    document.getElementById('logSpoilers').checked = userLog && userLog.containsSpoilers ? true : false;
+    document.getElementById('logRewatch').checked = userLog && userLog.rewatch ? true : false;
+    document.getElementById('logTags').value = userLog && userLog.tags ? userLog.tags.join(', ') : '';
+
+    // Watch Method
+    const watchMethod = userLog && userLog.watchMethod ? userLog.watchMethod : 'NONE';
+    document.querySelector(`input[name="logWatchMethod"][value="${watchMethod}"]`).checked = true;
+    
+    if (watchMethod === 'THEATRE') {
+        document.getElementById('logTheatreOptions').style.display = 'flex';
+        document.getElementById('logOTTOptions').style.display = 'none';
+        if (userLog && userLog.theatre) {
+            document.getElementById('logTheatreName').value = userLog.theatre.name || '';
+            document.getElementById('logTheatreFormat').value = userLog.theatre.format || '';
+            document.getElementById('logTheatreLanguage').value = userLog.theatre.language || '';
+        }
+    } else if (watchMethod === 'OTT') {
+        document.getElementById('logTheatreOptions').style.display = 'none';
+        document.getElementById('logOTTOptions').style.display = 'flex';
+        if (userLog && userLog.ott) {
+            document.getElementById('logOTTProvider').value = userLog.ott.provider || '';
+        }
+    } else {
+        document.getElementById('logTheatreOptions').style.display = 'none';
+        document.getElementById('logOTTOptions').style.display = 'none';
+    }
+
+    document.getElementById('logModal').style.display = 'flex';
+}
+
+function renderLogStars(rating) {
+    const starsContainer = document.getElementById('logRatingStars');
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+        if (rating >= i) {
+            html += `<span data-val="${i}" class="star full">★</span>`;
+        } else if (rating === i - 0.5) {
+            html += `<span data-val="${i}" class="star half" style="position:relative;display:inline-block;">
+                        <span style="color:#555;">★</span>
+                        <span style="color:#00e5ff;position:absolute;left:0;top:0;width:50%;overflow:hidden;">★</span>
+                     </span>`;
+        } else {
+            html += `<span data-val="${i}" class="star empty" style="color:#555;">★</span>`;
+        }
+    }
+    starsContainer.innerHTML = html;
+    starsContainer.style.color = '#00e5ff';
+}
+
+document.getElementById('logRatingStars')?.addEventListener('click', (e) => {
+    const starNode = e.target.closest('.star');
+    if (!starNode) return;
+    const val = parseInt(starNode.getAttribute('data-val'));
+    const rect = starNode.getBoundingClientRect();
+    const isHalf = e.clientX - rect.left < rect.width / 2;
+    const rating = isHalf ? val - 0.5 : val;
+    document.getElementById('logRating').value = rating;
+    renderLogStars(rating);
+});
+
+document.getElementById('logLikeBtn')?.addEventListener('click', () => {
+    const likedInput = document.getElementById('logLiked');
+    const isLiked = likedInput.value === 'true';
+    likedInput.value = isLiked ? 'false' : 'true';
+    document.getElementById('logLikeBtn').style.color = !isLiked ? '#ff2d55' : '#555';
+});
+
+document.querySelectorAll('input[name="logWatchMethod"]')?.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'THEATRE') {
+            document.getElementById('logTheatreOptions').style.display = 'flex';
+            document.getElementById('logOTTOptions').style.display = 'none';
+        } else if (val === 'OTT') {
+            document.getElementById('logTheatreOptions').style.display = 'none';
+            document.getElementById('logOTTOptions').style.display = 'flex';
+        } else {
+            document.getElementById('logTheatreOptions').style.display = 'none';
+            document.getElementById('logOTTOptions').style.display = 'none';
+        }
+    });
+});
+
+document.getElementById('logForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    
+    const movieId = document.getElementById('logMovieId').value;
+    const rating = parseFloat(document.getElementById('logRating').value) || null;
+    const liked = document.getElementById('logLiked').value === 'true';
+    const review = document.getElementById('logReview').value.trim() || null;
+    const containsSpoilers = document.getElementById('logSpoilers').checked;
+    const rewatch = document.getElementById('logRewatch').checked;
+    const tags = document.getElementById('logTags').value.split(',').map(t => t.trim()).filter(Boolean);
+    const watchedAt = document.getElementById('logDate').value;
+    
+    const watchMethodRadio = document.querySelector('input[name="logWatchMethod"]:checked');
+    const watchMethod = watchMethodRadio ? watchMethodRadio.value : null;
+    
+    const theatre = watchMethod === 'THEATRE' ? {
+        name: document.getElementById('logTheatreName').value.trim() || null,
+        format: document.getElementById('logTheatreFormat').value || null,
+        language: document.getElementById('logTheatreLanguage').value || null
+    } : null;
+    
+    const ott = watchMethod === 'OTT' ? {
+        provider: document.getElementById('logOTTProvider').value || null
+    } : null;
+
+    const payload = {
+        rating, liked, review, containsSpoilers, rewatch, tags, watchMethod, theatre, ott, watchedAt
+    };
+
+    try {
+        await apiFetch(`/films/${movieId}/log`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        document.getElementById('logModal').style.display = 'none';
+        showMovieDetail(movieId);
+    } catch (err) {
+        console.error('Error saving log:', err);
+    }
+});
+
+
+// ============================================
 // Initialization
 // ============================================
+
+async function loadProfileAndDiary() {
+    if (!currentUser) return;
+
+    try {
+        const [diaryLogs, watchedData] = await Promise.all([
+            apiFetch('/users/me/diary'),
+            apiFetch('/users/me/watched')
+        ]);
+        
+        const logs = diaryLogs || [];
+        const uniqueMovies = watchedData.uniqueMovies || [];
+
+        // Calculate Stats
+        const totalWatched = uniqueMovies.length;
+        const totalReviews = logs.filter(l => l.review).length;
+        const totalRatings = logs.filter(l => l.rating).length;
+        const totalLikes = logs.filter(l => l.liked).length;
+        const totalRewatches = logs.filter(l => l.rewatch).length;
+        
+        const theatreCount = logs.filter(l => l.watchMethod === 'THEATRE').length;
+        const ottCount = logs.filter(l => l.watchMethod === 'OTT').length;
+
+        const sumRatings = logs.filter(l => l.rating).reduce((sum, l) => sum + l.rating, 0);
+        const avgRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : '0.0';
+
+        // Render Stats
+        document.getElementById('profileStatsContainer').style.display = 'block';
+        document.getElementById('profileStatsGrid').innerHTML = `
+            <div style="background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; flex: 1; min-width: 100px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #fff;">🎬 ${totalWatched}</div>
+                <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Watched</div>
+            </div>
+            <div style="background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; flex: 1; min-width: 100px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #00e5ff;">⭐ ${avgRating}</div>
+                <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Average</div>
+            </div>
+            <div style="background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; flex: 1; min-width: 100px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #ff2d55;">❤️ ${totalLikes}</div>
+                <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Likes</div>
+            </div>
+            <div style="background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; flex: 1; min-width: 100px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #34c759;">📝 ${totalReviews}</div>
+                <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Reviews</div>
+            </div>
+            <div style="background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; flex: 1; min-width: 100px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #ff9500;">🎟️ ${theatreCount}</div>
+                <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Theatre</div>
+            </div>
+            <div style="background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; flex: 1; min-width: 100px; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #af52de;">📺 ${ottCount}</div>
+                <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">OTT</div>
+            </div>
+        `;
+
+        // Render Diary
+        document.getElementById('cinemaDiaryContainer').style.display = 'block';
+        if (logs.length === 0) {
+            document.getElementById('cinemaDiaryList').innerHTML = '<p style="color: #888;">You haven\'t logged any movies yet.</p>';
+        } else {
+            document.getElementById('cinemaDiaryList').innerHTML = logs.map(log => {
+                const movie = allMovies.find(m => m.id === log.movieId);
+                const movieTitle = movie ? movie.title : 'Unknown Movie';
+                const dateStr = new Date(log.watchedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                let locationBadge = '';
+                if (log.watchMethod === 'THEATRE') locationBadge = `<span style="background: rgba(255,149,0,0.2); color: #ff9500; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">🎬 Theatre${log.theatre && log.theatre.name ? ` - ${log.theatre.name}` : ''}</span>`;
+                if (log.watchMethod === 'OTT') locationBadge = `<span style="background: rgba(175,82,222,0.2); color: #af52de; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">📺 OTT${log.ott && log.ott.provider ? ` - ${log.ott.provider}` : ''}</span>`;
+
+                return `
+                    <div style="background: var(--bg-card); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); display: flex; gap: 1rem; cursor: pointer;" onclick="showMovieDetail('${log.movieId}')">
+                        <div style="min-width: 60px; color: #888; font-size: 0.9rem;">
+                            ${dateStr}
+                        </div>
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">${movieTitle} ${log.rewatch ? '<span style="color:#888;" title="Rewatch">🔄</span>' : ''}</h3>
+                            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                                ${log.rating ? `<span style="color: #00e5ff; font-weight: bold;">⭐ ${log.rating}</span>` : ''}
+                                ${log.liked ? `<span style="color: #ff2d55;">❤️</span>` : ''}
+                                ${locationBadge}
+                            </div>
+                            ${log.review ? `<p style="color: #ccc; font-size: 0.9rem; line-height: 1.4; ${log.containsSpoilers ? 'filter: blur(4px); cursor: pointer;' : ''}" ${log.containsSpoilers ? 'onclick="event.stopPropagation(); this.style.filter=\'none\';"' : ''}>${log.containsSpoilers ? '[SPOILERS] ' : ''}${log.review}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+    } catch (err) {
+        console.error('Error loading profile and diary:', err);
+    }
+}
 
 function init() {
     // Load data from storage

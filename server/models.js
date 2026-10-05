@@ -312,6 +312,42 @@ const reminderSchema = new mongoose.Schema({
 const Reminder = mongoose.model('Reminder', reminderSchema);
 
 // ============================================
+// FilmLog Schema (Letterboxd-style logging)
+// ============================================
+const filmLogSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    movieId: { type: String, required: true },
+    watchedAt: { type: Date, default: Date.now },
+    rating: { type: Number, min: 0.5, max: 5.0, default: null }, // half-star increments
+    liked: { type: Boolean, default: false },
+    review: { type: String, default: null },
+    containsSpoilers: { type: Boolean, default: false },
+    rewatch: { type: Boolean, default: false },
+    tags: [{ type: String }],
+    watchMethod: { type: String, enum: ['THEATRE', 'OTT', null], default: null },
+    theatre: {
+        name: { type: String },
+        format: { type: String },
+        language: { type: String }
+    },
+    ott: {
+        provider: { type: String },
+        language: { type: String }
+    },
+    visibility: { type: String, enum: ['PUBLIC', 'FRIENDS', 'PRIVATE'], default: 'PUBLIC' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+// Update the updatedAt timestamp before saving
+filmLogSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
+});
+
+const FilmLog = mongoose.model('FilmLog', filmLogSchema);
+
+// ============================================
 // Export Models
 // ============================================
 const User = mongoose.model('User', userSchema);
@@ -357,6 +393,6 @@ const DailyFeature = mongoose.model('DailyFeature', dailyFeatureSchema);
 
 module.exports = { 
     User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, 
-    UserEvent, UserInterest, Notification, JobRun, DailyFeature, Reminder,
+    UserEvent, UserInterest, Notification, JobRun, DailyFeature, Reminder, FilmLog,
     Game, GameQuestion, GameSession, GameLeaderboard
 };

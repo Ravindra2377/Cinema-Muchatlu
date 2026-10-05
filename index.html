@@ -176,6 +176,20 @@
 
 
         <section id="watchlist" class="section">
+            <div id="profileStatsContainer" style="margin-bottom: 2rem; display: none;">
+                <h2 class="section-title">My Profile</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;" id="profileStatsGrid">
+                    <!-- JS will populate stats -->
+                </div>
+            </div>
+
+            <div id="cinemaDiaryContainer" style="margin-bottom: 2rem; display: none;">
+                <h2 class="section-title">My Cinema Diary</h2>
+                <div style="display: flex; flex-direction: column; gap: 1rem;" id="cinemaDiaryList">
+                    <!-- JS will populate diary -->
+                </div>
+            </div>
+
             <h2 class="section-title">My Watchlist</h2>
             <div class="watchlist-grid" id="watchlistGrid">
                 <div class="empty-state" id="emptyWatchlist">
@@ -358,6 +372,100 @@
 
 
 
+
+    <!-- Log Film Modal -->
+    <div id="logModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: var(--bg-card); padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem;" id="logModalTitle">I watched...</h2>
+                <button onclick="document.getElementById('logModal').style.display='none'" style="background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="logForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="logMovieId">
+                
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <label style="color: #ccc; width: 100px;">Date</label>
+                    <input type="date" id="logDate" style="flex: 1; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <label style="color: #ccc; width: 100px;">Rating</label>
+                    <div id="logRatingStars" style="font-size: 1.5rem; cursor: pointer; color: #555; display: flex; gap: 2px;">
+                        <!-- JS will populate stars -->
+                    </div>
+                    <input type="hidden" id="logRating" value="0">
+                    <button type="button" id="logLikeBtn" style="background: transparent; border: none; color: #555; font-size: 1.5rem; cursor: pointer; margin-left: auto;">🤍</button>
+                    <input type="hidden" id="logLiked" value="false">
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                    <label style="color: #ccc; width: 100px; padding-top: 0.5rem;">Review</label>
+                    <div style="flex: 1;">
+                        <textarea id="logReview" placeholder="Add a review..." rows="4" style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; resize: vertical; box-sizing: border-box;"></textarea>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; color: #aaa; font-size: 0.9rem;">
+                            <input type="checkbox" id="logSpoilers"> Contains spoilers
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <label style="color: #ccc; width: 100px;"></label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; color: #aaa; font-size: 0.9rem;">
+                        <input type="checkbox" id="logRewatch"> I've watched this before
+                    </label>
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                    <label style="color: #ccc; width: 100px; padding-top: 0.5rem;">Where?</label>
+                    <div style="flex: 1;">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                            <label style="color: white; font-size: 0.9rem;"><input type="radio" name="logWatchMethod" value="THEATRE"> 🎬 Theatre</label>
+                            <label style="color: white; font-size: 0.9rem;"><input type="radio" name="logWatchMethod" value="OTT"> 📺 OTT</label>
+                            <label style="color: white; font-size: 0.9rem;"><input type="radio" name="logWatchMethod" value="NONE" checked> None</label>
+                        </div>
+                        
+                        <div id="logTheatreOptions" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: #111; border-radius: 8px; border: 1px solid #333;">
+                            <input type="text" id="logTheatreName" placeholder="Theatre name (e.g. INOX, Prasads)" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem; box-sizing: border-box;">
+                            <select id="logTheatreFormat" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
+                                <option value="">Format...</option>
+                                <option value="2D">2D</option>
+                                <option value="3D">3D</option>
+                                <option value="IMAX">IMAX</option>
+                                <option value="4DX">4DX</option>
+                            </select>
+                            <select id="logTheatreLanguage" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
+                                <option value="">Language...</option>
+                                <option value="Telugu">Telugu</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Tamil">Tamil</option>
+                                <option value="English">English</option>
+                            </select>
+                        </div>
+
+                        <div id="logOTTOptions" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: #111; border-radius: 8px; border: 1px solid #333;">
+                            <select id="logOTTProvider" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
+                                <option value="">Provider...</option>
+                                <option value="Netflix">Netflix</option>
+                                <option value="Prime Video">Prime Video</option>
+                                <option value="Aha">Aha</option>
+                                <option value="Hotstar">Disney+ Hotstar</option>
+                                <option value="Sun NXT">Sun NXT</option>
+                                <option value="Zee5">Zee5</option>
+                                <option value="SonyLIV">SonyLIV</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <label style="color: #ccc; width: 100px;">Tags</label>
+                    <input type="text" id="logTags" placeholder="e.g. mind-bending, comfort-movie" style="flex: 1; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
+                </div>
+
+                <button type="submit" style="background: #00e5ff; color: #000; border: none; padding: 1rem; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 1rem;">Save</button>
+            </form>
+        </div>
+    </div>
 
     <!-- API Client Configuration -->
     <script src="config.js"></script>
