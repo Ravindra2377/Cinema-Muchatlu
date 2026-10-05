@@ -1483,7 +1483,7 @@ app.get('*', (req, res) => {
 // ============================================
 connectDB().then(() => {
     server.listen(PORT, '0.0.0.0', () => {
-        console.log(`🎬 Cinema Muchatlu server running on http://localhost:${PORT}`);
+        console.log(`🎬 TRIBE server running on http://localhost:${PORT}`);
         console.log(`📡 API available at http://localhost:${PORT}/api`);
         console.log(`🎮 Game Engine & Socket.IO active`);
     });

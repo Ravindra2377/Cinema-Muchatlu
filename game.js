@@ -894,7 +894,7 @@
             shareBtn.textContent = 'Share to WhatsApp 📱';
             shareBtn.onclick = () => {
                 const grid = results.score > 0 ? '🟩🟩🟩🟩' : '🟥🟥🟥🟥';
-                const text = `Cinema Muchatlu Daily Puzzle (${results.date})\\nResult: ${grid}\\nPlay at: ${window.location.href}`;
+                const text = `TRIBE Daily Puzzle (${results.date})\\nResult: ${grid}\\nPlay at: ${window.location.href}`;
                 navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard! Ready to paste in WhatsApp.'));
             };
             returnHubBtn.parentNode.insertBefore(shareBtn, returnHubBtn);
@@ -1294,7 +1294,7 @@
             const contentInput = document.getElementById('discussionContent');
             const categoryInput = document.getElementById('discussionCategory');
 
-            if (titleInput) titleInput.value = `Just played ${gameTitle} on Cinema Muchatlu! 🎮🔥`;
+            if (titleInput) titleInput.value = `Just played ${gameTitle} on TRIBE! 🎮🔥`;
             if (contentInput) {
                 contentInput.value = `Scored ${score} points with a ${bestStreak}-streak in ${gameTitle}! 🎬 Think you know Telugu cinema better? Challenge accepted! 🍿`;
             }
