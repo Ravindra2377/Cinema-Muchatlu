@@ -1475,6 +1475,7 @@ function init() {
 
 
     initEventListeners();
+    showSection('trending');
 }
 
 // Start the app when DOM is ready
