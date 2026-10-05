@@ -1,20 +1,21 @@
 :root {
     /* Color Palette */
-    --primary: #E50914;
-    --primary-dark: #B20710;
-    --primary-light: #FF1F29;
-    --secondary: #FFD700;
-    --background: #0A0A0A;
-    --surface: #141414;
-    --surface-light: #1F1F1F;
-    --surface-lighter: #2A2A2A;
-    --text-primary: #FFFFFF;
-    --text-secondary: #B3B3B3;
-    --text-muted: #808080;
-    --border: rgba(255, 255, 255, 0.1);
-    --overlay: rgba(0, 0, 0, 0.8);
+    --primary: #6D28D9;
+    --primary-dark: #241338;
+    --primary-light: #8B5CF6;
+    --secondary: #F5C542;
+    --background: #030305;
+    --surface: #07070B;
+    --surface-light: #0D0B12;
+    --surface-lighter: #13101A;
+    --text-primary: #F4F0FF;
+    --text-secondary: #918B9F;
+    --text-muted: #6B627A;
+    --border: #211A2B;
+    --overlay: rgba(3, 3, 5, 0.85);
     --success: #46D369;
     --warning: #FFA500;
+    --game-purple: #8B5CF6;
 
     /* Glassmorphism */
     --glass-bg: rgba(20, 20, 20, 0.7);
@@ -53,7 +54,10 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: radial-gradient(circle at top right, rgba(229, 9, 20, 0.35), transparent 35%), linear-gradient(180deg, #080808 0%, #040404 60%, #050505 100%);
+    background:
+      radial-gradient(ellipse 60% 45% at 85% 5%, rgba(109, 40, 217, 0.16), transparent 70%),
+      radial-gradient(ellipse 45% 35% at 10% 75%, rgba(76, 29, 149, 0.08), transparent 70%),
+      #030305;
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
@@ -65,11 +69,9 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: rgba(10, 10, 10, 0.85);
-    backdrop-filter: blur(22px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
-    z-index: 1000;
+    background: rgba(3, 3, 5, 0.94);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.10);
     transition: var(--transition-normal);
 }
 
@@ -87,10 +89,11 @@ body {
     font-family: 'Outfit', sans-serif;
     font-size: 1.8rem;
     font-weight: 900;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(90deg, #7C3AED 0%, #A855F7 50%, #C084FC 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-shadow: none;
     letter-spacing: -0.5px;
 }
 
@@ -107,26 +110,17 @@ body {
     transition: var(--transition-fast);
     position: relative;
     padding: 0.5rem 0;
+    border-bottom: 2px solid transparent;
 }
 
-.nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: var(--transition-fast);
-}
-
-.nav-link:hover,
-.nav-link.active {
+.nav-link:hover {
     color: var(--text-primary);
 }
 
-.nav-link.active::after {
-    width: 100%;
+.nav-link.active {
+    color: #A78BFA;
+    border-bottom: 2px solid #7C3AED;
+    text-shadow: 0 0 12px rgba(124, 58, 237, 0.45);
 }
 
 .header-actions {
@@ -191,7 +185,7 @@ body {
 }
 
 .btn-login {
-    background: var(--primary);
+    background: linear-gradient(135deg, #6D28D9, #8B5CF6);
     color: var(--text-primary);
     border: none;
     padding: 0.6rem 1.5rem;
@@ -203,7 +197,7 @@ body {
 }
 
 .btn-login:hover {
-    background: var(--primary-light);
+    background: linear-gradient(135deg, #5B21B6, #7C3AED);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
@@ -535,8 +529,8 @@ body {
 }
 
 .filter-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: linear-gradient(135deg, #6D28D9, #8B5CF6);
+    border-color: transparent;
     color: var(--text-primary);
 }
 
@@ -614,7 +608,8 @@ body {
 }
 
 .movie-card {
-    background: var(--surface);
+    background: linear-gradient(180deg, #121019 0%, #0A090D 100%);
+    border: 1px solid #201A28;
     border-radius: var(--radius-lg);
     overflow: hidden;
     cursor: pointer;
@@ -623,8 +618,9 @@ body {
 }
 
 .movie-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-xl);
+    border-color: rgba(139, 92, 246, 0.38);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65), 0 0 30px rgba(109, 40, 217, 0.10);
+    transform: translateY(-4px);
 }
 
 .movie-poster {
@@ -710,6 +706,18 @@ body {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
+    color: #F4F0FF;
+}
+
+.section-title::after {
+    content: "";
+    display: block;
+    width: 42px;
+    height: 3px;
+    margin-top: 8px;
+    background: linear-gradient(90deg, #6D28D9, #A855F7);
+    border-radius: 4px;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.45);
 }
 
 /* Trending Carousel */
@@ -738,7 +746,8 @@ body {
 
 .trending-card {
     min-width: 300px;
-    background: var(--surface);
+    background: linear-gradient(180deg, #121019 0%, #0A090D 100%);
+    border: 1px solid #201A28;
     border-radius: var(--radius-lg);
     overflow: hidden;
     cursor: pointer;
@@ -747,24 +756,26 @@ body {
 }
 
 .trending-card:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-xl);
+    border-color: rgba(139, 92, 246, 0.38);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65), 0 0 30px rgba(109, 40, 217, 0.10);
+    transform: translateY(-4px);
 }
 
 .trending-music-card {
     min-width: 250px;
     max-width: 260px;
-    background: var(--surface);
+    background: #0C0911;
     border-radius: var(--radius-lg);
     overflow: hidden;
     transition: var(--transition-normal);
-    border: 1px solid var(--glass-border);
+    border: 1px solid #21152C;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
 }
 
 .trending-music-card:hover {
+    border-color: rgba(192, 132, 252, 0.35);
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
 }
@@ -808,7 +819,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary-lite, #ff1f29), var(--primary-dark));
+    background: linear-gradient(135deg, #6D28D9, #8B5CF6);
     color: var(--text-primary);
     border: none;
     padding: 0.75rem 1.5rem;
@@ -823,9 +834,9 @@ body {
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, #5B21B6, #7C3AED);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3);
 }
 
 .btn-primary svg {

@@ -5,26 +5,26 @@
 /* CSS Variables */
 :root {
     /* Colors */
-    --primary: #dc2626;
-    --primary-dark: #991b1b;
-    --primary-light: #ef4444;
+    --primary: #6D28D9;
+    --primary-dark: #241338;
+    --primary-light: #8B5CF6;
     --success: #10b981;
     --error: #ef4444;
     --warning: #f59e0b;
 
     /* Backgrounds */
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-card: #334155;
-    --bg-overlay: rgba(15, 23, 42, 0.95);
+    --bg-primary: #030305;
+    --bg-secondary: #0D0B12;
+    --bg-card: #0D0B12;
+    --bg-overlay: rgba(3, 3, 5, 0.95);
 
     /* Text */
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-primary: #F4F0FF;
+    --text-secondary: #918B9F;
+    --text-muted: #6B627A;
 
     /* Borders */
-    --border-color: #475569;
+    --border-color: #211A2B;
     --border-radius: 12px;
     --border-radius-sm: 8px;
 
@@ -135,9 +135,12 @@ body.auth-page {
 .brand-logo {
     font-size: var(--font-size-3xl);
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary-light);
     margin-bottom: var(--spacing-xs);
-    text-shadow: 0 0 30px rgba(220, 38, 38, 0.3);
+    background: linear-gradient(90deg, #7C3AED 0%, #A855F7 50%, #C084FC 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
 }
 
 .brand-tagline {
@@ -560,7 +563,7 @@ body.auth-page {
     font-size: var(--font-size-md);
     font-weight: 600;
     color: white;
-    background: var(--primary);
+    background: linear-gradient(135deg, #6D28D9, #8B5CF6);
     border: none;
     border-radius: var(--border-radius-sm);
     cursor: pointer;
@@ -571,9 +574,9 @@ body.auth-page {
 }
 
 .btn-primary:hover {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, #5B21B6, #7C3AED);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 15px rgba(109, 40, 217, 0.3);
 }
 
 .btn-primary:active {
