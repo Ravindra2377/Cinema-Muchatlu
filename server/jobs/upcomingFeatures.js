@@ -9,7 +9,8 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
  */
 async function syncUpcomingReleases() {
     const today = new Date().toISOString().split('T')[0];
-    const url = `${TMDB_API}/discover/movie?api_key=${TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+    const langs = 'hi|te|ta|ml|kn|mr|bn|en';
+    const url = `${TMDB_API}/discover/movie?api_key=${TMDB_API_KEY}&with_original_language=${langs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
     
     const response = await axios.get(url);
     const movies = response.data.results.slice(0, 20); // Sync top 20 upcoming

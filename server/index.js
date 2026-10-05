@@ -54,17 +54,20 @@ const TMDB_GENRES = {
 };
 
 function mapTMDBMovie(m) {
+    const title = m.title || m.name || 'Unknown Title';
+    const release_date = m.release_date || m.first_air_date || null;
+    const isTv = !!m.name;
     return {
         id: m.id.toString(),
-        title: m.title,
-        year: m.release_date ? parseInt(m.release_date.split('-')[0]) : null,
-        release_date: m.release_date || null,
+        title: title,
+        year: release_date ? parseInt(release_date.split('-')[0]) : null,
+        release_date: release_date,
         genre: (m.genre_ids || []).map(id => TMDB_GENRES[id]).filter(Boolean), 
         rating: Math.round(m.vote_average * 10) / 10,
         poster: m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop',
         description: m.overview || 'No description available.',
         cast: [],
-        content_type: 'Movie'
+        content_type: isTv ? 'Series' : 'Movie'
     };
 }
 
@@ -238,20 +241,29 @@ app.get('/api/movies', async (req, res) => {
         let results = [];
         
         if (search) {
-            // Fetch 2 pages of search results to give them lots of global IMDb movies
-            const urls = [1, 2].map(page => 
+            // Fetch search results for both movies and tv
+            const movieUrls = [1, 2].map(page => 
                 `${TMDB_API}/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(search)}&page=${page}`
             );
-            const responses = await Promise.all(urls.map(url => axios.get(url)));
+            const tvUrls = [1, 2].map(page => 
+                `${TMDB_API}/search/tv?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(search)}&page=${page}`
+            );
+            const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
             results = responses.flatMap(r => r.data.results);
+            results.sort((a,b) => b.popularity - a.popularity);
         } else {
-            // Fetch first 4 pages (80 movies) of Telugu movies from 1960 to 2026
-            const urls = [1, 2, 3, 4].map(page => 
-                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
+            // Fetch first 2 pages of Movies and TV for all Indian languages + English
+            const langs = 'hi|te|ta|ml|kn|mr|bn|en';
+            const movieUrls = [1, 2].map(page => 
+                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
+            );
+            const tvUrls = [1, 2].map(page => 
+                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
             );
             
-            const responses = await Promise.all(urls.map(url => axios.get(url)));
+            const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
             results = responses.flatMap(r => r.data.results);
+            results.sort((a,b) => b.popularity - a.popularity);
         }
         
         const mapped = results.map(mapTMDBMovie);
@@ -265,18 +277,19 @@ app.get('/api/movies', async (req, res) => {
 // GET /api/movies/trending - Get trending movies (Multiple Pages for Doom Scrolling)
 app.get('/api/movies/trending', async (req, res) => {
     try {
-        // Fetch truly trending Telugu movies by filtering strictly to the year 2026
-        const url1 = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=1`;
-        const url2 = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=2`;
-        const url3 = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=3`;
+        // Fetch trending movies and TV for 2026
+        const langs = 'hi|te|ta|ml|kn|mr|bn|en';
+        const movieUrls = [1, 2].map(page => 
+            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&sort_by=popularity.desc&primary_release_year=2026&page=${page}`
+        );
+        const tvUrls = [1, 2].map(page => 
+            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&sort_by=popularity.desc&first_air_date_year=2026&page=${page}`
+        );
         
-        const [res1, res2, res3] = await Promise.all([
-            axios.get(url1),
-            axios.get(url2),
-            axios.get(url3)
-        ]);
+        const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
+        const allResults = responses.flatMap(r => r.data.results);
+        allResults.sort((a,b) => b.popularity - a.popularity);
         
-        const allResults = [...res1.data.results, ...res2.data.results, ...res3.data.results];
         const mapped = allResults.map(mapTMDBMovie);
         res.json(mapped);
     } catch (err) {
@@ -285,7 +298,7 @@ app.get('/api/movies/trending', async (req, res) => {
     }
 });
 
-// GET /api/movies/upcoming - Get upcoming Telugu movies release calendar
+// GET /api/movies/upcoming - Get upcoming movies release calendar
 app.get('/api/movies/upcoming', async (req, res) => {
     try {
         const dateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
@@ -295,9 +308,10 @@ app.get('/api/movies/upcoming', async (req, res) => {
             return res.json(feature.data.map(mapTMDBMovie));
         }
 
-        // Fallback to live TMDB fetch
+        // Fallback to live TMDB fetch for upcoming movies
         const today = new Date().toISOString().split('T')[0];
-        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+        const langs = 'hi|te|ta|ml|kn|mr|bn|en';
+        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
         const response = await axios.get(url);
         res.json(response.data.results.slice(0, 10).map(mapTMDBMovie));
     } catch (err) {
@@ -897,7 +911,8 @@ app.get('/api/feed', optionalAuth, async (req, res) => {
         }
 
         // Fetch a few trending movies to interleave
-        const trendingUrl = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=te&sort_by=popularity.desc&primary_release_year=2026&page=1`;
+        const langs = 'hi|te|ta|ml|kn|mr|bn|en';
+        const trendingUrl = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&sort_by=popularity.desc&primary_release_year=2026&page=1`;
         const movieRes = await axios.get(trendingUrl);
         const topMovies = movieRes.data.results.slice(0, 6).map(mapTMDBMovie);
         
@@ -1138,7 +1153,7 @@ app.get('/api/music/daily', async (req, res) => {
         // Fallback if job hasn't run
         let songs = cachedMusic;
         if (songs.length === 0) {
-            songs = await searchSongs('telugu trending');
+            songs = await searchSongs('indian trending songs');
         }
         
         if (songs.length > 0) {
@@ -1156,10 +1171,10 @@ app.get('/api/music/daily', async (req, res) => {
 let cachedMusic = [];
 let lastMusicFetch = 0;
 
-// GET /api/music - Get popular Telugu music directly via native in-process engine
+// GET /api/music - Get popular music directly via native in-process engine
 app.get('/api/music', async (req, res) => {
     try {
-        const searchQuery = req.query.search || 'telugu hit songs';
+        const searchQuery = req.query.search || 'indian hit songs';
         
         // Cache results for 1 hour to prevent excessive requests (only cache default hits, not search)
         if (!req.query.search && cachedMusic.length > 0 && (Date.now() - lastMusicFetch) < 3600000) {

@@ -480,7 +480,7 @@ async function renderTrendingSongs() {
     trendingMusicCarousel.innerHTML = musicTracks.slice(0, 15).map(track => `
         <div class="trending-music-card">
             <div style="position: relative; width: 100%; padding-top: 100%; background: #111; overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
-                <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Telugu+Music'">
+                <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">
                 <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); color: #ffd700; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; backdrop-filter: blur(4px);">🔥 Top Song</span>
             </div>
             <div style="padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
@@ -551,7 +551,7 @@ async function initMusic(force = false) {
         musicGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: var(--text-secondary);">
                 <div style="margin: 0 auto 1.5rem; width: 44px; height: 44px; border: 3px solid rgba(229,9,20,0.2); border-top-color: #e50914; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                <p style="font-size: 1rem; font-weight: 500;">Loading Telugu hits...</p>
+                <p style="font-size: 1rem; font-weight: 500;">Loading hits...</p>
             </div>
         `;
     }
@@ -617,7 +617,7 @@ function renderMusic() {
         musicTrendingCarousel.innerHTML = musicTracks.slice(0, 10).map(track => `
             <div class="trending-music-card">
                 <div style="position: relative; width: 100%; padding-top: 100%; background: #111; overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
-                    <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Telugu+Music'">
+                    <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">
                     <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); color: #ffd700; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; backdrop-filter: blur(4px);">🔥 Trending</span>
                 </div>
                 <div style="padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
@@ -637,7 +637,7 @@ function renderMusic() {
     musicGrid.innerHTML = musicTracks.map(track => `
         <div class="movie-card" style="display: flex; flex-direction: column;">
             <div style="position: relative; width: 100%; padding-top: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; overflow: hidden; background: #111;">
-                <img src="${track.thumbnailUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" alt="${track.title}" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Telugu+Music'">
+                <img src="${track.thumbnailUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" alt="${track.title}" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">
             </div>
             <div class="movie-info" style="padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
