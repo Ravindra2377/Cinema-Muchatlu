@@ -361,3 +361,24 @@ Expanded multiplayer room capacity up to 10 players, and added interactive membe
 - Restored arcade games in the Play tab by resolving a syntax error in the game engine
 - Fixed backend routing conflict to ensure the Upcoming Releases tab loads movies correctly
 - Replaced technical 'flatrate' label with 'Stream' under watch provider icons
+
+## 33. 📊 Universal Tracking Hub & Architecture
+Transformed the "My Stuff" tab from a simple movie diary into a comprehensive, extensible **Universal Tracking Hub** capable of tracking 25 distinct aspects of daily life while retaining a singular, cohesive UI and backend infrastructure.
+
+- **Universal Engine Architecture (`server/models.js`):**
+  - **`Tracker` Schema:** Represents a specific user-created tracker instance (e.g., "My Car", "Netflix Subs", "Home Loan"). Added strict `type` enum support for 25 distinct templates ranging from `FUEL` and `EMI` to `MEDICATION` and `HABIT`.
+  - **`TrackerEntry` Schema:** Schema-less `metadata` approach to handle infinite variations of tracking data (e.g., storing `litres` and `price` for Fuel, but `season` and `episode` for Series) without bloating the database with 25 separate tables.
+  - **`TimelineEvent` Schema:** A central aggregation engine that unifies legacy `FilmLog` entries (Movie Watched/Liked/Reviewed) and new `TrackerEntry` creations into one chronological feed.
+- **My Trackers Dashboard (`index.html` & `app.js`):**
+  - Rebuilt the `❤️ My Stuff` UI grid to dynamically fetch and display active trackers alongside the user's Movie Watchlist and Cinema Diary stats.
+  - Added a responsive **Add Tracker Modal** allowing users to pick from the 25 specific templates, assign a custom name, choose a defining emoji icon (e.g., 🍿, 🚗, 💳), and set a theme color.
+- **Universal Tracker Detail Engine (Phase 2):**
+  - Built a dynamic `trackerDetailModal` that projects a specialized interface based on the Tracker's underlying `type`.
+  - **Dynamic Form Injection:** When adding a new entry, `app.js` dynamically shapes the form fields:
+    - **⛽ FUEL:** Litres, Price/Litre, Odometer, Station.
+    - **🚗 VEHICLE:** Service Type, Odometer, Cost.
+    - **📺 SERIES:** Season, Episode, Review/Notes.
+    - **GENERIC:** Note/Description, Amount/Value.
+  - **Instant Timeline Synchronization:** Form submissions instantly trigger `TrackerEntry` creation, auto-generate a `TimelineEvent`, and dynamically update both the individual Tracker's history and the Global "My Timeline" view without refreshing.
+- **Cinema Workflow Integration:**
+  - Upgraded the existing `/api/films/:movieId/log` and `/api/films/:movieId/like` endpoints to natively generate `TimelineEvent` records, automatically injecting Cinema Muchatlu activity directly into the new Universal Tracking timeline.
