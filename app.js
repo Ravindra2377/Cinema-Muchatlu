@@ -717,8 +717,8 @@ async function showMovieDetail(movieId) {
                         🔖 ${isInWatchlist(movie.id) ? 'Watchlist' : 'Watchlist'}
                     </button>
                     
-                    <button onclick="toggleLogLike('${movie.id}', ${userLog && userLog.liked ? true : false})" style="background: transparent; color: ${userLog && userLog.liked ? '#ff2d55' : '#555'}; border: 1px solid #444; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">
-                        ❤️
+                    <button onclick="toggleLogLike('${movie.id}', ${userLog && userLog.liked ? true : false})" style="background: ${userLog && userLog.liked ? 'rgba(255, 45, 85, 0.1)' : 'transparent'}; border: 1px solid ${userLog && userLog.liked ? '#ff2d55' : '#444'}; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">
+                        ${userLog && userLog.liked ? '❤️' : '🤍'}
                     </button>
 
                     <button onclick="openLogModal('${movie.id}')" style="background: transparent; border: 1px solid #444; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; font-weight: bold;">
