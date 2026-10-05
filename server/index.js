@@ -272,7 +272,7 @@ app.get('/api/movies', async (req, res) => {
             results.sort(() => Math.random() - 0.5); // Shuffle so it's a mix of Indian and English
         }
         
-        const mapped = results.map(mapTMDBMovie);
+        const mapped = results.filter(m => !JSON.stringify(m).toLowerCase().includes('ullu')).map(mapTMDBMovie);
         res.json(mapped);
     } catch (err) {
         console.error('Error fetching movies from TMDB:', err);
@@ -297,7 +297,7 @@ app.get('/api/movies/trending', async (req, res) => {
         ];
         
         const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
-        const allResults = responses.flatMap(r => r.data.results);
+        const allResults = responses.flatMap(r => r.data.results).filter(m => !JSON.stringify(m).toLowerCase().includes('ullu'));
         allResults.sort(() => Math.random() - 0.5);
         
         const mapped = allResults.map(mapTMDBMovie);
@@ -326,7 +326,7 @@ app.get('/api/movies/upcoming', async (req, res) => {
         const urlEn = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
         
         const [resInd, resEn] = await Promise.all([axios.get(urlInd), axios.get(urlEn)]);
-        const combined = [...resInd.data.results.slice(0, 7), ...resEn.data.results.slice(0, 3)];
+        const combined = [...resInd.data.results.slice(0, 15), ...resEn.data.results.slice(0, 5)].filter(m => !JSON.stringify(m).toLowerCase().includes('ullu'));
         
         res.json(combined.map(mapTMDBMovie));
     } catch (err) {
@@ -932,7 +932,10 @@ app.get('/api/feed', optionalAuth, async (req, res) => {
         const urlEn = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&primary_release_year=2026&page=1`;
         
         const [resInd, resEn] = await Promise.all([axios.get(urlInd), axios.get(urlEn)]);
-        const topMovies = [...resInd.data.results.slice(0, 4), ...resEn.data.results.slice(0, 2)].map(mapTMDBMovie);
+        const topMovies = [...resInd.data.results, ...resEn.data.results]
+            .filter(m => !JSON.stringify(m).toLowerCase().includes('ullu'))
+            .slice(0, 6)
+            .map(mapTMDBMovie);
         
         // Combine them into a feed
         const mixedFeed = [];

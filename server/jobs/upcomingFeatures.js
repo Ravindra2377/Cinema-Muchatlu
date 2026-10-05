@@ -15,7 +15,9 @@ async function syncUpcomingReleases() {
     const urlEn = `${TMDB_API}/discover/movie?api_key=${TMDB_API_KEY}&with_original_language=${enLangs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
     
     const [resInd, resEn] = await Promise.all([axios.get(urlInd), axios.get(urlEn)]);
-    const movies = [...resInd.data.results.slice(0, 15), ...resEn.data.results.slice(0, 5)];
+    const movies = [...resInd.data.results, ...resEn.data.results]
+        .filter(m => !JSON.stringify(m).toLowerCase().includes('ullu'))
+        .slice(0, 20);
     
     // Save to DailyFeature so we don't hit TMDB directly on every request
     const dateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
