@@ -1151,6 +1151,7 @@ function showSection(sectionId) {
     } else if (sectionId === 'watchlist') {
         if (currentUser) {
             loadProfileAndDiary();
+            loadTrackers();
         }
     }
 }
@@ -1479,6 +1480,71 @@ async function loadProfileAndDiary() {
         console.error('Error loading profile and diary:', err);
     }
 }
+
+async function loadTrackers() {
+    try {
+        const trackers = await apiFetch('/trackers');
+        if (!trackers) return;
+        
+        const grid = document.getElementById('userTrackersGrid');
+        
+        const addBtnHTML = `
+            <div onclick="openAddTrackerModal()" style="border: 2px dashed var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; min-height: 120px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-secondary)';">
+                <div style="text-align: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <div>Add Tracker</div>
+                </div>
+            </div>
+        `;
+
+        const trackersHTML = trackers.map(tracker => `
+            <div style="background: #111; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: transform 0.2s;" onclick="alert('Viewing tracker details is coming soon!')">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <span style="font-size: 1.2rem; background: rgba(255,255,255,0.05); padding: 0.25rem; border-radius: 8px;">${tracker.icon}</span>
+                    <h3 style="margin: 0; font-size: 1rem; color: ${tracker.color || '#fff'};">${tracker.name}</h3>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #888;">
+                    <span>Type: ${tracker.type.replace('_', ' ')}</span>
+                    <span style="color: var(--primary);">Active</span>
+                </div>
+            </div>
+        `).join('');
+
+        grid.innerHTML = trackersHTML + addBtnHTML;
+    } catch (err) {
+        console.error('Error loading trackers:', err);
+    }
+}
+
+function openAddTrackerModal() {
+    document.getElementById('addTrackerModal').style.display = 'flex';
+}
+
+document.getElementById('addTrackerForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const type = document.getElementById('trackerType').value;
+    const name = document.getElementById('trackerName').value;
+    const icon = document.getElementById('trackerIcon').value;
+    const color = document.getElementById('trackerColor').value;
+
+    try {
+        const result = await apiFetch('/trackers', {
+            method: 'POST',
+            body: JSON.stringify({ type, name, icon, color, metadata: {} })
+        });
+        if (result && !result.error) {
+            document.getElementById('addTrackerModal').style.display = 'none';
+            document.getElementById('addTrackerForm').reset();
+            loadTrackers(); // Refresh trackers
+        }
+    } catch (err) {
+        console.error('Error creating tracker', err);
+        alert('Failed to create tracker');
+    }
+});
 
 function init() {
     // Load data from storage
