@@ -1370,9 +1370,10 @@ async function loadProfileAndDiary() {
     if (!currentUser) return;
 
     try {
-        const [diaryLogs, watchedData] = await Promise.all([
+        const [diaryLogs, watchedData, timelineEvents] = await Promise.all([
             apiFetch('/users/me/diary'),
-            apiFetch('/users/me/watched')
+            apiFetch('/users/me/watched'),
+            apiFetch('/timeline').catch(() => [])
         ]);
         
         const logs = diaryLogs || [];
@@ -1419,6 +1420,27 @@ async function loadProfileAndDiary() {
                 <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">OTT</div>
             </div>
         `;
+
+        // Render Universal Timeline
+        if (timelineEvents && timelineEvents.length > 0) {
+            document.getElementById('universalTimelineContainer').innerHTML = `
+                <h2 class="section-title">📅 My Timeline</h2>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    ${timelineEvents.map(event => `
+                        <div style="background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; display: flex; align-items: center; gap: 1rem;">
+                            <div style="font-size: 1.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">${event.icon}</div>
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0; font-size: 1rem; color: ${event.color || '#fff'};">${event.title}</h3>
+                                ${event.description ? `<p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${event.description}</p>` : ''}
+                            </div>
+                            <div style="color: #666; font-size: 0.8rem;">
+                                ${new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
 
         // Render Diary
         document.getElementById('cinemaDiaryContainer').style.display = 'block';

@@ -393,8 +393,52 @@ dailyFeatureSchema.index({ dateKey: 1, type: 1 }, { unique: true });
 
 const DailyFeature = mongoose.model('DailyFeature', dailyFeatureSchema);
 
+// ============================================
+// Universal Tracking Engine
+// ============================================
+const trackerSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    type: { 
+        type: String, 
+        enum: ['MOVIE', 'SERIES', 'FUEL', 'VEHICLE', 'EMI', 'AUTO_PAY', 'BILLS', 'HEALTH', 'INSURANCE', 'INVESTMENT', 'WARRANTY', 'DOCUMENT', 'TRAVEL', 'FITNESS', 'HABIT', 'FOOD', 'HOME'],
+        required: true 
+    },
+    name: { type: String, required: true },
+    icon: { type: String, default: '📊' },
+    color: { type: String, default: '#00e5ff' },
+    status: { type: String, enum: ['ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED'], default: 'ACTIVE' },
+    metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const trackerEntrySchema = new mongoose.Schema({
+    trackerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tracker', required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    date: { type: Date, default: Date.now },
+    metadata: { type: mongoose.Schema.Types.Mixed, default: {} }, // Schema-less payload for the entry
+    createdAt: { type: Date, default: Date.now }
+});
+
+const timelineEventSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    sourceType: { type: String, enum: ['TRACKER_ENTRY', 'MOVIE_LOG', 'SYSTEM_NOTIFICATION'], required: true },
+    sourceId: { type: mongoose.Schema.Types.ObjectId }, // e.g. trackerEntryId or filmLogId
+    title: { type: String, required: true },
+    description: { type: String },
+    icon: { type: String, default: '📌' },
+    color: { type: String, default: '#fff' },
+    date: { type: Date, default: Date.now },
+    metadata: { type: mongoose.Schema.Types.Mixed, default: {} }
+});
+
+const Tracker = mongoose.model('Tracker', trackerSchema);
+const TrackerEntry = mongoose.model('TrackerEntry', trackerEntrySchema);
+const TimelineEvent = mongoose.model('TimelineEvent', timelineEventSchema);
+
 module.exports = { 
     User, Movie, Watchlist, Comment, Discussion, Reply, Music, CulturePost, 
     UserEvent, UserInterest, Notification, JobRun, DailyFeature, Reminder, FilmLog,
-    Game, GameQuestion, GameSession, GameLeaderboard
+    Game, GameQuestion, GameSession, GameLeaderboard,
+    Tracker, TrackerEntry, TimelineEvent
 };

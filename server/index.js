@@ -378,6 +378,17 @@ app.post('/api/films/:movieId/log', authMiddleware, async (req, res) => {
         } else if (watchMethod === 'OTT') {
             await UserEvent.create({ userId: req.user.id, eventType: 'watch_method_ott', targetType: 'movie', targetId: movieId, metadata: { provider: ott?.provider } });
         }
+
+        // Add to Universal Timeline
+        await TimelineEvent.create({
+            userId: req.user.id,
+            sourceType: 'MOVIE_LOG',
+            sourceId: log._id,
+            title: review ? `Reviewed a movie` : (rating ? `Rated a movie` : `Watched a movie`),
+            description: review ? review : (rating ? `⭐ ${rating}` : ''),
+            icon: '🎬',
+            color: '#00e5ff'
+        });
         
         res.status(201).json(log);
     } catch (err) {
@@ -509,7 +520,17 @@ app.post('/api/films/:movieId/like', authMiddleware, async (req, res) => {
         } else {
             log = await FilmLog.create({ userId: req.user.id, movieId, liked });
         }
-        if (liked) await UserEvent.create({ userId: req.user.id, eventType: 'movie_liked', targetType: 'movie', targetId: movieId });
+        if (liked) {
+            await UserEvent.create({ userId: req.user.id, eventType: 'movie_liked', targetType: 'movie', targetId: movieId });
+            await TimelineEvent.create({
+                userId: req.user.id,
+                sourceType: 'MOVIE_LOG',
+                sourceId: log._id,
+                title: `Liked a movie`,
+                icon: '❤️',
+                color: '#ff2d55'
+            });
+        }
         res.json(log);
     } catch (err) {
         res.status(500).json({ error: 'Error liking movie' });
@@ -1383,6 +1404,72 @@ app.get('/api/analytics/recommendations', async (req, res) => {
     } catch (err) {
         console.error('Error fetching analytics:', err);
         res.status(500).json({ error: 'Failed to generate analytics report' });
+    }
+});
+
+// ============================================
+// Universal Tracking Hub API
+// ============================================
+const { Tracker, TrackerEntry, TimelineEvent } = require('./models');
+
+app.get('/api/trackers', authMiddleware, async (req, res) => {
+    try {
+        const trackers = await Tracker.find({ userId: req.user.id, status: 'ACTIVE' }).sort({ createdAt: -1 });
+        res.json(trackers);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching trackers' });
+    }
+});
+
+app.post('/api/trackers', authMiddleware, async (req, res) => {
+    try {
+        const { type, name, icon, color, metadata } = req.body;
+        const tracker = await Tracker.create({ userId: req.user.id, type, name, icon, color, metadata });
+        res.json(tracker);
+    } catch (err) {
+        res.status(500).json({ error: 'Error creating tracker' });
+    }
+});
+
+app.get('/api/trackers/:id/entries', authMiddleware, async (req, res) => {
+    try {
+        const entries = await TrackerEntry.find({ trackerId: req.params.id, userId: req.user.id }).sort({ date: -1 });
+        res.json(entries);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching entries' });
+    }
+});
+
+app.post('/api/trackers/:id/entries', authMiddleware, async (req, res) => {
+    try {
+        const { date, metadata } = req.body;
+        const entry = await TrackerEntry.create({ trackerId: req.params.id, userId: req.user.id, date, metadata });
+        
+        // Create a generic timeline event
+        const tracker = await Tracker.findById(req.params.id);
+        if (tracker) {
+            await TimelineEvent.create({
+                userId: req.user.id,
+                sourceType: 'TRACKER_ENTRY',
+                sourceId: entry._id,
+                title: `Added entry to ${tracker.name}`,
+                icon: tracker.icon,
+                color: tracker.color,
+                metadata: metadata
+            });
+        }
+        res.json(entry);
+    } catch (err) {
+        res.status(500).json({ error: 'Error adding entry' });
+    }
+});
+
+app.get('/api/timeline', authMiddleware, async (req, res) => {
+    try {
+        const events = await TimelineEvent.find({ userId: req.user.id }).sort({ date: -1 }).limit(50);
+        res.json(events);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching timeline' });
     }
 });
 
