@@ -252,18 +252,24 @@ app.get('/api/movies', async (req, res) => {
             results = responses.flatMap(r => r.data.results);
             results.sort((a,b) => b.popularity - a.popularity);
         } else {
-            // Fetch first 2 pages of Movies and TV for all Indian languages + English
-            const langs = 'hi|te|ta|ml|kn|mr|bn|en';
-            const movieUrls = [1, 2].map(page => 
-                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
-            );
-            const tvUrls = [1, 2].map(page => 
-                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
-            );
+            // Fetch 2 pages of Indian Movies/TV and 1 page of English Movies/TV
+            const indLangs = 'hi|te|ta|ml|kn|mr|bn';
+            const enLangs = 'en';
+            
+            const movieUrls = [
+                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=1`,
+                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=2`,
+                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=1`
+            ];
+            const tvUrls = [
+                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=1`,
+                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=2`,
+                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=1`
+            ];
             
             const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
             results = responses.flatMap(r => r.data.results);
-            results.sort((a,b) => b.popularity - a.popularity);
+            results.sort(() => Math.random() - 0.5); // Shuffle so it's a mix of Indian and English
         }
         
         const mapped = results.map(mapTMDBMovie);
@@ -278,17 +284,21 @@ app.get('/api/movies', async (req, res) => {
 app.get('/api/movies/trending', async (req, res) => {
     try {
         // Fetch trending movies and TV for 2026
-        const langs = 'hi|te|ta|ml|kn|mr|bn|en';
-        const movieUrls = [1, 2].map(page => 
-            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&sort_by=popularity.desc&primary_release_year=2026&page=${page}`
-        );
-        const tvUrls = [1, 2].map(page => 
-            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&sort_by=popularity.desc&first_air_date_year=2026&page=${page}`
-        );
+        const indLangs = 'hi|te|ta|ml|kn|mr|bn';
+        const enLangs = 'en';
+        
+        const movieUrls = [
+            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&sort_by=popularity.desc&primary_release_year=2026&page=1`,
+            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&primary_release_year=2026&page=1`
+        ];
+        const tvUrls = [
+            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&sort_by=popularity.desc&first_air_date_year=2026&page=1`,
+            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&first_air_date_year=2026&page=1`
+        ];
         
         const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
         const allResults = responses.flatMap(r => r.data.results);
-        allResults.sort((a,b) => b.popularity - a.popularity);
+        allResults.sort(() => Math.random() - 0.5);
         
         const mapped = allResults.map(mapTMDBMovie);
         res.json(mapped);
@@ -310,10 +320,15 @@ app.get('/api/movies/upcoming', async (req, res) => {
 
         // Fallback to live TMDB fetch for upcoming movies
         const today = new Date().toISOString().split('T')[0];
-        const langs = 'hi|te|ta|ml|kn|mr|bn|en';
-        const url = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
-        const response = await axios.get(url);
-        res.json(response.data.results.slice(0, 10).map(mapTMDBMovie));
+        const indLangs = 'hi|te|ta|ml|kn|mr|bn';
+        const enLangs = 'en';
+        const urlInd = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+        const urlEn = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+        
+        const [resInd, resEn] = await Promise.all([axios.get(urlInd), axios.get(urlEn)]);
+        const combined = [...resInd.data.results.slice(0, 7), ...resEn.data.results.slice(0, 3)];
+        
+        res.json(combined.map(mapTMDBMovie));
     } catch (err) {
         res.status(500).json({ error: 'Error fetching upcoming movies' });
     }
@@ -911,10 +926,13 @@ app.get('/api/feed', optionalAuth, async (req, res) => {
         }
 
         // Fetch a few trending movies to interleave
-        const langs = 'hi|te|ta|ml|kn|mr|bn|en';
-        const trendingUrl = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${langs}&sort_by=popularity.desc&primary_release_year=2026&page=1`;
-        const movieRes = await axios.get(trendingUrl);
-        const topMovies = movieRes.data.results.slice(0, 6).map(mapTMDBMovie);
+        const indLangs = 'hi|te|ta|ml|kn|mr|bn';
+        const enLangs = 'en';
+        const urlInd = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&sort_by=popularity.desc&primary_release_year=2026&page=1`;
+        const urlEn = `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&primary_release_year=2026&page=1`;
+        
+        const [resInd, resEn] = await Promise.all([axios.get(urlInd), axios.get(urlEn)]);
+        const topMovies = [...resInd.data.results.slice(0, 4), ...resEn.data.results.slice(0, 2)].map(mapTMDBMovie);
         
         // Combine them into a feed
         const mixedFeed = [];
@@ -1174,21 +1192,30 @@ let lastMusicFetch = 0;
 // GET /api/music - Get popular music directly via native in-process engine
 app.get('/api/music', async (req, res) => {
     try {
-        const searchQuery = req.query.search || 'indian hit songs';
-        
-        // Cache results for 1 hour to prevent excessive requests (only cache default hits, not search)
-        if (!req.query.search && cachedMusic.length > 0 && (Date.now() - lastMusicFetch) < 3600000) {
-            return res.json(cachedMusic);
+        if (!req.query.search) {
+            // Cache results for 1 hour to prevent excessive requests
+            if (cachedMusic.length > 0 && (Date.now() - lastMusicFetch) < 3600000) {
+                return res.json(cachedMusic);
+            }
+            
+            // Fetch a mix of languages
+            const queries = ['hindi hit songs', 'telugu hit songs', 'tamil hit songs', 'english hit songs', 'malayalam hit songs'];
+            const songPromises = queries.map(q => searchSongs(q, 8));
+            const results = await Promise.all(songPromises);
+            let songs = results.flat();
+            
+            // Shuffle them to create a diverse playlist
+            songs.sort(() => Math.random() - 0.5);
+            
+            if (songs.length > 0) {
+                cachedMusic = songs;
+                lastMusicFetch = Date.now();
+            }
+            return res.json(songs);
+        } else {
+            const songs = await searchSongs(req.query.search, 40);
+            return res.json(songs);
         }
-
-        const songs = await searchSongs(searchQuery, 40);
-        
-        if (!req.query.search && songs.length > 0) {
-            cachedMusic = songs;
-            lastMusicFetch = Date.now();
-        }
-        
-        res.json(songs);
     } catch (err) {
         console.warn(`⚠️ JioSaavn service issue (${err.message}). Serving fallback tracks.`);
         res.json(FALLBACK_TRACKS);

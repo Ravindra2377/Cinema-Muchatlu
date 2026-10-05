@@ -9,11 +9,13 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
  */
 async function syncUpcomingReleases() {
     const today = new Date().toISOString().split('T')[0];
-    const langs = 'hi|te|ta|ml|kn|mr|bn|en';
-    const url = `${TMDB_API}/discover/movie?api_key=${TMDB_API_KEY}&with_original_language=${langs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+    const indLangs = 'hi|te|ta|ml|kn|mr|bn';
+    const enLangs = 'en';
+    const urlInd = `${TMDB_API}/discover/movie?api_key=${TMDB_API_KEY}&with_original_language=${indLangs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
+    const urlEn = `${TMDB_API}/discover/movie?api_key=${TMDB_API_KEY}&with_original_language=${enLangs}&primary_release_date.gte=${today}&sort_by=primary_release_date.asc&page=1`;
     
-    const response = await axios.get(url);
-    const movies = response.data.results.slice(0, 20); // Sync top 20 upcoming
+    const [resInd, resEn] = await Promise.all([axios.get(urlInd), axios.get(urlEn)]);
+    const movies = [...resInd.data.results.slice(0, 15), ...resEn.data.results.slice(0, 5)];
     
     // Save to DailyFeature so we don't hit TMDB directly on every request
     const dateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
