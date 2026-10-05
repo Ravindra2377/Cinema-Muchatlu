@@ -67,7 +67,7 @@ function mapTMDBMovie(m) {
         poster: m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop',
         description: m.overview || 'No description available.',
         cast: [],
-        content_type: isTv ? 'Series' : 'Movie'
+        content_type: isTv ? 'TV Show' : 'Movie'
     };
 }
 
