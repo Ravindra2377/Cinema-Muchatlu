@@ -252,23 +252,35 @@ app.get('/api/movies', async (req, res) => {
             results = responses.flatMap(r => r.data.results);
             results.sort((a,b) => b.popularity - a.popularity);
         } else {
-            // Fetch 2 pages of Indian Movies/TV and 1 page of English Movies/TV
+            // Fetch 4 pages of Indian Movies/TV and 2 pages of English Movies/TV
             const indLangs = 'hi|te|ta|ml|kn|mr|bn';
             const enLangs = 'en';
             
-            const movieUrls = [
-                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=1`,
-                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=2`,
-                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=1`
-            ];
-            const tvUrls = [
-                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=1`,
-                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=2`,
-                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=1`
-            ];
+            const movieUrls = [1, 2, 3, 4].map(page => 
+                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
+            ).concat([1, 2].map(page => 
+                `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&primary_release_date.gte=1960-01-01&primary_release_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
+            ));
+            
+            const tvUrls = [1, 2, 3, 4].map(page => 
+                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
+            ).concat([1, 2].map(page => 
+                `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&first_air_date.gte=1960-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&page=${page}`
+            ));
             
             const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
             results = responses.flatMap(r => r.data.results);
+            
+            // Deduplicate
+            const uniqueResults = [];
+            const seen = new Set();
+            for (const r of results) {
+                if (!seen.has(r.id)) {
+                    seen.add(r.id);
+                    uniqueResults.push(r);
+                }
+            }
+            results = uniqueResults;
             results.sort(() => Math.random() - 0.5); // Shuffle so it's a mix of Indian and English
         }
         
@@ -287,17 +299,30 @@ app.get('/api/movies/trending', async (req, res) => {
         const indLangs = 'hi|te|ta|ml|kn|mr|bn';
         const enLangs = 'en';
         
-        const movieUrls = [
-            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&sort_by=popularity.desc&primary_release_year=2026&page=1`,
-            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&primary_release_year=2026&page=1`
-        ];
-        const tvUrls = [
-            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&sort_by=popularity.desc&first_air_date_year=2026&page=1`,
-            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&first_air_date_year=2026&page=1`
-        ];
+        const movieUrls = [1, 2, 3].map(page => 
+            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&sort_by=popularity.desc&primary_release_year=2026&page=${page}`
+        ).concat([1, 2].map(page => 
+            `${TMDB_API}/discover/movie?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&primary_release_year=2026&page=${page}`
+        ));
+        const tvUrls = [1, 2, 3].map(page => 
+            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${indLangs}&sort_by=popularity.desc&first_air_date_year=2026&page=${page}`
+        ).concat([1, 2].map(page => 
+            `${TMDB_API}/discover/tv?api_key=${process.env.TMDB_API_KEY}&with_original_language=${enLangs}&sort_by=popularity.desc&first_air_date_year=2026&page=${page}`
+        ));
         
         const responses = await Promise.all([...movieUrls, ...tvUrls].map(url => axios.get(url)));
-        const allResults = responses.flatMap(r => r.data.results).filter(m => !JSON.stringify(m).toLowerCase().includes('ullu'));
+        let allResults = responses.flatMap(r => r.data.results).filter(m => !JSON.stringify(m).toLowerCase().includes('ullu'));
+        
+        // Deduplicate
+        const uniqueTrending = [];
+        const seenTrending = new Set();
+        for (const r of allResults) {
+            if (!seenTrending.has(r.id)) {
+                seenTrending.add(r.id);
+                uniqueTrending.push(r);
+            }
+        }
+        allResults = uniqueTrending;
         allResults.sort(() => Math.random() - 0.5);
         
         const mapped = allResults.map(mapTMDBMovie);
