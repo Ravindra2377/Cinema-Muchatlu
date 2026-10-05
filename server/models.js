@@ -399,8 +399,13 @@ const DailyFeature = mongoose.model('DailyFeature', dailyFeatureSchema);
 const trackerSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: { 
-        type: String, 
-        enum: ['MOVIE', 'SERIES', 'FUEL', 'VEHICLE', 'EMI', 'AUTO_PAY', 'BILLS', 'HEALTH', 'INSURANCE', 'INVESTMENT', 'WARRANTY', 'DOCUMENT', 'TRAVEL', 'FITNESS', 'HABIT', 'FOOD', 'HOME'],
+        type: String,
+        enum: [
+            'MOVIE', 'SERIES', 'THEATRE_OTT', 'FUEL', 'VEHICLE', 'INSURANCE', 'EMI', 'AUTO_PAY', 
+            'BILLS', 'EXPENSE', 'INCOME', 'BUDGET', 'INVESTMENT', 'CREDIT_CARD', 'MEDICAL', 
+            'MEDICATION', 'DOCTOR', 'MEDICAL_REPORT', 'FITNESS', 'WEIGHT', 'WATER', 'SLEEP', 
+            'HABIT', 'DOCUMENT', 'HOME', 'WARRANTY', 'TRAVEL', 'FOOD'
+        ],
         required: true 
     },
     name: { type: String, required: true },
