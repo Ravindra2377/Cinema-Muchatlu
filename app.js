@@ -12,7 +12,6 @@ const STORAGE_KEYS = {
     MOVIES: 'cinema_muchatlu_movies',
     WATCHLIST: 'cinema_muchatlu_watchlist',
     COMMENTS: 'cinema_muchatlu_comments',
-    DISCUSSIONS: 'cinema_muchatlu_discussions',
     REPLIES: 'cinema_muchatlu_replies'
 };
 
@@ -240,42 +239,6 @@ const SAMPLE_MOVIES = [
     }
 ];
 
-// Sample Discussions
-const SAMPLE_DISCUSSIONS = [
-    {
-        id: 'd1',
-        userId: 'admin',
-        username: 'MuchatluAdmin',
-        title: 'What makes a perfect movie ending?',
-        content: 'I\'ve been thinking about what makes a movie ending truly memorable. Is it the twist, the emotional payoff, or something else entirely? What are your thoughts?',
-        likes: 15,
-        likedBy: [],
-        replies: [],
-        timestamp: Date.now() - 86400000 * 2
-    },
-    {
-        id: 'd2',
-        userId: 'admin',
-        username: 'MuchatluAdmin',
-        title: 'Christopher Nolan\'s best work?',
-        content: 'Nolan has given us so many masterpieces - Inception, The Dark Knight, Interstellar, The Prestige. Which one do you think is his magnum opus and why?',
-        likes: 23,
-        likedBy: [],
-        replies: [],
-        timestamp: Date.now() - 86400000 * 5
-    },
-    {
-        id: 'd3',
-        userId: 'admin',
-        username: 'MuchatluAdmin',
-        title: 'Underrated movies that deserve more love',
-        content: 'Let\'s talk about those hidden gems that didn\'t get the recognition they deserved. What are some underrated movies you think everyone should watch?',
-        likes: 18,
-        likedBy: [],
-        replies: [],
-        timestamp: Date.now() - 86400000 * 7
-    }
-];
 
 
 
@@ -288,10 +251,7 @@ let allMovies = [];
 let watchlist = [];
 let reminders = [];
 let comments = [];
-let discussions = [];
-let replies = [];
 let musicTracks = [];
-let feedItems = [];
 let currentFilter = 'all';
 let currentContentType = 'all';
 
@@ -337,19 +297,6 @@ function calculateReputation(userId) {
     userComments.forEach(comment => {
         reputation += comment.likes * 2;
     });
-
-    // Points for discussions
-    const userDiscussions = discussions.filter(d => d.userId === userId);
-    reputation += userDiscussions.length * 10;
-
-    // Points for likes received on discussions
-    userDiscussions.forEach(discussion => {
-        reputation += discussion.likes * 2;
-    });
-
-    // Points for replies
-    const userReplies = replies.filter(r => r.userId === userId);
-    reputation += userReplies.length * 3;
 
     return reputation;
 }
@@ -583,251 +530,6 @@ async function trackEvent(eventType, targetType, targetId, entityType = null, en
     }
 }
 
-// Intersection Observer for true Feed Impressions
-const feedObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const el = entry.target;
-            const postId = el.getAttribute('data-post-id');
-            const source = el.getAttribute('data-source');
-            
-            if (postId) {
-                trackEvent('feed_impression', 'culturePost', postId, null, null, { source });
-                observer.unobserve(el); // Only track impression once per page load
-            }
-        }
-    });
-}, { threshold: 0.5 }); // Require 50% of card to be visible
-
-async function handleReaction(postId, reactionType, buttonElement) {
-    // Optimistic UI update
-    const textNode = buttonElement.childNodes[buttonElement.childNodes.length - 1];
-    const currentText = textNode.textContent || "";
-    const currentCount = parseInt(currentText.replace(/[^0-9]/g, '')) || 0;
-    textNode.textContent = currentText.replace(/[0-9]+/, currentCount + 1);
-    if (!currentText.match(/[0-9]+/)) {
-        textNode.textContent = ` ${currentCount + 1}`;
-    }
-    
-    // Prevent multiple clicks easily
-    buttonElement.style.pointerEvents = 'none';
-    buttonElement.style.opacity = '0.7';
-
-    // Analytics: Find source of this post (exploration, personalized, global)
-    let source = 'global';
-    const feedItem = feedItems.find(i => i.feedType === 'culture' && i.data._id === postId);
-    if (feedItem && feedItem._source) {
-        source = feedItem._source;
-    }
-
-    // Track the event which also updates the backend DB
-    await trackEvent('reaction', 'culturePost', postId, null, null, { reaction: reactionType, source });
-}
-
-async function handlePollVote(postId, optionIndex, buttonElement) {
-    // Optimistic UI update
-    buttonElement.style.background = '#34c759';
-    buttonElement.style.borderColor = '#34c759';
-    
-    // Disable all siblings
-    const parent = buttonElement.parentElement;
-    Array.from(parent.children).forEach(child => {
-        child.style.pointerEvents = 'none';
-        if (child !== buttonElement) child.style.opacity = '0.5';
-    });
-
-    let source = 'global';
-    const feedItem = feedItems.find(i => i.feedType === 'culture' && i.data._id === postId);
-    if (feedItem && feedItem._source) {
-        source = feedItem._source;
-    }
-
-    await trackEvent('poll_vote', 'culturePost', postId, null, null, { optionIndex, source });
-}
-
-async function initFeed() {
-    try {
-        feedItems = await apiFetch('/feed');
-        renderFeed();
-    } catch (err) {
-        console.error('Error fetching feed:', err);
-    }
-}
-
-function renderFeed() {
-    const feedContainer = document.getElementById('feedContainer');
-    if (!feedContainer) return;
-    
-    feedContainer.innerHTML = feedItems.map(item => {
-        if (item.feedType === 'culture') {
-            const post = item.data;
-            const source = item._source || 'global';
-            const debug = item._debugInfo || {};
-            
-            const debugHtml = (currentUser && currentUser.isAdmin) ? `
-                <details style="margin-top: 1rem;">
-                    <summary style="cursor: pointer; color: #888; font-size: 0.8rem; user-select: none;">ℹ️ Admin Debug: Why am I seeing this?</summary>
-                    <div style="margin-top: 0.5rem; padding: 1rem; background: #000; border-radius: 8px; font-size: 0.8rem; border: 1px solid #333;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #aaa;">Personal Score</span> <span style="color: #34c759;">+${debug.personalScore || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #aaa;">Global Score</span> <span style="color: #007aff;">+${debug.globalScore || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; border-top: 1px solid #333; padding-top: 0.5rem;">
-                            <span style="color: #aaa;">Final Score</span> <strong style="color: #fff;">${debug.finalScore || 0}</strong>
-                        </div>
-                        ${debug.matchedEntities && debug.matchedEntities.length > 0 ? `<div style="margin-top: 0.5rem; color: #888;">Matches: ${debug.matchedEntities.join(', ')}</div>` : ''}
-                    </div>
-                </details>
-            ` : '';
-            
-            if (post.type === 'news') {
-                return `<div class="feed-card" data-post-id="${post._id}" data-source="${source}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
-                    <div style="color: var(--primary-color); font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; text-transform: uppercase;">🔥 Trending News</div>
-                    <h3 style="margin-bottom: 0.5rem; font-size: 1.2rem;">${post.title}</h3>
-                    <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">${post.content}</p>
-                    <div style="display: flex; gap: 1rem; color: #888; font-size: 0.9rem;">
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'mass', this)">🔥 <span>${post.reactions?.mass || 0}</span></span>
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'love', this)">❤️ <span>${post.reactions?.love || 0}</span></span>
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'wtf', this)">🤯 <span>${post.reactions?.wtf || 0}</span></span>
-                        <span>💬 ${post.commentsCount} Muchatlu</span>
-                    </div>
-                    ${debugHtml}
-                </div>`;
-            } else if (post.type === 'meme') {
-                return `<div class="feed-card" data-post-id="${post._id}" data-source="${source}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
-                    <div style="color: #34c759; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; text-transform: uppercase;">😂 Meme</div>
-                    <p style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.1rem;">${post.content}</p>
-                    <img src="${post.media}" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;" />
-                    <div style="display: flex; gap: 1rem; color: #888; font-size: 0.9rem;">
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'lol', this)">😂 <span>${post.reactions?.lol || 0}</span> LOL</span>
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'mass', this)">🔥 <span>${post.reactions?.mass || 0}</span></span>
-                        <span>💬 ${post.commentsCount} Muchatlu</span>
-                    </div>
-                    ${debugHtml}
-                </div>`;
-            } else if (post.type === 'poll') {
-                return `<div class="feed-card" data-post-id="${post._id}" data-source="${source}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
-                    <div style="color: #007aff; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; text-transform: uppercase;">📊 Poll</div>
-                    <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">${post.title}</h3>
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
-                        ${post.pollOptions.map((opt, index) => `<button style="background: #2a2a2a; color: white; border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 8px; text-align: left; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#2a2a2a'" onclick="handlePollVote('${post._id}', ${index}, this)">${opt.text}</button>`).join('')}
-                    </div>
-                    <div style="display: flex; gap: 1rem; color: #888; font-size: 0.9rem;">
-                        <span>💬 ${post.commentsCount} Muchatlu</span>
-                    </div>
-                    ${debugHtml}
-                </div>`;
-            } else if (post.type === 'dialogue') {
-                return `<div class="feed-card" data-post-id="${post._id}" data-source="${source}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); border-left: 4px solid #ff9500;">
-                    <div style="color: #ff9500; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; text-transform: uppercase;">🗣️ Iconic Dialogue</div>
-                    <p style="font-size: 1.3rem; font-style: italic; margin-bottom: 0.5rem; line-height: 1.4;">"${post.content}"</p>
-                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem; font-weight: 500;">— ${post.title}</p>
-                    <div style="display: flex; gap: 1rem; color: #888; font-size: 0.9rem;">
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'mass', this)">🔥 <span>${post.reactions?.mass || 0}</span> Mass</span>
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'love', this)">❤️ <span>${post.reactions?.love || 0}</span></span>
-                        <span>💬 ${post.commentsCount}</span>
-                    </div>
-                    ${debugHtml}
-                </div>`;
-            } else if (post.type === 'opinion') {
-                return `<div class="feed-card" data-post-id="${post._id}" data-source="${source}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
-                    <div style="color: #af52de; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; text-transform: uppercase;">🤔 Hot Take</div>
-                    <h3 style="margin-bottom: 0.5rem; font-size: 1.2rem;">${post.title}</h3>
-                    <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">${post.content}</p>
-                    <div style="display: flex; gap: 1rem; color: #888; font-size: 0.9rem;">
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'disagree', this)">👎 <span>${post.reactions?.disagree || 0}</span> Disagree</span>
-                        <span style="cursor:pointer;" onclick="handleReaction('${post._id}', 'wtf', this)">🤯 <span>${post.reactions?.wtf || 0}</span></span>
-                        <span>💬 ${post.commentsCount}</span>
-                    </div>
-                    ${debugHtml}
-                </div>`;
-            }
-        } else if (item.feedType === 'movie') {
-            const movie = item.data;
-            const source = item._source || 'global';
-            const debug = item._debugInfo || {};
-            
-            const debugHtml = (currentUser && currentUser.isAdmin) ? `
-                <details style="margin-top: 1rem; width: 100%;">
-                    <summary style="cursor: pointer; color: #888; font-size: 0.8rem; user-select: none;">ℹ️ Admin Debug: Why am I seeing this?</summary>
-                    <div style="margin-top: 0.5rem; padding: 1rem; background: #000; border-radius: 8px; font-size: 0.8rem; border: 1px solid #333;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #aaa;">Personal Score</span> <span style="color: #34c759;">+${debug.personalScore || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #aaa;">Global Score</span> <span style="color: #007aff;">+${debug.globalScore || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; border-top: 1px solid #333; padding-top: 0.5rem;">
-                            <span style="color: #aaa;">Final Score</span> <strong style="color: #fff;">${debug.finalScore || 0}</strong>
-                        </div>
-                        ${debug.matchedEntities && debug.matchedEntities.length > 0 ? `<div style="margin-top: 0.5rem; color: #888;">Matches: ${debug.matchedEntities.join(', ')}</div>` : ''}
-                    </div>
-                </details>
-            ` : '';
-            
-            return `<div class="feed-card" data-post-id="${movie.id}" data-source="${source}" style="background: var(--bg-card); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.5)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';" onclick="showMovieDetail('${movie.id}')">
-                <div style="display: flex; gap: 1rem;">
-                    <img src="${movie.poster}" style="width: 100px; height: 150px; object-fit: cover; border-radius: 8px;" />
-                    <div style="display: flex; flex-direction: column; justify-content: center; padding: 0.5rem 0;">
-                        <div style="color: var(--primary-color); font-size: 0.8rem; font-weight: bold; margin-bottom: 0.25rem; text-transform: uppercase;">🎬 Trending Movie</div>
-                        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; line-height: 1.3;">${movie.title}</h3>
-                        <div style="color: #666; font-size: 0.9rem; margin-top: auto; display: flex; align-items: center; gap: 0.5rem;">
-                            <span>⭐ ${movie.rating || 'N/A'}</span>
-                            <span>• ${movie.year || 'N/A'}</span>
-                        </div>
-                    </div>
-                </div>
-                ${debugHtml}
-            </div>`;
-
-        } else if (item.feedType === 'music') {
-            const track = item.data;
-            const source = item._source || 'global';
-            const debug = item._debugInfo || {};
-            
-            const debugHtml = (currentUser && currentUser.isAdmin) ? `
-                <details style="margin-top: 1rem; width: 100%;">
-                    <summary style="cursor: pointer; color: #888; font-size: 0.8rem; user-select: none;">ℹ️ Admin Debug: Why am I seeing this?</summary>
-                    <div style="margin-top: 0.5rem; padding: 1rem; background: #000; border-radius: 8px; font-size: 0.8rem; border: 1px solid #333;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #aaa;">Personal Score</span> <span style="color: #34c759;">+${debug.personalScore || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #aaa;">Global Score</span> <span style="color: #007aff;">+${debug.globalScore || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; border-top: 1px solid #333; padding-top: 0.5rem;">
-                            <span style="color: #aaa;">Final Score</span> <strong style="color: #fff;">${debug.finalScore || 0}</strong>
-                        </div>
-                        ${debug.matchedEntities && debug.matchedEntities.length > 0 ? `<div style="margin-top: 0.5rem; color: #888;">Matches: ${debug.matchedEntities.join(', ')}</div>` : ''}
-                    </div>
-                </details>
-            ` : '';
-            
-            return `<div class="feed-card" data-post-id="${track.id}" data-source="${source}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
-                <div style="color: #34c759; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.75rem; text-transform: uppercase;">🎵 Viral Track</div>
-                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                    <img src="${track.thumbnailUrl}" style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
-                    <div>
-                        <h3 style="margin-bottom: 0.25rem; font-size: 1.1rem; line-height: 1.3;">${track.title}</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem;">${track.artist}</p>
-                    </div>
-                </div>
-                <audio controls preload="none" style="width: 100%; height: 36px; border-radius: 20px;">
-                    <source src="${track.mediaUrl}" type="audio/mp4">
-                </audio>
-                ${debugHtml}
-            </div>`;
-        }
-        return '';
-    }).join('');
-
-    // Attach IntersectionObserver to track true impressions
-    document.querySelectorAll('.feed-card').forEach(card => {
-        feedObserver.observe(card);
-    });
-}
 
 // ============================================
 // Music Functions
@@ -1278,243 +980,6 @@ function renderWatchlist() {
     });
 }
 
-// ============================================
-// Discussion Functions
-// ============================================
-
-let currentDiscussionCategory = 'Trending';
-let activeDiscussionId = null;
-
-async function initDiscussions() {
-    try {
-        const categoryQuery = currentDiscussionCategory && currentDiscussionCategory !== 'Trending' && currentDiscussionCategory !== 'Latest' && currentDiscussionCategory !== 'Popular' ? `?category=${currentDiscussionCategory}` : '';
-        discussions = await apiFetch(`/discussions${categoryQuery}`);
-    } catch (err) {
-        console.error('Error fetching discussions:', err);
-        discussions = [];
-    }
-    renderDiscussions();
-}
-
-function renderDiscussions() {
-    document.getElementById('discussionDetailContainer').style.display = 'none';
-    const feedContainer = document.getElementById('feedContainer');
-    feedContainer.style.display = 'flex';
-
-    if (discussions.length === 0) {
-        feedContainer.innerHTML = `
-            <div style="text-align: center; padding: 4rem; color: #888; width: 100%;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🗣️</div>
-                <h3 style="color: white; margin-bottom: 0.5rem;">No Discussions found</h3>
-                <p>Be the first to start a conversation about ${currentDiscussionCategory}!</p>
-            </div>
-        `;
-        return;
-    }
-
-    feedContainer.innerHTML = discussions.map(discussion => `
-        <div class="feed-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;" onclick="viewDiscussion('${discussion._id}')">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                <div>
-                    <span style="background: #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #aaa; margin-bottom: 0.5rem; display: inline-block;">
-                        ${discussion.category}
-                    </span>
-                    <h3 style="font-size: 1.2rem; color: white; margin-bottom: 0.5rem;">${discussion.title}</h3>
-                    <div style="color: #888; font-size: 0.9rem;">
-                        👤 ${discussion.username} &middot; ${formatTimeAgo(new Date(discussion.timestamp).getTime())}
-                    </div>
-                </div>
-                ${currentUser && currentUser.id === discussion.userId ? `
-                    <button onclick="event.stopPropagation(); deleteDiscussion('${discussion._id}')" style="background: transparent; border: none; color: #ff3b30; cursor: pointer;" title="Delete">🗑️</button>
-                ` : ''}
-            </div>
-            
-            <p style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1rem; line-height: 1.5;">${discussion.content.length > 200 ? discussion.content.substring(0, 200) + '...' : discussion.content}</p>
-            
-            ${discussion.media ? `<img src="${discussion.media}" style="max-width: 100%; border-radius: 8px; margin-bottom: 1rem; max-height: 300px; object-fit: cover;" />` : ''}
-            
-            <div style="display: flex; gap: 1.5rem; color: #888; font-size: 0.9rem; align-items: center; border-top: 1px solid #333; padding-top: 1rem;">
-                <span>🔥 ${discussion.reactions?.mass || 0}</span>
-                <span>😂 ${discussion.reactions?.lol || 0}</span>
-                <span>❤️ ${discussion.reactions?.love || 0}</span>
-                <span style="margin-left: auto; color: #007aff;">💬 ${discussion.repliesCount || 0} replies</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function viewDiscussion(id) {
-    activeDiscussionId = id;
-    try {
-        const { discussion, replies } = await apiFetch(`/discussions/${id}`);
-        renderDiscussionDetail(discussion, replies);
-    } catch (err) {
-        console.error('Error fetching discussion thread:', err);
-    }
-}
-
-function renderDiscussionDetail(discussion, replies) {
-    document.getElementById('feedContainer').style.display = 'none';
-    const detailContainer = document.getElementById('discussionDetailContainer');
-    detailContainer.style.display = 'block';
-    
-    let entitiesHtml = '';
-    if (discussion.movieId || discussion.actorId) {
-        entitiesHtml = `<div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-            ${discussion.movieId ? `<span style="background: #111; border: 1px solid #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #aaa;">🎬 ${discussion.movieId}</span>` : ''}
-            ${discussion.actorId ? `<span style="background: #111; border: 1px solid #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #aaa;">🌟 ${discussion.actorId}</span>` : ''}
-        </div>`;
-    }
-    
-    detailContainer.innerHTML = `
-        <button onclick="backToDiscussions()" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
-            <span>←</span> Back to Muchatlu
-        </button>
-        
-        <div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
-            <span style="background: #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #aaa; margin-bottom: 1rem; display: inline-block;">
-                ${discussion.category}
-            </span>
-            <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">${discussion.title}</h2>
-            <div style="color: #888; font-size: 0.9rem; margin-bottom: 1.5rem;">
-                👤 ${discussion.username} &middot; ${formatTimeAgo(new Date(discussion.timestamp).getTime())}
-            </div>
-            
-            <div style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem;">
-                ${discussion.content.replace(/\\n/g, '<br/>')}
-            </div>
-            
-            ${discussion.media ? `<img src="${discussion.media}" style="max-width: 100%; border-radius: 8px; margin-bottom: 1.5rem;" />` : ''}
-            
-            ${entitiesHtml}
-            
-            <div style="display: flex; gap: 1rem; color: #888; font-size: 0.9rem; align-items: center; border-top: 1px solid #333; padding-top: 1.5rem; margin-top: 1.5rem;">
-                <span style="cursor:pointer; padding: 0.5rem; border-radius: 8px; background: #222;" onclick="handleDiscussionReaction('${discussion._id}', 'mass', this)">🔥 <span style="font-weight:bold; color:white;">${discussion.reactions?.mass || 0}</span></span>
-                <span style="cursor:pointer; padding: 0.5rem; border-radius: 8px; background: #222;" onclick="handleDiscussionReaction('${discussion._id}', 'lol', this)">😂 <span style="font-weight:bold; color:white;">${discussion.reactions?.lol || 0}</span></span>
-                <span style="cursor:pointer; padding: 0.5rem; border-radius: 8px; background: #222;" onclick="handleDiscussionReaction('${discussion._id}', 'love', this)">❤️ <span style="font-weight:bold; color:white;">${discussion.reactions?.love || 0}</span></span>
-            </div>
-        </div>
-        
-        <h3 style="margin-bottom: 1rem; color: #ccc;">💬 ${replies.length} Replies</h3>
-        
-        <div id="repliesContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-            ${replies.map(reply => `
-                <div style="background: #111; padding: 1.5rem; border-radius: 8px; border: 1px solid #222;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="font-weight: bold; color: #aaa;">👤 ${reply.username}</span>
-                        <span style="color: #666; font-size: 0.8rem;">${formatTimeAgo(new Date(reply.timestamp).getTime())}</span>
-                    </div>
-                    <p style="margin-bottom: 1rem; line-height: 1.5;">${reply.text}</p>
-                    <div style="display: flex; gap: 1rem; font-size: 0.8rem;">
-                        <span style="cursor:pointer;" onclick="handleReplyReaction('${reply._id}', 'mass', this)">🔥 <span style="color:white;">${reply.reactions?.mass || 0}</span></span>
-                        <span style="cursor:pointer;" onclick="handleReplyReaction('${reply._id}', 'lol', this)">😂 <span style="color:white;">${reply.reactions?.lol || 0}</span></span>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-        
-        <form onsubmit="handleReplySubmit(event)" style="display: flex; gap: 1rem; position: sticky; bottom: max(20px, env(safe-area-inset-bottom)); background: var(--bg-color); padding: 1rem; border-radius: 12px; border: 1px solid #333; box-shadow: 0 -4px 12px rgba(0,0,0,0.5);">
-            <input type="text" id="replyInput" required placeholder="Write a reply..." style="flex: 1; padding: 0.75rem; font-size: max(16px, 1rem); background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
-            <button type="submit" style="background: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: bold; cursor: pointer;">Send</button>
-        </form>
-    `;
-}
-
-function backToDiscussions() {
-    activeDiscussionId = null;
-    document.getElementById('discussionDetailContainer').style.display = 'none';
-    document.getElementById('feedContainer').style.display = 'flex';
-}
-
-async function handleDiscussionReaction(discussionId, type, btnElement) {
-    const countSpan = btnElement.querySelector('span');
-    countSpan.textContent = parseInt(countSpan.textContent) + 1;
-    btnElement.style.pointerEvents = 'none';
-    btnElement.style.opacity = '0.7';
-    await trackEvent('reaction', 'discussion', discussionId, null, null, { reaction: type });
-}
-
-async function handleReplyReaction(replyId, type, btnElement) {
-    const countSpan = btnElement.querySelector('span');
-    countSpan.textContent = parseInt(countSpan.textContent) + 1;
-    btnElement.style.pointerEvents = 'none';
-    btnElement.style.opacity = '0.7';
-    await trackEvent('reaction', 'reply', replyId, null, null, { reaction: type });
-}
-
-async function handleReplySubmit(e) {
-    e.preventDefault();
-    if (!activeDiscussionId) return;
-    
-    const inputEl = document.getElementById('replyInput');
-    const text = inputEl.value.trim();
-    if (!text) return;
-    
-    // Instantly clear the input and blur it (closes keyboard on mobile)
-    inputEl.value = '';
-    
-    // Optimistic UI update: instantly show the message
-    const fakeUsername = currentUser ? currentUser.username : 'Anonymous Guest';
-    const repliesContainer = document.getElementById('repliesContainer');
-    if (repliesContainer) {
-        const fakeReplyHtml = `
-            <div style="background: #111; padding: 1.5rem; border-radius: 8px; border: 1px solid #222; opacity: 0.6; transition: opacity 0.3s;" id="optimistic-reply">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-weight: bold; color: #aaa;">👤 ${fakeUsername}</span>
-                    <span style="color: #666; font-size: 0.8rem;">Sending...</span>
-                </div>
-                <p style="margin-bottom: 1rem; line-height: 1.5;">${text}</p>
-            </div>
-        `;
-        repliesContainer.insertAdjacentHTML('beforeend', fakeReplyHtml);
-        
-        // Scroll to the bottom to see the new reply
-        window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-        });
-    }
-
-    try {
-        await apiFetch(`/discussions/${activeDiscussionId}/replies`, {
-            method: 'POST',
-            body: JSON.stringify({ text })
-        });
-        viewDiscussion(activeDiscussionId); // Refresh thread cleanly to get real IDs and reactions
-    } catch (err) {
-        alert('Error adding reply: ' + err.message);
-        // Remove the fake reply if it failed
-        const fakeReply = document.getElementById('optimistic-reply');
-        if (fakeReply) fakeReply.remove();
-        inputEl.value = text; // Restore the text so they don't lose it
-    }
-}
-
-async function createDiscussion(data) {
-
-    try {
-        await apiFetch('/discussions', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        
-        await initDiscussions(); 
-        document.getElementById('discussionModal').style.display = 'none';
-        document.getElementById('discussionForm').reset();
-    } catch (err) {
-        alert(err.message || 'Error creating discussion');
-    }
-}
-
-async function deleteDiscussion(id) {
-    if (!confirm('Delete this discussion?')) return;
-    try {
-        await apiFetch(`/discussions/${id}`, { method: 'DELETE' });
-        initDiscussions();
-    } catch (err) {
-        alert('Error deleting discussion: ' + err.message);
-    }
-}
 
 // ============================================
 // UI Event Handlers
@@ -1639,35 +1104,7 @@ function initEventListeners() {
     // Logout button
     document.getElementById('logoutBtn').addEventListener('click', () => { if (window.authFunctions && window.authFunctions.signOut) window.authFunctions.signOut(); });
 
-    // Start discussion button
-    document.getElementById('startDiscussionBtn').addEventListener('click', openDiscussionModal);
 
-    // Filters
-    document.querySelectorAll('.filter-chip').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentDiscussionCategory = btn.dataset.category;
-            initDiscussions(); // Fetch newly filtered list
-            backToDiscussions(); // If in detail view, go back
-        });
-    });
-
-    // Discussion form
-    const discussionForm = document.getElementById('discussionForm');
-    if (discussionForm) {
-        discussionForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            createDiscussion({
-                title: document.getElementById('discussionTitle').value,
-                category: document.getElementById('discussionCategory').value,
-                content: document.getElementById('discussionContent').value,
-                media: document.getElementById('discussionMedia') ? document.getElementById('discussionMedia').value : undefined,
-                movieId: document.getElementById('discussionMovieId') ? document.getElementById('discussionMovieId').value : undefined,
-                actorId: document.getElementById('discussionActorId') ? document.getElementById('discussionActorId').value : undefined
-            });
-        });
-    }
 }
 
 
@@ -1710,19 +1147,6 @@ window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
 
 
-function openDiscussionModal() {
-    if (!currentUser) {
-        openAuthModal();
-        return;
-    }
-    document.getElementById('discussionModal').style.display = 'flex';
-}
-
-function closeDiscussionModal() {
-    document.getElementById('discussionModal').style.display = 'none';
-    const form = document.getElementById('discussionForm');
-    if (form) form.reset();
-}
 
 function closeMovieModal() {
     document.getElementById('movieModal').classList.remove('active');
@@ -1741,7 +1165,7 @@ function init() {
     if (window.authFunctions && window.authFunctions.initAuth) {
         window.authFunctions.initAuth();
     }
-    initFeed(); // Enabled for Culture Graph
+
     initMovies();
     initMusic();
     initWatchlist();
