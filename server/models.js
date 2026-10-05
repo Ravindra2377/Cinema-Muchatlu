@@ -251,7 +251,9 @@ const userEventSchema = new mongoose.Schema({
             'comment', 'reply', 'save', 'share', 'not_interested', 'poll_vote',
             'game_open', 'game_start', 'game_answer', 'game_answer_correct', 
             'game_answer_wrong', 'game_complete', 'game_room_created', 
-            'game_room_joined', 'game_room_left', 'game_rematch'
+            'game_room_joined', 'game_room_left', 'game_rematch',
+            'movie_watched', 'movie_liked', 'movie_rated',
+            'review_created', 'movie_rewatched', 'watch_method_theatre', 'watch_method_ott'
         ], 
         required: true 
     },
