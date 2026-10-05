@@ -1481,10 +1481,13 @@ async function loadProfileAndDiary() {
     }
 }
 
+let userTrackers = [];
+
 async function loadTrackers() {
     try {
         const trackers = await apiFetch('/trackers');
         if (!trackers) return;
+        userTrackers = trackers;
         
         const grid = document.getElementById('userTrackersGrid');
         
@@ -1500,8 +1503,8 @@ async function loadTrackers() {
             </div>
         `;
 
-        const trackersHTML = trackers.map(tracker => `
-            <div style="background: #111; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: transform 0.2s;" onclick="alert('Viewing tracker details is coming soon!')">
+        const trackersHTML = trackers.map((tracker, index) => `
+            <div style="background: #111; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: transform 0.2s;" onclick="openTrackerDetail(${index})">
                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                     <span style="font-size: 1.2rem; background: rgba(255,255,255,0.05); padding: 0.25rem; border-radius: 8px;">${tracker.icon}</span>
                     <h3 style="margin: 0; font-size: 1rem; color: ${tracker.color || '#fff'};">${tracker.name}</h3>
@@ -1543,6 +1546,147 @@ document.getElementById('addTrackerForm')?.addEventListener('submit', async (e) 
     } catch (err) {
         console.error('Error creating tracker', err);
         alert('Failed to create tracker');
+    }
+});
+
+let currentActiveTracker = null;
+
+async function openTrackerDetail(index) {
+    const tracker = userTrackers[index];
+    currentActiveTracker = tracker;
+
+    // Set Header
+    document.getElementById('trackerDetailIcon').innerText = tracker.icon;
+    document.getElementById('trackerDetailName').innerText = tracker.name;
+    document.getElementById('trackerDetailType').innerText = tracker.type.replace(/_/g, ' ');
+    
+    // Reset Form Container
+    document.getElementById('trackerEntryFormContainer').style.display = 'none';
+
+    // Generate Dynamic Fields based on Type
+    const dynamicFields = document.getElementById('dynamicEntryFields');
+    if (tracker.type === 'FUEL') {
+        dynamicFields.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Litres</label><input type="number" step="0.1" id="fuelLitres" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Price/Litre</label><input type="number" step="0.1" id="fuelPrice" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Odometer</label><input type="number" id="fuelOdo" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Station</label><input type="text" id="fuelStation" placeholder="e.g. Shell" style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+            </div>
+        `;
+    } else if (tracker.type === 'VEHICLE') {
+        dynamicFields.innerHTML = `
+            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Service Type</label><input type="text" id="serviceType" placeholder="e.g. Oil Change" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Odometer</label><input type="number" id="serviceOdo" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Cost</label><input type="number" id="serviceCost" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+            </div>
+        `;
+    } else if (tracker.type === 'SERIES') {
+        dynamicFields.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Season</label><input type="number" id="seriesSeason" value="1" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Episode</label><input type="number" id="seriesEpisode" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+            </div>
+            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Review / Notes</label><input type="text" id="seriesNotes" style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+        `;
+    } else {
+        dynamicFields.innerHTML = `
+            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Note / Description</label><input type="text" id="genericNote" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Amount / Value (Optional)</label><input type="number" id="genericValue" style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
+        `;
+    }
+
+    // Bind Add Button to show form
+    document.getElementById('addEntryBtn').onclick = () => {
+        document.getElementById('trackerEntryFormContainer').style.display = 'block';
+    };
+
+    // Load Entries
+    await loadTrackerEntries(tracker._id);
+
+    document.getElementById('trackerDetailModal').style.display = 'flex';
+}
+
+async function loadTrackerEntries(trackerId) {
+    const timelineEl = document.getElementById('trackerDetailTimeline');
+    timelineEl.innerHTML = '<div style="color: #888;">Loading...</div>';
+    
+    try {
+        const entries = await apiFetch('/trackers/' + trackerId + '/entries');
+        if (!entries || entries.length === 0) {
+            timelineEl.innerHTML = '<div style="color: #888;">No entries yet. Click Add Entry to start tracking!</div>';
+            return;
+        }
+
+        timelineEl.innerHTML = entries.map(entry => {
+            const dateStr = new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            let details = '';
+            if (entry.metadata.litres) details = '<b>' + entry.metadata.litres + 'L</b> @ ₹' + entry.metadata.price + '/L (Odo: ' + entry.metadata.odo + ')';
+            else if (entry.metadata.season) details = 'Season ' + entry.metadata.season + ', Ep ' + entry.metadata.episode + (entry.metadata.notes ? ' - ' + entry.metadata.notes : '');
+            else if (entry.metadata.serviceType) details = entry.metadata.serviceType + ' - ₹' + entry.metadata.cost + ' (Odo: ' + entry.metadata.odo + ')';
+            else if (entry.metadata.note) details = entry.metadata.note + (entry.metadata.value ? ' - ₹' + entry.metadata.value : '');
+            else details = JSON.stringify(entry.metadata);
+
+            return \`
+                <div style="background: #1a1a1a; padding: 1rem; border-radius: 8px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                    <div>\${details}</div>
+                    <div style="color: #666; font-size: 0.8rem;">\${dateStr}</div>
+                </div>
+            \`;
+        }).join('');
+    } catch (err) {
+        timelineEl.innerHTML = '<div style="color: red;">Error loading entries</div>';
+    }
+}
+
+document.getElementById('trackerEntryForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentActiveTracker) return;
+
+    let metadata = {};
+    if (currentActiveTracker.type === 'FUEL') {
+        metadata = {
+            litres: document.getElementById('fuelLitres').value,
+            price: document.getElementById('fuelPrice').value,
+            odo: document.getElementById('fuelOdo').value,
+            station: document.getElementById('fuelStation').value
+        };
+    } else if (currentActiveTracker.type === 'VEHICLE') {
+        metadata = {
+            serviceType: document.getElementById('serviceType').value,
+            odo: document.getElementById('serviceOdo').value,
+            cost: document.getElementById('serviceCost').value
+        };
+    } else if (currentActiveTracker.type === 'SERIES') {
+        metadata = {
+            season: document.getElementById('seriesSeason').value,
+            episode: document.getElementById('seriesEpisode').value,
+            notes: document.getElementById('seriesNotes').value
+        };
+    } else {
+        metadata = {
+            note: document.getElementById('genericNote').value,
+            value: document.getElementById('genericValue').value
+        };
+    }
+
+    try {
+        await apiFetch('/trackers/' + currentActiveTracker._id + '/entries', {
+            method: 'POST',
+            body: JSON.stringify({ metadata })
+        });
+        document.getElementById('trackerEntryForm').reset();
+        document.getElementById('trackerEntryFormContainer').style.display = 'none';
+        loadTrackerEntries(currentActiveTracker._id);
+        
+        // Also refresh universal timeline behind
+        loadProfileAndDiary();
+    } catch (err) {
+        console.error('Error saving entry', err);
+        alert('Failed to save entry');
     }
 });
 
