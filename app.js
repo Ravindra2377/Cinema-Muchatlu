@@ -1249,6 +1249,8 @@ async function openLogModal(movieId) {
         document.getElementById('logTheatreOptions').style.display = 'flex';
         document.getElementById('logOTTOptions').style.display = 'none';
         if (userLog && userLog.theatre) {
+            const cityNameElement = document.getElementById('logCityName');
+            if (cityNameElement) cityNameElement.value = '';
             document.getElementById('logTheatreName').value = userLog.theatre.name || '';
             document.getElementById('logTheatreFormat').value = userLog.theatre.format || '';
             document.getElementById('logTheatreLanguage').value = userLog.theatre.language || '';
@@ -1303,6 +1305,112 @@ document.getElementById('logLikeBtn')?.addEventListener('click', () => {
     likedInput.value = isLiked ? 'false' : 'true';
     document.getElementById('logLikeBtn').style.color = !isLiked ? '#ff2d55' : '#555';
 });
+
+    const INDIAN_CITIES = [
+        "Agra", "Ahmedabad", "Ajmer", "Aligarh", "Allahabad", "Amravati", "Amritsar", "Anand", "Asansol", 
+        "Aurangabad", "Bareilly", "Belagavi", "Bengaluru", "Bhavnagar", "Bhilai", "Bhiwandi", "Bhopal", 
+        "Bhubaneswar", "Bikaner", "Bilaspur", "Bokaro", "Chandigarh", "Chennai", "Coimbatore", "Cuttack", 
+        "Dehradun", "Delhi NCR", "Dhanbad", "Durgapur", "Erode", "Faridabad", "Firozabad", "Ghaziabad", 
+        "Gorakhpur", "Gulbarga", "Guntur", "Gurugram", "Guwahati", "Gwalior", "Hubli-Dharwad", "Hyderabad", 
+        "Indore", "Jabalpur", "Jaipur", "Jalandhar", "Jalgaon", "Jammu", "Jamnagar", "Jamshedpur", "Jhansi", 
+        "Jodhpur", "Kakinada", "Kannur", "Kanpur", "Kharagpur", "Kochi", "Kolhapur", "Kolkata", "Kollam", 
+        "Kota", "Kozhikode", "Kurnool", "Lucknow", "Ludhiana", "Madurai", "Malappuram", "Mangaluru", 
+        "Mathura", "Meerut", "Moradabad", "Mumbai", "Mysuru", "Nagpur", "Nanded", "Nashik", "Nellore", 
+        "Noida", "Patna", "Pondicherry", "Pune", "Raipur", "Rajahmundry", "Rajkot", "Ranchi", "Rohtak", 
+        "Rourkela", "Saharanpur", "Salem", "Sangli", "Siliguri", "Solapur", "Srinagar", "Surat", 
+        "Thiruvananthapuram", "Thrissur", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tirupati", 
+        "Udaipur", "Ujjain", "Vadodara", "Varanasi", "Vasai-Virar", "Vellore", "Vijayawada", "Visakhapatnam", 
+        "Warangal"
+    ];
+
+    const cityInput = document.getElementById('logCityName');
+    const cityDataList = document.getElementById('cityDataList');
+    const theatreDataList = document.getElementById('theatreDataList');
+    
+    if (cityDataList && cityDataList.children.length <= 10) {
+        cityDataList.innerHTML = ''; // Clear default ones
+        INDIAN_CITIES.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            cityDataList.appendChild(option);
+        });
+    }
+
+    let osmDebounce;
+    if (cityInput) {
+        cityInput.addEventListener('input', (e) => {
+            const city = e.target.value.trim();
+            
+            clearTimeout(osmDebounce);
+            if (city.length < 3) {
+                theatreDataList.innerHTML = '';
+                return;
+            }
+
+            osmDebounce = setTimeout(async () => {
+                theatreDataList.innerHTML = '<option value="Searching OSM for theatres..."></option>';
+                try {
+                    // 1. Get Lat/Lon of the city
+                    const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(city)}&country=India&format=json`);
+                    const geoData = await geoRes.json();
+                    
+                    if (!geoData || geoData.length === 0) {
+                        theatreDataList.innerHTML = '<option value="City not found in OSM"></option>';
+                        return;
+                    }
+
+                    const lat = geoData[0].lat;
+                    const lon = geoData[0].lon;
+
+                    // 2. Fetch Cinemas in a 15km radius using Overpass API
+                    // 'out center;' makes 'way' and 'relation' queries incredibly fast
+                    const query = `[out:json][timeout:5];nwr["amenity"="cinema"](around:15000,${lat},${lon});out center;`;
+                    const overpassUrl = `https://overpass-api.de/api/interpreter`;
+                    
+                    const res = await fetch(overpassUrl, {
+                        method: 'POST',
+                        body: query
+                    });
+                    
+                    if (!res.ok) {
+                        throw new Error(`Overpass API error: ${res.status}`);
+                    }
+                    
+                    const data = await res.json();
+
+                    // 3. Deduplicate theatre names
+                    const theatres = new Set();
+                    data.elements.forEach(el => {
+                        if (el.tags && el.tags.name) {
+                            theatres.add(el.tags.name);
+                        }
+                    });
+
+                    const theatreArray = Array.from(theatres).sort();
+                    theatreDataList.innerHTML = '';
+                    
+                    if (theatreArray.length > 0) {
+                        theatreArray.forEach(theatre => {
+                            const option = document.createElement('option');
+                            option.value = theatre;
+                            theatreDataList.appendChild(option);
+                        });
+                    } else {
+                        // Fallback
+                        theatreDataList.innerHTML = '<option value="No theatres found in OSM for this city"></option>';
+                        ['INOX', 'PVR Cinemas', 'Cinepolis', 'Miraj Cinemas', 'Mukta A2 Cinemas', 'Carnival Cinemas', 'Asian Cinemas', 'Local Single Screen'].forEach(theatre => {
+                            const option = document.createElement('option');
+                            option.value = theatre;
+                            theatreDataList.appendChild(option);
+                        });
+                    }
+                } catch (err) {
+                    console.error("OSM Error:", err);
+                    theatreDataList.innerHTML = '<option value="Error fetching OSM Data"></option>';
+                }
+            }, 800);
+        });
+    }
 
 document.querySelectorAll('input[name="logWatchMethod"]')?.forEach(radio => {
     radio.addEventListener('change', (e) => {

@@ -467,13 +467,31 @@
                         </div>
                         
                         <div id="logTheatreOptions" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: #111; border-radius: 8px; border: 1px solid #333;">
-                            <input type="text" id="logTheatreName" placeholder="Theatre name (e.g. INOX, Prasads)" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem; box-sizing: border-box;">
+                            <input type="text" id="logCityName" list="cityDataList" placeholder="Search your city (e.g. Hyderabad, Bengaluru)" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem; box-sizing: border-box;" autocomplete="off">
+                            <datalist id="cityDataList">
+                                <option value="Hyderabad">
+                                <option value="Bengaluru">
+                                <option value="Chennai">
+                                <option value="Mumbai">
+                                <option value="Delhi NCR">
+                                <option value="Pune">
+                                <option value="Kolkata">
+                                <option value="Kochi">
+                                <option value="Vijayawada">
+                                <option value="Visakhapatnam">
+                            </datalist>
+
+                            <input type="text" id="logTheatreName" list="theatreDataList" placeholder="Select or type theatre name..." style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem; box-sizing: border-box;" autocomplete="off">
+                            <datalist id="theatreDataList"></datalist>
+
                             <select id="logTheatreFormat" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
                                 <option value="">Format...</option>
                                 <option value="2D">2D</option>
                                 <option value="3D">3D</option>
                                 <option value="IMAX">IMAX</option>
                                 <option value="4DX">4DX</option>
+                                <option value="EPIQ">EPIQ</option>
+                                <option value="PCX">PCX</option>
                             </select>
                             <select id="logTheatreLanguage" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
                                 <option value="">Language...</option>
@@ -481,6 +499,8 @@
                                 <option value="Hindi">Hindi</option>
                                 <option value="Tamil">Tamil</option>
                                 <option value="English">English</option>
+                                <option value="Malayalam">Malayalam</option>
+                                <option value="Kannada">Kannada</option>
                             </select>
                         </div>
 
