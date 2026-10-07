@@ -1474,22 +1474,16 @@ audio {
 
     /* Mobile Tabs and Filters */
     .content-type-tabs {
-        justify-content: flex-start;
-        overflow-x: auto;
-        padding-bottom: 0.5rem;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
-    }
-    
-    .content-type-tabs::-webkit-scrollbar {
-        display: none;
+        width: 100%;
     }
     
     .content-type-tab {
-        flex: 0 0 auto;
-        padding: 0.6rem 0.8rem;
+        padding: 0.6rem 0.4rem;
+        font-size: 0.45rem;
+        text-align: center;
     }
 
     .filters {
