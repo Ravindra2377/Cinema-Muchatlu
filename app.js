@@ -756,10 +756,12 @@ async function showMovieDetail(movieId) {
             </div>
         </div>
         ` : ''}
+        ${movie.cast && movie.cast.length > 0 ? `
         <div class="movie-detail-section">
             <h3 style="margin-bottom: 1rem; font-family: 'Press Start 2P', monospace; font-size: 0.6rem; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1px; text-shadow: 2px 2px 0px rgba(255, 45, 120, 0.8), 0 0 15px rgba(255, 45, 120, 0.4);">Cast</h3>
             <p class="cast-list">${movie.cast.join(', ')}</p>
         </div>
+        ` : ''}
 
     `;
 
