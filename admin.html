@@ -61,6 +61,15 @@
         .personalized-color { background: #34c759; }
         .global-color { background: #007aff; }
         .exploration-color { background: #af52de; }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            .grid { grid-template-columns: 1fr; }
+            .tabs { flex-direction: column; }
+            .tabs button { width: 100%; text-align: center; }
+            .user-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .user-meta { flex-direction: column; gap: 0.5rem; }
+        }
     </style>
 </head>
 <body>

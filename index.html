@@ -147,8 +147,8 @@
             <h2 class="section-title">🎬 Trending Movies This Week</h2>
             <div class="trending-carousel" id="trendingCarousel"></div>
 
-            <div style="margin-top: 3.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div class="mt-xl">
+                <div class="flex justify-between items-center mb-md">
                     <h2 class="section-title" style="margin: 0;">🎵 Trending Songs</h2>
                     <a href="#music" class="nav-link" data-section="music" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">View All Tracks &rarr;</a>
                 </div>
@@ -158,10 +158,10 @@
 
         <section id="music" class="section">
             <!-- SONG OF THE DAY PINNED CARD -->
-            <div id="dailySongCard" style="margin-bottom: 2rem;"></div>
+            <div id="dailySongCard" class="mb-lg"></div>
             
-            <div style="margin-bottom: 3rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div class="mb-xl">
+                <div class="flex justify-between items-center mb-md">
                     <h2 class="section-title" style="margin: 0;">🔥 Trending Hits</h2>
                     <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Most Streamed</span>
                 </div>
@@ -176,13 +176,13 @@
 
 
         <section id="watchlist" class="section">
-            <div class="mystuff-header" style="margin-bottom: 2rem;">
-                <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">❤️ My Stuff</h1>
+            <div class="mystuff-header mb-lg">
+                <h1 class="mb-xs" style="font-size: 2rem;">❤️ My Stuff</h1>
                 <p style="color: var(--text-secondary);">Your personal timeline, trackers, and cinema collection.</p>
             </div>
 
             <!-- UNIVERSAL TIMELINE PREVIEW -->
-            <div id="universalTimelineContainer" style="margin-bottom: 3rem;">
+            <div id="universalTimelineContainer" class="mb-xl">
                 <h2 class="section-title">📅 My Timeline</h2>
                 <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center; color: var(--text-secondary);">
                     Your recent activities will appear here chronologically.
@@ -192,8 +192,8 @@
             </div>
 
             <!-- TRACKERS DASHBOARD -->
-            <div id="trackersDashboardContainer" style="margin-bottom: 3rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div id="trackersDashboardContainer" class="mb-xl">
+                <div class="flex justify-between items-center mb-md">
                     <h2 class="section-title" style="margin: 0;">📊 My Trackers</h2>
                 </div>
                 <div id="userTrackersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
@@ -210,19 +210,19 @@
                 </div>
             </div>
 
-            <div id="profileStatsContainer" style="margin-bottom: 2rem; display: none;">
+            <div id="profileStatsContainer" class="mb-lg" style="display: none;">
                 <h2 class="section-title">🎬 Cinema Stats</h2>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;" id="profileStatsGrid">
+                <div class="flex gap-sm mb-sm" style="flex-wrap: wrap;" id="profileStatsGrid">
                     <!-- JS will populate stats -->
                 </div>
             </div>
 
-            <div id="cinemaDiaryContainer" style="margin-bottom: 3rem; display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div id="cinemaDiaryContainer" class="mb-xl" style="display: none;">
+                <div class="flex justify-between items-center mb-md">
                     <h2 class="section-title" style="margin: 0;">📖 Cinema Diary</h2>
                     <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Recent logs</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 1rem;" id="cinemaDiaryList">
+                <div class="flex-col gap-sm" id="cinemaDiaryList">
                     <!-- JS will populate diary -->
                 </div>
             </div>
@@ -411,63 +411,63 @@
 
 
     <!-- Log Film Modal -->
-    <div id="logModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center;">
-        <div class="modal-content" style="background: var(--bg-card); padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 style="font-size: 1.5rem;" id="logModalTitle">I watched...</h2>
-                <button onclick="document.getElementById('logModal').style.display='none'" style="background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;">&times;</button>
-            </div>
-            <form id="logForm" style="display: flex; flex-direction: column; gap: 1rem;">
-                <input type="hidden" id="logMovieId">
-                
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <label style="color: #ccc; width: 100px;">Date</label>
-                    <input type="date" id="logDate" style="flex: 1; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <label style="color: #ccc; width: 100px;">Rating</label>
-                    <div id="logRatingStars" style="font-size: 1.5rem; cursor: pointer; color: #555; display: flex; gap: 2px;">
-                        <!-- JS will populate stars -->
+    <div id="logModal" class="modal">
+        <div class="modal-overlay" onclick="document.getElementById('logModal').classList.remove('active')"></div>
+        <div class="modal-content" style="max-width: 550px;">
+            <button class="modal-close" onclick="document.getElementById('logModal').classList.remove('active')">&times;</button>
+            <div class="modal-body">
+                <h2 class="modal-title mb-md" id="logModalTitle">I watched...</h2>
+                <form id="logForm" class="auth-form" style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                    <input type="hidden" id="logMovieId">
+                    
+                    <div class="form-group flex items-center gap-sm" style="margin-bottom: 0;">
+                        <label style="width: 100px; margin: 0;">Date</label>
+                        <input type="date" id="logDate" class="form-control" style="flex: 1;">
                     </div>
-                    <input type="hidden" id="logRating" value="0">
-                    <button type="button" id="logLikeBtn" style="background: transparent; border: none; color: #555; font-size: 1.5rem; cursor: pointer; margin-left: auto;">🤍</button>
-                    <input type="hidden" id="logLiked" value="false">
-                </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                    <label style="color: #ccc; width: 100px; padding-top: 0.5rem;">Review</label>
-                    <div style="flex: 1;">
-                        <textarea id="logReview" placeholder="Add a review..." rows="4" style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; resize: vertical; box-sizing: border-box;"></textarea>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; color: #aaa; font-size: 0.9rem;">
-                            <input type="checkbox" id="logSpoilers"> Contains spoilers
+                    <div class="form-group flex items-center gap-sm" style="margin-bottom: 0;">
+                        <label style="width: 100px; margin: 0;">Rating</label>
+                        <div id="logRatingStars" style="font-size: 1.5rem; cursor: pointer; color: #555; display: flex; gap: 4px;">
+                            <!-- JS will populate stars -->
+                        </div>
+                        <input type="hidden" id="logRating" value="0">
+                        <button type="button" id="logLikeBtn" style="background: transparent; border: none; color: #555; font-size: 1.5rem; cursor: pointer; margin-left: auto;">🤍</button>
+                        <input type="hidden" id="logLiked" value="false">
+                    </div>
+
+                    <div class="form-group flex gap-sm" style="margin-bottom: 0; align-items: flex-start;">
+                        <label style="width: 100px; margin: 0; padding-top: var(--spacing-xs);">Review</label>
+                        <div style="flex: 1;">
+                            <textarea id="logReview" class="form-control" placeholder="Add a review..." rows="4"></textarea>
+                            <label class="flex items-center gap-xs mt-xs" style="color: var(--text-muted); font-size: 0.9rem; cursor: pointer;">
+                                <input type="checkbox" id="logSpoilers"> Contains spoilers
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group flex items-center gap-sm" style="margin-bottom: 0;">
+                        <label style="width: 100px; margin: 0;"></label>
+                        <label class="flex items-center gap-xs" style="color: var(--text-muted); font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" id="logRewatch"> I've watched this before
                         </label>
                     </div>
-                </div>
 
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <label style="color: #ccc; width: 100px;"></label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; color: #aaa; font-size: 0.9rem;">
-                        <input type="checkbox" id="logRewatch"> I've watched this before
-                    </label>
-                </div>
+                    <div class="form-group flex items-center gap-sm" style="margin-bottom: 0;">
+                        <label style="width: 100px; margin: 0;">Tags</label>
+                        <input type="text" id="logTags" class="form-control" placeholder="Comma separated tags" style="flex: 1;">
+                    </div>
 
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <label style="color: #ccc; width: 100px;">Tags</label>
-                    <input type="text" id="logTags" placeholder="Comma separated tags" style="flex: 1; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
-                </div>
-
-                <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                    <label style="color: #ccc; width: 100px; padding-top: 0.5rem;">Where?</label>
-                    <div style="flex: 1;">
-                        <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
-                            <label style="color: white; font-size: 0.9rem;"><input type="radio" name="logWatchMethod" value="THEATRE"> 🎬 Theatre</label>
-                            <label style="color: white; font-size: 0.9rem;"><input type="radio" name="logWatchMethod" value="OTT"> 📺 OTT</label>
-                            <label style="color: white; font-size: 0.9rem;"><input type="radio" name="logWatchMethod" value="NONE" checked> None</label>
-                        </div>
-                        
-                        <div id="logTheatreOptions" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: #111; border-radius: 8px; border: 1px solid #333;">
-                            <input type="text" id="logCityName" list="cityDataList" placeholder="Search your city (e.g. Hyderabad, Bengaluru)" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem; box-sizing: border-box;" autocomplete="off">
+                    <div class="form-group flex gap-sm" style="margin-bottom: 0; align-items: flex-start;">
+                        <label style="width: 100px; margin: 0; padding-top: var(--spacing-xs);">Where?</label>
+                        <div style="flex: 1;">
+                            <div class="flex gap-md mb-xs">
+                                <label class="flex items-center gap-xs" style="color: white; font-size: 0.9rem; cursor: pointer;"><input type="radio" name="logWatchMethod" value="THEATRE"> 🎬 Theatre</label>
+                                <label class="flex items-center gap-xs" style="color: white; font-size: 0.9rem; cursor: pointer;"><input type="radio" name="logWatchMethod" value="OTT"> 📺 OTT</label>
+                                <label class="flex items-center gap-xs" style="color: white; font-size: 0.9rem; cursor: pointer;"><input type="radio" name="logWatchMethod" value="NONE" checked> None</label>
+                            </div>
+                            
+                            <div id="logTheatreOptions" style="display: none; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm); padding: var(--spacing-sm); background: var(--surface-light); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                            <input type="text" id="logCityName" class="form-control" list="cityDataList" placeholder="Search your city (e.g. Hyderabad, Bengaluru)" autocomplete="off">
                             <datalist id="cityDataList">
                                 <option value="Hyderabad">
                                 <option value="Bengaluru">
@@ -481,10 +481,10 @@
                                 <option value="Visakhapatnam">
                             </datalist>
 
-                            <input type="text" id="logTheatreName" list="theatreDataList" placeholder="Select or type theatre name..." style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem; box-sizing: border-box;" autocomplete="off">
+                            <input type="text" id="logTheatreName" class="form-control" list="theatreDataList" placeholder="Select or type theatre name..." autocomplete="off">
                             <datalist id="theatreDataList"></datalist>
 
-                            <select id="logTheatreFormat" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
+                            <select id="logTheatreFormat" class="form-control">
                                 <option value="">Format...</option>
                                 <option value="2D">2D</option>
                                 <option value="3D">3D</option>
@@ -493,7 +493,7 @@
                                 <option value="EPIQ">EPIQ</option>
                                 <option value="PCX">PCX</option>
                             </select>
-                            <select id="logTheatreLanguage" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
+                            <select id="logTheatreLanguage" class="form-control">
                                 <option value="">Language...</option>
                                 <option value="Telugu">Telugu</option>
                                 <option value="Hindi">Hindi</option>
@@ -504,8 +504,8 @@
                             </select>
                         </div>
 
-                        <div id="logOTTOptions" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: #111; border-radius: 8px; border: 1px solid #333;">
-                            <select id="logOTTProvider" style="width: 100%; padding: 0.5rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; color: white; font-size: 0.9rem;">
+                        <div id="logOTTOptions" style="display: none; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm); padding: var(--spacing-sm); background: var(--surface-light); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                            <select id="logOTTProvider" class="form-control">
                                 <option value="">Provider...</option>
                                 <option value="Netflix">Netflix</option>
                                 <option value="Prime Video">Prime Video</option>
@@ -519,73 +519,78 @@
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <label style="color: #ccc; width: 100px;">Tags</label>
-                    <input type="text" id="logTags" placeholder="e.g. mind-bending, comfort-movie" style="flex: 1; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
+                <div class="form-group flex items-center gap-sm" style="margin-bottom: 0;">
+                    <label style="width: 100px; margin: 0;">Tags</label>
+                    <input type="text" id="logTags" class="form-control" placeholder="e.g. mind-bending, comfort-movie" style="flex: 1;">
                 </div>
 
-                <button type="submit" style="background: #00e5ff; color: #000; border: none; padding: 1rem; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 1rem;">Save</button>
+                <div class="form-actions mt-md">
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
             </form>
         </div>
     </div>
 
     <!-- Add Tracker Modal -->
-    <div id="addTrackerModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center;">
-        <div class="modal-content" style="background: var(--bg-card); padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; border: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 style="font-size: 1.5rem;">Create Tracker</h2>
-                <button onclick="document.getElementById('addTrackerModal').style.display='none'" style="background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;">&times;</button>
+    <div id="addTrackerModal" class="modal">
+        <div class="modal-overlay" onclick="document.getElementById('addTrackerModal').classList.remove('active')"></div>
+        <div class="modal-content" style="max-width: 450px;">
+            <button class="modal-close" onclick="document.getElementById('addTrackerModal').classList.remove('active')">&times;</button>
+            <div class="modal-body">
+                <h2 class="modal-title mb-md">Create Tracker</h2>
+                <form id="addTrackerForm" class="auth-form" style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Tracker Type</label>
+                        <select id="trackerType" class="form-control">
+                            <option value="MOVIE">🎬 Movie Tracking</option>
+                            <option value="SERIES">📺 Series & Episode Tracking</option>
+                            <option value="THEATRE_OTT">🎟️ Theatre / OTT Tracking</option>
+                            <option value="FUEL">⛽ Fuel / Petrol Tracking</option>
+                            <option value="VEHICLE">🚗 Vehicle Service Tracking</option>
+                            <option value="INSURANCE">🛡️ Insurance Tracking</option>
+                            <option value="EMI">💳 EMI / Loan Tracking</option>
+                            <option value="AUTO_PAY">🔁 Subscription / Auto-Pay Tracking</option>
+                            <option value="BILLS">💡 Bills & Utilities Tracking</option>
+                            <option value="EXPENSE">💰 Expense Tracking</option>
+                            <option value="INCOME">💵 Income Tracking</option>
+                            <option value="BUDGET">🎯 Budget & Savings Tracking</option>
+                            <option value="INVESTMENT">📈 Investment / SIP Tracking</option>
+                            <option value="CREDIT_CARD">💳 Credit Card Tracking</option>
+                            <option value="MEDICAL">🏥 Medical Tracking</option>
+                            <option value="MEDICATION">💊 Medication Tracking</option>
+                            <option value="DOCTOR">📅 Doctor Appointment Tracking</option>
+                            <option value="MEDICAL_REPORT">🧪 Medical Report Tracking</option>
+                            <option value="FITNESS">💪 Fitness / Workout Tracking</option>
+                            <option value="WEIGHT">⚖️ Weight Tracking</option>
+                            <option value="WATER">💧 Water Intake Tracking</option>
+                            <option value="SLEEP">😴 Sleep Tracking</option>
+                            <option value="HABIT">✅ Habit Tracking</option>
+                            <option value="DOCUMENT">📄 Document & Expiry Tracking</option>
+                            <option value="HOME">🏠 Home Maintenance Tracking</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Name</label>
+                        <input type="text" id="trackerName" class="form-control" placeholder="e.g. Car EMI, Stranger Things" required>
+                    </div>
+
+                    <div class="flex gap-md mb-md">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label class="form-label">Icon</label>
+                            <input type="text" id="trackerIcon" class="form-control" placeholder="e.g. 🍿, 🚗" required>
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label class="form-label">Color</label>
+                            <input type="color" id="trackerColor" class="form-control" value="#00e5ff" style="height: 42px; cursor: pointer; padding: 0.25rem;">
+                        </div>
+                    </div>
+
+                    <div class="form-actions mt-xs">
+                        <button type="submit" class="btn-primary">Create</button>
+                    </div>
+                </form>
             </div>
-            <form id="addTrackerForm" style="display: flex; flex-direction: column; gap: 1rem;">
-                <div>
-                    <label style="color: #ccc; display: block; margin-bottom: 0.5rem;">Tracker Type</label>
-                    <select id="trackerType" style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
-                        <option value="MOVIE">🎬 Movie Tracking</option>
-                        <option value="SERIES">📺 Series & Episode Tracking</option>
-                        <option value="THEATRE_OTT">🎟️ Theatre / OTT Tracking</option>
-                        <option value="FUEL">⛽ Fuel / Petrol Tracking</option>
-                        <option value="VEHICLE">🚗 Vehicle Service Tracking</option>
-                        <option value="INSURANCE">🛡️ Insurance Tracking</option>
-                        <option value="EMI">💳 EMI / Loan Tracking</option>
-                        <option value="AUTO_PAY">🔁 Subscription / Auto-Pay Tracking</option>
-                        <option value="BILLS">💡 Bills & Utilities Tracking</option>
-                        <option value="EXPENSE">💰 Expense Tracking</option>
-                        <option value="INCOME">💵 Income Tracking</option>
-                        <option value="BUDGET">🎯 Budget & Savings Tracking</option>
-                        <option value="INVESTMENT">📈 Investment / SIP Tracking</option>
-                        <option value="CREDIT_CARD">💳 Credit Card Tracking</option>
-                        <option value="MEDICAL">🏥 Medical Tracking</option>
-                        <option value="MEDICATION">💊 Medication Tracking</option>
-                        <option value="DOCTOR">📅 Doctor Appointment Tracking</option>
-                        <option value="MEDICAL_REPORT">🧪 Medical Report Tracking</option>
-                        <option value="FITNESS">💪 Fitness / Workout Tracking</option>
-                        <option value="WEIGHT">⚖️ Weight Tracking</option>
-                        <option value="WATER">💧 Water Intake Tracking</option>
-                        <option value="SLEEP">😴 Sleep Tracking</option>
-                        <option value="HABIT">✅ Habit Tracking</option>
-                        <option value="DOCUMENT">📄 Document & Expiry Tracking</option>
-                        <option value="HOME">🏠 Home Maintenance Tracking</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label style="color: #ccc; display: block; margin-bottom: 0.5rem;">Name</label>
-                    <input type="text" id="trackerName" placeholder="e.g. Car EMI, Stranger Things" required style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
-                </div>
-
-                <div style="display: flex; gap: 1rem;">
-                    <div style="flex: 1;">
-                        <label style="color: #ccc; display: block; margin-bottom: 0.5rem;">Icon</label>
-                        <input type="text" id="trackerIcon" placeholder="e.g. 🍿, 🚗" required style="width: 100%; padding: 0.75rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="color: #ccc; display: block; margin-bottom: 0.5rem;">Color</label>
-                        <input type="color" id="trackerColor" value="#00e5ff" style="width: 100%; padding: 0.25rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; height: 45px; cursor: pointer;">
-                    </div>
-                </div>
-
-                <button type="submit" style="background: var(--primary); color: #000; border: none; padding: 1rem; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 1rem;">Create</button>
-            </form>
         </div>
     </div>
 
