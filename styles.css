@@ -981,8 +981,8 @@ audio {
     box-shadow: 0 0 20px rgba(176, 38, 255, 0.15);
 }
 
-/* Watchlist Grid */
-.watchlist-grid {
+/* Watchlist & Trackers Grid */
+.watchlist-grid, .trackers-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 2rem;
@@ -1426,7 +1426,7 @@ audio {
         letter-spacing: 1px;
     }
 
-    .movies-grid, .watchlist-grid {
+    .movies-grid, .watchlist-grid, .trackers-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 1rem;
     }
@@ -1454,6 +1454,40 @@ audio {
 
     .curated-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Modals & Headers Mobile Fixes */
+    .movie-detail-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .movie-detail-poster {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .movie-detail-title {
+        text-align: center;
+        font-size: 1rem;
+    }
+
+    .movie-detail-meta {
+        justify-content: center;
+    }
+
+    .genre-tags {
+        justify-content: center;
+    }
+
+    .filter-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.4rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
     }
 }
 
@@ -1843,64 +1877,7 @@ audio {
     display: none;
 }
 
-@media (max-width: 768px) {
-    body:has(input:focus, textarea:focus) .header {
-        position: static;
-    }
-
-    .feed-header-responsive {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .header-content {
-        flex-wrap: wrap;
-        padding: 1rem;
-    }
-
-    .nav {
-        order: 3;
-        width: 100%;
-        justify-content: flex-start;
-        gap: 1.5rem;
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 0.5rem;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-
-    .nav::-webkit-scrollbar {
-        display: none;
-    }
-
-    .search-input {
-        width: 180px;
-    }
-
-    .hero-title {
-        font-size: 2rem;
-    }
-
-    .movies-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1rem;
-    }
-
-    .movie-detail-header {
-        flex-direction: column;
-    }
-
-    .movie-detail-poster {
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-    }
-
-    .modal-content {
-        margin: 1rem;
-    }
-}
+/* Removed duplicate media query */
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
