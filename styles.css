@@ -740,7 +740,7 @@ audio {
 
 .movie-card {
     background: var(--surface);
-    border: 2px solid var(--neon-purple);
+    border: 2px solid var(--border);
     overflow: hidden;
     cursor: pointer;
     transition: var(--transition-normal);
@@ -776,12 +776,12 @@ audio {
     aspect-ratio: 2/3;
     object-fit: cover;
     display: block;
-    filter: grayscale(100%) contrast(1.2) sepia(1) hue-rotate(240deg);
+    filter: grayscale(40%) brightness(0.7) contrast(1.1);
     transition: var(--transition-normal);
 }
 
 .movie-card:hover .movie-poster {
-    filter: grayscale(0%) contrast(1.1) sepia(0) hue-rotate(0deg);
+    filter: grayscale(0%) brightness(1) contrast(1.1);
 }
 
 .movie-info {
@@ -791,7 +791,7 @@ audio {
 .movie-title {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.65rem;
-    color: var(--neon-purple);
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -799,7 +799,12 @@ audio {
     overflow: hidden;
     line-height: 1.4;
     text-transform: uppercase;
-    text-shadow: 0 0 6px rgba(176, 38, 255, 0.4);
+    transition: var(--transition-fast);
+}
+
+.movie-card:hover .movie-title {
+    color: var(--neon-pink);
+    text-shadow: 0 0 6px rgba(255, 45, 120, 0.4);
 }
 
 .movie-meta {
