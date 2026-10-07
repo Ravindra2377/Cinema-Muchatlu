@@ -1602,39 +1602,60 @@ async function loadTrackers() {
         const grid = document.getElementById('userTrackersGrid');
         
         const addBtnHTML = `
-            <div onclick="openAddTrackerModal()" style="border: 2px dashed var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; min-height: 120px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-secondary)';">
-                <div style="text-align: center;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem;">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <div>Add Tracker</div>
+            <div class="tracker-add-btn" onclick="openAddTrackerModal()" style="border: 2px dashed var(--border); clip-path: var(--pixel-clip); display: flex; align-items: center; justify-content: center; min-height: 120px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; background: rgba(255, 255, 255, 0.02);" onmouseover="this.style.borderColor='var(--neon-pink)'; this.style.color='var(--neon-pink)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-secondary)';">
+                <div style="text-align: center; pointer-events: none;">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(255,45,120,0.5);">+</div>
+                    <div style="font-family: 'Press Start 2P', monospace; font-size: 0.5rem; text-transform: uppercase;">Add Tracker</div>
                 </div>
             </div>
         `;
 
         const trackersHTML = trackers.map((tracker, index) => `
-            <div style="background: #111; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: transform 0.2s;" onclick="openTrackerDetail(${index})">
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                    <span style="font-size: 1.2rem; background: rgba(255,255,255,0.05); padding: 0.25rem; border-radius: 8px;">${tracker.icon}</span>
-                    <h3 style="margin: 0; font-size: 1rem; color: ${tracker.color || '#fff'};">${tracker.name}</h3>
+            <div class="tracker-card-item" data-index="${index}" style="background: var(--surface); border: 2px solid var(--border); clip-path: var(--pixel-clip); padding: 1.25rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--neon-pink)'; this.style.transform='translateY(-4px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)';">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; pointer-events: none;">
+                    <span style="font-size: 1.5rem; text-shadow: 0 0 10px rgba(255,255,255,0.3);">${tracker.icon}</span>
+                    <h3 style="margin: 0; font-family: 'Press Start 2P', monospace; font-size: 0.65rem; text-transform: uppercase; color: ${tracker.color || 'var(--text-primary)'}; text-shadow: 0 0 6px ${tracker.color || 'var(--text-primary)'}80;">${tracker.name}</h3>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #888;">
-                    <span>Type: ${tracker.type.replace('_', ' ')}</span>
-                    <span style="color: var(--primary);">Active</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-secondary); font-family: monospace; pointer-events: none;">
+                    <span style="text-transform: uppercase;">${tracker.type.replace(/_/g, ' ')}</span>
+                    <span style="color: var(--neon-pink); font-family: 'Press Start 2P', monospace; font-size: 0.4rem;">Active</span>
                 </div>
             </div>
         `).join('');
 
         grid.innerHTML = trackersHTML + addBtnHTML;
+
+        // Bind event listeners
+        document.querySelector('.tracker-add-btn')?.addEventListener('click', openAddTrackerModal);
+        document.querySelectorAll('.tracker-card-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const index = parseInt(e.currentTarget.getAttribute('data-index'));
+                openTrackerDetail(index);
+            });
+        });
     } catch (err) {
         console.error('Error loading trackers:', err);
     }
 }
 
 function openAddTrackerModal() {
-    document.getElementById('addTrackerModal').style.display = 'flex';
+    const modal = document.getElementById('addTrackerModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    }
 }
+
+function closeAddTrackerModal() {
+    const modal = document.getElementById('addTrackerModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
+}
+
+window.openAddTrackerModal = openAddTrackerModal;
+window.closeAddTrackerModal = closeAddTrackerModal;
 
 document.getElementById('addTrackerForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1649,7 +1670,7 @@ document.getElementById('addTrackerForm')?.addEventListener('submit', async (e) 
             body: JSON.stringify({ type, name, icon, color, metadata: {} })
         });
         if (result && !result.error) {
-            document.getElementById('addTrackerModal').style.display = 'none';
+            closeAddTrackerModal();
             document.getElementById('addTrackerForm').reset();
             loadTrackers(); // Refresh trackers
         }
@@ -1658,6 +1679,35 @@ document.getElementById('addTrackerForm')?.addEventListener('submit', async (e) 
         alert('Failed to create tracker');
     }
 });
+
+const TRACKER_SCHEMAS = {
+    MOVIE: [{id: 'title', label: 'Movie Title', type: 'text'}, {id: 'rating', label: 'Rating (1-5)', type: 'number'}, {id: 'review', label: 'Review', type: 'text'}],
+    SERIES: [{id: 'season', label: 'Season', type: 'number'}, {id: 'episode', label: 'Episode', type: 'number'}, {id: 'notes', label: 'Notes', type: 'text'}],
+    THEATRE_OTT: [{id: 'platform', label: 'Platform/Theatre', type: 'text'}, {id: 'cost', label: 'Cost', type: 'number'}, {id: 'date', label: 'Date', type: 'date'}],
+    FUEL: [{id: 'litres', label: 'Litres', type: 'number', step: '0.1'}, {id: 'price', label: 'Price/Litre', type: 'number', step: '0.1'}, {id: 'odo', label: 'Odometer', type: 'number'}, {id: 'station', label: 'Station', type: 'text'}],
+    VEHICLE: [{id: 'serviceType', label: 'Service Type', type: 'text'}, {id: 'odo', label: 'Odometer', type: 'number'}, {id: 'cost', label: 'Cost', type: 'number'}],
+    INSURANCE: [{id: 'policy', label: 'Policy Name', type: 'text'}, {id: 'premium', label: 'Premium Amount', type: 'number'}, {id: 'dueDate', label: 'Due Date', type: 'date'}],
+    EMI: [{id: 'loanName', label: 'Loan Name', type: 'text'}, {id: 'amount', label: 'EMI Amount', type: 'number'}, {id: 'month', label: 'Month/Year', type: 'text'}],
+    AUTO_PAY: [{id: 'service', label: 'Service', type: 'text'}, {id: 'amount', label: 'Amount', type: 'number'}, {id: 'date', label: 'Date Processed', type: 'date'}],
+    BILLS: [{id: 'billType', label: 'Bill Type', type: 'text'}, {id: 'amount', label: 'Amount', type: 'number'}, {id: 'month', label: 'Billing Month', type: 'text'}],
+    EXPENSE: [{id: 'category', label: 'Category', type: 'text'}, {id: 'amount', label: 'Amount', type: 'number'}, {id: 'description', label: 'Description', type: 'text'}],
+    INCOME: [{id: 'source', label: 'Income Source', type: 'text'}, {id: 'amount', label: 'Amount', type: 'number'}, {id: 'date', label: 'Date Received', type: 'date'}],
+    BUDGET: [{id: 'category', label: 'Category', type: 'text'}, {id: 'limit', label: 'Budget Limit', type: 'number'}, {id: 'spent', label: 'Amount Spent', type: 'number'}],
+    INVESTMENT: [{id: 'asset', label: 'Asset / SIP Name', type: 'text'}, {id: 'amount', label: 'Amount Invested', type: 'number'}, {id: 'units', label: 'Units/Qty', type: 'number', step: '0.001'}],
+    CREDIT_CARD: [{id: 'cardName', label: 'Card Name', type: 'text'}, {id: 'spent', label: 'Amount Spent', type: 'number'}, {id: 'merchant', label: 'Merchant', type: 'text'}],
+    MEDICAL: [{id: 'visitReason', label: 'Reason/Condition', type: 'text'}, {id: 'cost', label: 'Cost', type: 'number'}, {id: 'date', label: 'Date', type: 'date'}],
+    MEDICATION: [{id: 'medName', label: 'Medicine Name', type: 'text'}, {id: 'dosage', label: 'Dosage', type: 'text'}, {id: 'time', label: 'Time Taken', type: 'time'}],
+    DOCTOR: [{id: 'doctorName', label: 'Doctor Name', type: 'text'}, {id: 'specialty', label: 'Specialty', type: 'text'}, {id: 'appointmentDate', label: 'Appointment Date', type: 'date'}],
+    MEDICAL_REPORT: [{id: 'testName', label: 'Test Name', type: 'text'}, {id: 'result', label: 'Result/Value', type: 'text'}, {id: 'date', label: 'Test Date', type: 'date'}],
+    FITNESS: [{id: 'workout', label: 'Workout Type', type: 'text'}, {id: 'duration', label: 'Duration (mins)', type: 'number'}, {id: 'calories', label: 'Calories Burned', type: 'number'}],
+    WEIGHT: [{id: 'weight', label: 'Weight (kg/lbs)', type: 'number', step: '0.1'}, {id: 'bodyFat', label: 'Body Fat %', type: 'number', step: '0.1'}, {id: 'date', label: 'Date', type: 'date'}],
+    WATER: [{id: 'amount', label: 'Amount (ml/oz)', type: 'number'}, {id: 'time', label: 'Time', type: 'time'}],
+    SLEEP: [{id: 'hours', label: 'Hours Slept', type: 'number', step: '0.1'}, {id: 'quality', label: 'Quality (1-5)', type: 'number'}, {id: 'date', label: 'Date', type: 'date'}],
+    HABIT: [{id: 'habitName', label: 'Habit Name', type: 'text'}, {id: 'status', label: 'Done / Not Done', type: 'text'}, {id: 'notes', label: 'Notes', type: 'text'}],
+    DOCUMENT: [{id: 'docName', label: 'Document Name', type: 'text'}, {id: 'expiryDate', label: 'Expiry Date', type: 'date'}, {id: 'location', label: 'Physical/Digital Location', type: 'text'}],
+    HOME: [{id: 'task', label: 'Maintenance Task', type: 'text'}, {id: 'cost', label: 'Cost', type: 'number'}, {id: 'date', label: 'Date Completed', type: 'date'}],
+    DEFAULT: [{id: 'note', label: 'Note / Description', type: 'text'}, {id: 'value', label: 'Amount / Value (Optional)', type: 'text'}]
+};
 
 let currentActiveTracker = null;
 
@@ -1675,39 +1725,13 @@ async function openTrackerDetail(index) {
 
     // Generate Dynamic Fields based on Type
     const dynamicFields = document.getElementById('dynamicEntryFields');
-    if (tracker.type === 'FUEL') {
-        dynamicFields.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Litres</label><input type="number" step="0.1" id="fuelLitres" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Price/Litre</label><input type="number" step="0.1" id="fuelPrice" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Odometer</label><input type="number" id="fuelOdo" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Station</label><input type="text" id="fuelStation" placeholder="e.g. Shell" style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-            </div>
-        `;
-    } else if (tracker.type === 'VEHICLE') {
-        dynamicFields.innerHTML = `
-            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Service Type</label><input type="text" id="serviceType" placeholder="e.g. Oil Change" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Odometer</label><input type="number" id="serviceOdo" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Cost</label><input type="number" id="serviceCost" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-            </div>
-        `;
-    } else if (tracker.type === 'SERIES') {
-        dynamicFields.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Season</label><input type="number" id="seriesSeason" value="1" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-                <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Episode</label><input type="number" id="seriesEpisode" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-            </div>
-            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Review / Notes</label><input type="text" id="seriesNotes" style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-        `;
-    } else {
-        dynamicFields.innerHTML = `
-            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Note / Description</label><input type="text" id="genericNote" required style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-            <div><label style="color:#ccc;display:block;margin-bottom:0.25rem;">Amount / Value (Optional)</label><input type="number" id="genericValue" style="width:100%;padding:0.75rem;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:white;"></div>
-        `;
-    }
+    const schema = TRACKER_SCHEMAS[tracker.type] || TRACKER_SCHEMAS.DEFAULT;
+    dynamicFields.innerHTML = schema.map(field => `
+        <div style="margin-bottom: 1rem;">
+            <label style="color:var(--text-secondary);display:block;margin-bottom:0.25rem;">${field.label}</label>
+            <input type="${field.type}" step="${field.step || 'any'}" id="dyn_${field.id}" required style="width:100%;padding:0.75rem;background:var(--surface-lighter);border:2px solid var(--border);color:white;font-family:'Press Start 2P', monospace; font-size: 0.5rem; clip-path: var(--pixel-clip);">
+        </div>
+    `).join('');
 
     // Bind Add Button to show form
     document.getElementById('addEntryBtn').onclick = () => {
@@ -1717,8 +1741,23 @@ async function openTrackerDetail(index) {
     // Load Entries
     await loadTrackerEntries(tracker._id);
 
-    document.getElementById('trackerDetailModal').style.display = 'flex';
+    const modal = document.getElementById('trackerDetailModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    }
 }
+
+function closeTrackerDetailModal() {
+    const modal = document.getElementById('trackerDetailModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
+}
+
+window.openTrackerDetail = openTrackerDetail;
+window.closeTrackerDetailModal = closeTrackerDetailModal;
 
 async function loadTrackerEntries(trackerId) {
     const timelineEl = document.getElementById('trackerDetailTimeline');
@@ -1733,12 +1772,9 @@ async function loadTrackerEntries(trackerId) {
 
         timelineEl.innerHTML = entries.map(entry => {
             const dateStr = new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            let details = '';
-            if (entry.metadata.litres) details = '<b>' + entry.metadata.litres + 'L</b> @ ₹' + entry.metadata.price + '/L (Odo: ' + entry.metadata.odo + ')';
-            else if (entry.metadata.season) details = 'Season ' + entry.metadata.season + ', Ep ' + entry.metadata.episode + (entry.metadata.notes ? ' - ' + entry.metadata.notes : '');
-            else if (entry.metadata.serviceType) details = entry.metadata.serviceType + ' - ₹' + entry.metadata.cost + ' (Odo: ' + entry.metadata.odo + ')';
-            else if (entry.metadata.note) details = entry.metadata.note + (entry.metadata.value ? ' - ₹' + entry.metadata.value : '');
-            else details = JSON.stringify(entry.metadata);
+            let details = Object.entries(entry.metadata || {})
+                .map(([k, v]) => `<span style="color:var(--text-secondary); text-transform:uppercase; font-size: 0.75rem;">${k}:</span> <strong style="color:var(--neon-pink);">${v}</strong>`)
+                .join(' <span style="color:var(--border);">|</span> ');
 
             return `
                 <div style="background: #1a1a1a; padding: 1rem; border-radius: 8px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
@@ -1756,32 +1792,11 @@ document.getElementById('trackerEntryForm')?.addEventListener('submit', async (e
     e.preventDefault();
     if (!currentActiveTracker) return;
 
+    const schema = TRACKER_SCHEMAS[currentActiveTracker.type] || TRACKER_SCHEMAS.DEFAULT;
     let metadata = {};
-    if (currentActiveTracker.type === 'FUEL') {
-        metadata = {
-            litres: document.getElementById('fuelLitres').value,
-            price: document.getElementById('fuelPrice').value,
-            odo: document.getElementById('fuelOdo').value,
-            station: document.getElementById('fuelStation').value
-        };
-    } else if (currentActiveTracker.type === 'VEHICLE') {
-        metadata = {
-            serviceType: document.getElementById('serviceType').value,
-            odo: document.getElementById('serviceOdo').value,
-            cost: document.getElementById('serviceCost').value
-        };
-    } else if (currentActiveTracker.type === 'SERIES') {
-        metadata = {
-            season: document.getElementById('seriesSeason').value,
-            episode: document.getElementById('seriesEpisode').value,
-            notes: document.getElementById('seriesNotes').value
-        };
-    } else {
-        metadata = {
-            note: document.getElementById('genericNote').value,
-            value: document.getElementById('genericValue').value
-        };
-    }
+    schema.forEach(field => {
+        metadata[field.id] = document.getElementById('dyn_' + field.id).value;
+    });
 
     try {
         await apiFetch('/trackers/' + currentActiveTracker._id + '/entries', {

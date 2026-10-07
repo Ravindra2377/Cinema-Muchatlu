@@ -204,17 +204,13 @@
                 </div>
                 <div id="userTrackersGrid" class="trackers-grid">
                     <!-- JS will populate actual user trackers -->
-                    <div onclick="openAddTrackerModal()"
-                        style="border: 2px dashed var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; min-height: 120px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s;"
-                        onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)';"
-                        onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-secondary)';">
-                        <div style="text-align: center;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" style="margin-bottom: 0.5rem;">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            <div>Add Tracker</div>
+                    <div onclick="openAddTrackerModal()" class="tracker-add-btn"
+                        style="border: 2px dashed var(--border); clip-path: var(--pixel-clip); display: flex; align-items: center; justify-content: center; min-height: 120px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; background: rgba(255, 255, 255, 0.02);"
+                        onmouseover="this.style.borderColor='var(--neon-pink)'; this.style.color='var(--neon-pink)';"
+                        onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-secondary)';">
+                        <div style="text-align: center; pointer-events: none;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(255,45,120,0.5);">+</div>
+                            <div style="font-family: 'Press Start 2P', monospace; font-size: 0.5rem; text-transform: uppercase;">Add Tracker</div>
                         </div>
                     </div>
                 </div>
@@ -559,14 +555,15 @@
                 </form>
             </div>
         </div>
+    </div>
 
-        <!-- Add Tracker Modal -->
-        <div id="addTrackerModal" class="modal">
-            <div class="modal-overlay" onclick="document.getElementById('addTrackerModal').classList.remove('active')">
-            </div>
-            <div class="modal-content" style="max-width: 450px;">
-                <button class="modal-close"
-                    onclick="document.getElementById('addTrackerModal').classList.remove('active')">&times;</button>
+    <!-- Add Tracker Modal -->
+    <div id="addTrackerModal" class="modal">
+        <div class="modal-overlay" onclick="closeAddTrackerModal()">
+        </div>
+        <div class="modal-content" style="max-width: 450px;">
+            <button class="modal-close"
+                onclick="closeAddTrackerModal()">&times;</button>
                 <div class="modal-body">
                     <h2 class="modal-title mb-md">Create Tracker</h2>
                     <form id="addTrackerForm" class="auth-form"
@@ -631,7 +628,8 @@
 
         <!-- Tracker Detail Modal -->
         <div id="trackerDetailModal" class="modal"
-            style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center;">
+            style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center;"
+            onclick="if(event.target === this) closeTrackerDetailModal()">
             <div class="modal-content"
                 style="background: var(--bg-app); padding: 0; border-radius: 16px; max-width: 600px; width: 95%; border: 1px solid var(--border-color); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
 
@@ -649,7 +647,7 @@
                                 style="color: #888; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">TYPE</span>
                         </div>
                     </div>
-                    <button onclick="document.getElementById('trackerDetailModal').style.display='none'"
+                    <button onclick="closeTrackerDetailModal()"
                         style="background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;">&times;</button>
                 </div>
 
