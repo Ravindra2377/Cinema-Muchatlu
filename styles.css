@@ -1452,7 +1452,7 @@ audio {
     }
 
     .main-content {
-        padding: 1rem 0.5rem 3rem;
+        padding: 1rem 1rem 3rem;
     }
 
     .hero-panel {
@@ -1470,6 +1470,31 @@ audio {
 
     .curated-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Mobile Tabs and Filters */
+    .content-type-tabs {
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .content-type-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .content-type-tab {
+        flex: 0 0 auto;
+        padding: 0.6rem 0.8rem;
+    }
+
+    .filters {
+        gap: 0.5rem;
+        margin: 1rem 0;
     }
 
     /* Modals & Headers Mobile Fixes */
