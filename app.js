@@ -479,14 +479,14 @@ async function renderTrendingSongs() {
 
     trendingMusicCarousel.innerHTML = musicTracks.slice(0, 15).map(track => `
         <div class="trending-music-card">
-            <div style="position: relative; width: 100%; padding-top: 100%; background: #111; overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
-                <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">
-                <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); color: #ffd700; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; backdrop-filter: blur(4px);">🔥 Top Song</span>
+            <div style="position: relative; width: 100%; padding-top: 100%; background: #111; overflow: hidden; clip-path: var(--pixel-clip);">
+                <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover; filter: sepia(0.2) hue-rotate(-10deg);" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">
+                <span class="pop-badge">🔥 Top Song</span>
             </div>
             <div style="padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
                 <div style="margin-bottom: 0.75rem;">
-                    <h4 style="margin: 0 0 0.35rem 0; font-size: 0.95rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;" title="${track.title}">${track.title}</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎵 ${track.artist}</p>
+                    <h4 style="margin: 0 0 0.35rem 0; font-size: 0.65rem; font-family: 'Press Start 2P', monospace; color: var(--neon-purple); text-transform: uppercase; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;" title="${track.title}">${track.title}</h4>
+                    <p style="margin: 0; font-size: 0.45rem; font-family: 'Press Start 2P', monospace; color: var(--text-secondary); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎵 ${track.artist}</p>
                 </div>
                 <audio controls src="${track.mediaUrl}" preload="none" class="music-audio-player" style="width: 100%; height: 32px; border-radius: 16px;">
                     Your browser does not support the audio element.
@@ -636,13 +636,13 @@ function renderMusic() {
     // Render full tracks grid
     musicGrid.innerHTML = musicTracks.map(track => `
         <div class="movie-card" style="display: flex; flex-direction: column;">
-            <div style="position: relative; width: 100%; padding-top: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; overflow: hidden; background: #111;">
-                <img src="${track.thumbnailUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" alt="${track.title}" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">
+            <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #111; clip-path: var(--pixel-clip);">
+                <img src="${track.thumbnailUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; filter: sepia(0.2) hue-rotate(-10deg);" alt="${track.title}" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">
             </div>
             <div class="movie-info" style="padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    <h3 class="movie-title" style="font-size: 1rem; margin-bottom: 0.5rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${track.title}</h3>
-                    <div class="movie-meta" style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+                    <h3 class="movie-title" style="font-size: 0.65rem; margin-bottom: 0.5rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-family: 'Press Start 2P', monospace; color: var(--neon-purple); text-transform: uppercase;">${track.title}</h3>
+                    <div class="movie-meta" style="color: var(--text-secondary); font-size: 0.45rem; font-family: 'Press Start 2P', monospace; text-transform: uppercase; margin-bottom: 1rem;">
                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">🎵 ${track.artist}</span>
                     </div>
                 </div>
@@ -707,32 +707,32 @@ async function showMovieDetail(movieId) {
                 </div>
                 <p class="movie-description">${movie.description}</p>
                 
-                <!-- Action Bar (Letterboxd Style) -->
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; align-items: center; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
-                    <button onclick="toggleLogWatched('${movie.id}', ${userLog ? true : false})" style="background: ${userLog ? '#00e5ff' : 'transparent'}; color: ${userLog ? '#000' : '#fff'}; border: 1px solid ${userLog ? '#00e5ff' : '#444'}; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: bold;">
+                <!-- Action Bar (Neon Club Style) -->
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; align-items: center; background: rgba(0, 0, 0, 0.5); padding: 0.75rem; border: 2px dashed var(--border); clip-path: var(--pixel-clip);">
+                    <button onclick="toggleLogWatched('${movie.id}', ${userLog ? true : false})" style="background: ${userLog ? 'var(--neon-pink)' : 'transparent'}; color: ${userLog ? '#fff' : '#fff'}; border: 2px solid var(--neon-pink); padding: 0.5rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-family: 'Press Start 2P', monospace; font-size: 0.45rem; text-transform: uppercase; clip-path: var(--pixel-clip); text-shadow: ${userLog ? 'none' : '0 0 6px rgba(255, 45, 120, 0.4)'};">
                         👁 ${userLog ? 'Watched' : 'Watched'}
                     </button>
                     
-                    <button onclick="toggleWatchlist('${movie.id}')" style="background: ${isInWatchlist(movie.id) ? '#34c759' : 'transparent'}; color: ${isInWatchlist(movie.id) ? '#000' : '#fff'}; border: 1px solid ${isInWatchlist(movie.id) ? '#34c759' : '#444'}; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: bold;">
+                    <button onclick="toggleWatchlist('${movie.id}')" style="background: ${isInWatchlist(movie.id) ? 'var(--success)' : 'transparent'}; color: ${isInWatchlist(movie.id) ? '#000' : 'var(--success)'}; border: 2px solid var(--success); padding: 0.5rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-family: 'Press Start 2P', monospace; font-size: 0.45rem; text-transform: uppercase; clip-path: var(--pixel-clip); text-shadow: ${isInWatchlist(movie.id) ? 'none' : '0 0 6px rgba(0, 255, 136, 0.4)'};">
                         🔖 ${isInWatchlist(movie.id) ? 'Watchlist' : 'Watchlist'}
                     </button>
                     
-                    <button onclick="toggleLogLike('${movie.id}', ${userLog && userLog.liked ? true : false})" style="background: ${userLog && userLog.liked ? 'rgba(255, 45, 85, 0.1)' : 'transparent'}; border: 1px solid ${userLog && userLog.liked ? '#ff2d55' : '#444'}; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">
+                    <button onclick="toggleLogLike('${movie.id}', ${userLog && userLog.liked ? true : false})" style="background: ${userLog && userLog.liked ? 'rgba(255, 45, 120, 0.2)' : 'transparent'}; border: 2px solid ${userLog && userLog.liked ? 'var(--neon-pink)' : 'var(--border)'}; padding: 0.5rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; clip-path: var(--pixel-clip);">
                         ${userLog && userLog.liked ? '❤️' : '🤍'}
                     </button>
 
-                    <button onclick="openLogModal('${movie.id}')" style="background: transparent; border: 1px solid #444; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; font-weight: bold;">
-                        <span style="color: #00e5ff;">⭐ ${userLog && userLog.rating ? userLog.rating : 'Rate'}</span>
+                    <button onclick="openLogModal('${movie.id}')" style="background: transparent; border: 2px solid var(--border); padding: 0.5rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; font-family: 'Press Start 2P', monospace; font-size: 0.45rem; text-transform: uppercase; clip-path: var(--pixel-clip);">
+                        <span style="color: var(--neon-yellow); text-shadow: 0 0 6px rgba(255, 199, 44, 0.4);">⭐ ${userLog && userLog.rating ? userLog.rating : 'Rate'}</span>
                     </button>
 
-                    <button onclick="openLogModal('${movie.id}')" style="background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: bold; margin-left: auto;">
+                    <button onclick="openLogModal('${movie.id}')" style="background: var(--surface-light); color: var(--neon-pink); border: 2px solid var(--neon-pink); padding: 0.5rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-family: 'Press Start 2P', monospace; font-size: 0.45rem; text-transform: uppercase; margin-left: auto; clip-path: var(--pixel-clip); text-shadow: 0 0 6px rgba(255, 45, 120, 0.4);">
                         📝 Log / Review
                     </button>
                 </div>
                 
                 ${movie.content_type === 'Upcoming' ? `
                     <div style="margin-top: 1rem;">
-                        <button class="btn-secondary" onclick="toggleReminder('${movie.id}')" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; cursor: pointer;">
+                        <button class="btn-secondary" onclick="toggleReminder('${movie.id}')" style="background: var(--surface); border: 2px solid var(--border); color: #fff; padding: 0.5rem 1rem; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 0.45rem; text-transform: uppercase; clip-path: var(--pixel-clip); text-shadow: 0 0 6px rgba(255, 45, 120, 0.4);">
                             ${reminders.includes(movie.id) ? '✅ Reminder Set' : '🔔 Remind Me'}
                         </button>
                     </div>
@@ -741,15 +741,15 @@ async function showMovieDetail(movieId) {
         </div>
         ${watchProviders && (watchProviders.flatrate || watchProviders.rent || watchProviders.buy) ? `
         <div class="movie-detail-section providers-section">
-            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Where to Watch</h3>
+            <h3 style="margin-bottom: 1rem; font-family: 'Press Start 2P', monospace; font-size: 0.6rem; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1px; text-shadow: 2px 2px 0px rgba(255, 45, 120, 0.8), 0 0 15px rgba(255, 45, 120, 0.4);">Where to Watch</h3>
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 ${['flatrate', 'rent', 'buy'].map(type => {
                     if (!watchProviders[type]) return '';
                     let displayType = type === 'flatrate' ? 'Stream' : type;
                     return watchProviders[type].map(p => `
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
-                            <img src="https://image.tmdb.org/t/p/w92${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name} (${type})" style="width: 40px; height: 40px; border-radius: 8px;">
-                            <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: capitalize;">${displayType}</span>
+                            <img src="https://image.tmdb.org/t/p/w92${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name} (${type})" style="width: 40px; height: 40px; border: 2px solid var(--border); clip-path: var(--pixel-clip);">
+                            <span style="font-size: 0.4rem; color: var(--text-secondary); text-transform: uppercase; font-family: 'Press Start 2P', monospace;">${displayType}</span>
                         </div>
                     `).join('');
                 }).join('')}
@@ -757,7 +757,7 @@ async function showMovieDetail(movieId) {
         </div>
         ` : ''}
         <div class="movie-detail-section">
-            <h3>Cast</h3>
+            <h3 style="margin-bottom: 1rem; font-family: 'Press Start 2P', monospace; font-size: 0.6rem; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1px; text-shadow: 2px 2px 0px rgba(255, 45, 120, 0.8), 0 0 15px rgba(255, 45, 120, 0.4);">Cast</h3>
             <p class="cast-list">${movie.cast.join(', ')}</p>
         </div>
 
