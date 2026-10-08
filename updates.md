@@ -382,3 +382,23 @@ Transformed the "My Stuff" tab from a simple movie diary into a comprehensive, e
   - **Instant Timeline Synchronization:** Form submissions instantly trigger `TrackerEntry` creation, auto-generate a `TimelineEvent`, and dynamically update both the individual Tracker's history and the Global "My Timeline" view without refreshing.
 - **Cinema Workflow Integration:**
   - Upgraded the existing `/api/films/:movieId/log` and `/api/films/:movieId/like` endpoints to natively generate `TimelineEvent` records, automatically injecting Cinema Muchatlu activity directly into the new Universal Tracking timeline.
+
+## 34. 🛠️ Tracker Dashboard & Modal Visibility Resolution
+Resolved critical UI visibility and event handling issues affecting the "Add Tracker" button and Tracker Detail modals on the "My Trackers" dashboard:
+
+- **DOM Hierarchy & Nested Modal Fix (`index.html`):**
+  - Identified that `#logModal` was missing its closing `</div>` tag, causing `#addTrackerModal` and `#trackerDetailModal` to be incorrectly parsed as descendant children of `#logModal`.
+  - Because `#logModal` defaulted to `display: none`, all child modals remained unrendered and invisible on screen even when `.active` was toggled.
+  - Properly closed `#logModal`, restoring `#addTrackerModal` and `#trackerDetailModal` as top-level modal dialogs directly under `<body>`.
+- **Modal Lifecycle Synchronization (`app.js` & `index.html`):**
+  - Resolved conflicts between inline styles (`style.display = 'none'` / `'flex'`) and the CSS `.modal.active` class rule.
+  - Implemented unified `openAddTrackerModal()`, `closeAddTrackerModal()`, `openTrackerDetail()`, and `closeTrackerDetailModal()` methods that synchronize both inline display properties and active classes.
+  - Re-bound modal overlays, backdrop clicks, and close buttons (`&times;`) directly to the dedicated close handlers.
+  - Exported modal open and close methods to `window` for reliable access across modules and inline triggers.
+- **Add Tracker Button Interaction & Event Delegation (`index.html` & `app.js`):**
+  - Added `pointer-events: none` to the interior text and icon wrappers within `.tracker-add-btn` to prevent child DOM nodes from intercepting click events.
+  - Added direct `onclick="openAddTrackerModal()"` attributes to both the initial static placeholder in `index.html` and the dynamically injected button in `loadTrackers()`.
+- **Comprehensive Dynamic Entry Schemas (`app.js`):**
+  - Extended `TRACKER_SCHEMAS` with dedicated form field configurations covering all 25 tracker categories (e.g. Fuel, EMI, Insurance, Series, Habits, Doctor Visits, Medical Reports).
+  - Dynamically renders structured inputs with validation and retro arcade styling, reliably persisting entry metadata.
+

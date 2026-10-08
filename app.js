@@ -421,6 +421,7 @@ function renderMovies(filter = 'all', searchQuery = '') {
 
 async function renderTrendingMovies() {
     const trendingCarousel = document.getElementById('trendingCarousel');
+    const heroContainer = document.getElementById('trendingHeroContainer');
     let trendingMovies = [];
     
     try {
@@ -435,6 +436,49 @@ async function renderTrendingMovies() {
         console.error('Failed to fetch trending movies from API', err);
         // Fallback to highest rated if API fails
         trendingMovies = allMovies.sort((a, b) => b.rating - a.rating).slice(0, 40);
+    }
+
+    if (trendingMovies.length > 0 && heroContainer) {
+        const topMovie = trendingMovies[0];
+        const genres = Array.isArray(topMovie.genre) ? topMovie.genre.join(', ') : (topMovie.genre || 'Action/Drama');
+        
+        // Since many posters are vertical, we'll try to center it nicely
+        heroContainer.innerHTML = `
+            <div class="hero-card" onclick="openMovieModal('${topMovie.id}')" style="position: relative; width: 100%; height: 380px; border-radius: 16px; overflow: hidden; margin-bottom: 48px; background-color: #1a1a24; background-image: url('${topMovie.poster}'); background-position: center 25%; background-size: cover; background-repeat: no-repeat; cursor: pointer;">
+                <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,15,1) 0%, rgba(10,10,15,0.7) 40%, rgba(10,10,15,0.2) 100%);"></div>
+                <div style="position: absolute; bottom: 0; left: 0; padding: 40px; width: 100%;">
+                    <div style="display: inline-block; padding: 4px 8px; background: rgba(255,45,85,0.2); color: white; border-radius: 4px; font-size: 10px; font-weight: 700; margin-bottom: 12px; border: 1px solid rgba(255,45,85,0.4);">
+                        #1 TRENDING
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 11px; font-weight: 600; letter-spacing: 1px; margin: 0 0 4px; text-transform: uppercase;">Top Pick This Week</p>
+                    <h2 style="font-size: 42px; margin: 0 0 16px; font-weight: 700; color: #fff;">${topMovie.title}</h2>
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                        <span style="color: var(--gold); font-size: 13px; font-weight: 600;">★ ${topMovie.rating || 'N/A'}</span>
+                        <span style="color: var(--text-muted); font-size: 13px;">${topMovie.year || ''}</span>
+                        <span style="color: var(--text-muted); font-size: 13px;">${genres}</span>
+                    </div>
+                    <div style="display: flex; gap: 12px;" onclick="event.stopPropagation()">
+                        <button class="btn-primary" onclick="openMovieModal('${topMovie.id}')" style="background: #fff; color: #000; border: none; height: 40px; padding: 0 24px; font-weight: 600; border-radius: 20px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Explore movie
+                        </button>
+                        <button class="icon-button watchlist-btn" data-movie-id="${topMovie.id}" style="border: 1px solid rgba(255,255,255,0.2); color: #fff; background: rgba(255,255,255,0.05); height: 40px; padding: 0 20px; border-radius: 20px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Watchlist
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Re-attach watchlist button listener for the newly injected hero button
+        setTimeout(() => {
+            const btn = heroContainer.querySelector('.watchlist-btn');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleWatchlist(topMovie.id);
+                });
+            }
+        }, 50);
     }
 
     trendingCarousel.innerHTML = trendingMovies.map(movie => `
@@ -477,7 +521,7 @@ async function renderTrendingSongs() {
         return;
     }
 
-    trendingMusicCarousel.innerHTML = musicTracks.slice(0, 15).map(track => `
+    trendingMusicCarousel.innerHTML = musicTracks.slice(0, 5).map(track => `
         <div class="trending-music-card">
             <div style="position: relative; width: 100%; padding-top: 100%; background: #111; overflow: hidden; clip-path: var(--pixel-clip);">
                 <img src="${track.thumbnailUrl}" alt="${track.title}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover; filter: sepia(0.2) hue-rotate(-10deg);" onerror="this.src='https://via.placeholder.com/500x500/1e293b/ffffff?text=Music'">

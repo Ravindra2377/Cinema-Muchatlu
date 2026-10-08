@@ -20,74 +20,77 @@
 </head>
 
 <body>
-    <!-- Navigation Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <h1>TRIBE</h1>
+    <div class="app-shell">
+        <div class="ambient ambient-one"></div>
+        <div class="ambient ambient-two"></div>
+        
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <button class="brand" aria-label="TRIBE home">
+                    <span class="brand-mark"><span>TR</span></span>
+                    <span class="brand-words"><strong>TRIBE</strong><em>COMMUNITY</em></span>
+                </button>
             </div>
-            <nav class="nav">
-                <a href="#trending" class="nav-link" data-section="trending">🔥 Trending</a>
-                <a href="#home" class="nav-link" data-section="home">🎬 Cinema</a>
-                <a href="#music" class="nav-link" data-section="music">🎵 Music</a>
-                <a href="#watchlist" class="nav-link" data-section="watchlist">❤️ My Stuff</a>
+            <nav class="side-nav" aria-label="Main navigation">
+                <p class="nav-kicker">EXPLORE</p>
+                <a href="#trending" class="nav-button nav-link" data-section="trending">
+                    <span>🔥 Trending</span>
+                </a>
+                <a href="#home" class="nav-button nav-link active" data-section="home">
+                    <span>🎬 Cinema</span>
+                </a>
+                <a href="#music" class="nav-button nav-link" data-section="music">
+                    <span>🎵 Music</span>
+                </a>
+                <a href="#watchlist" class="nav-button nav-link" data-section="watchlist">
+                    <span>❤️ My Stuff</span>
+                </a>
             </nav>
-            <div class="header-actions">
+            
+            
+        </aside>
+
+        <div class="workspace">
+            <header class="topbar">
+                <div class="mobile-brand">
+                    <button class="brand" aria-label="TRIBE home">
+                        <span class="brand-mark"><span>TR</span></span>
+                    </button>
+                    <button class="icon-button ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu" aria-hidden="true"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path></svg>
+                    </button>
+                </div>
+
                 <label class="search-pill">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <input type="text" id="searchInput" placeholder="Search movies...">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+                    <input type="text" id="searchInput" placeholder="Search movies, people, music...">
                 </label>
-                <div class="user-section">
-                    <button class="btn-login" id="loginBtn">Login</button>
+                <div class="top-actions">
+                    <button class="icon-button notification">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+                        <i></i>
+                    </button>
+                    <button class="btn-primary" id="loginBtn" style="height: 38px; padding: 0 16px;">Login</button>
                     <div class="user-profile hidden" id="userProfile">
-                        <div class="user-avatar" id="userAvatar">
-                            <span id="userInitial">U</span>
-                        </div>
+                        <button class="profile-button" id="userAvatar">
+                            <span class="avatar-circle" id="userInitial">U</span>
+                            <span class="profile-name" id="userName">User</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"></path></svg>
+                        </button>
                         <div class="user-dropdown" id="userDropdown">
-                            <div class="user-info">
-                                <p class="user-name" id="userName">User</p>
-                                <p class="user-role" id="userRole">Member</p>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <a href="#profile" class="dropdown-item" id="profileLink">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                                Profile
-                            </a>
-                            <a href="#leaderboard" class="dropdown-item" id="leaderboardLink">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                                    <path d="M4 22h16"></path>
-                                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-                                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-                                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-                                </svg>
-                                Leaderboard
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <button class="dropdown-item logout-btn" id="logoutBtn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
+                            <p class="user-role" id="userRole" style="padding: 8px; margin: 0; font-size: 11px; color: var(--text-muted); text-align: center;">Member</p>
+                            <div style="height: 1px; background: var(--line); margin: 4px 0;"></div>
+                            <button class="icon-button logout-btn" id="logoutBtn" style="width: 100%; border-radius: 8px; justify-content: flex-start; padding: 0 12px; font-family: 'Inter'; font-size: 13px; color: var(--red);">
                                 Logout
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </header>
+            </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <div class="content-layout">
+        <main class="main-content">
 
         <section id="home" class="section">
 
@@ -144,17 +147,27 @@
         </section>
 
         <section id="trending" class="section">
+            <!-- Hero Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                <div>
+                    <div style="display: inline-block; padding: 4px 10px; border: 1px solid var(--red); border-radius: 20px; font-size: 9px; color: var(--red); font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">
+                        🔥 Trending Now
+                    </div>
+                    <h1 style="font-size: 28px; margin: 0 0 8px; font-weight: 600; color: #fff;">Explore what's hot</h1>
+                    <p style="color: var(--text-secondary); font-size: 13px; margin: 0;">The most talked about cinema this week.</p>
+                </div>
+                <button class="btn-primary" onclick="const original = this.innerHTML; this.innerHTML='<span style=\'font-size: 16px;\'>⏳</span> Coming Soon'; setTimeout(() => this.innerHTML=original, 2000)" style="background: var(--red); color: white; border: none; font-size: 12px; font-weight: 600; padding: 0 16px; height: 36px; border-radius: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    <span style="font-size: 16px;">+</span> Start a muchata
+                </button>
+            </div>
+
+            <!-- Dynamic Hero Card Container -->
+            <div id="trendingHeroContainer"></div>
+
             <h2 class="section-title">🎬 Trending Movies This Week</h2>
             <div class="trending-carousel" id="trendingCarousel"></div>
 
             <div class="mt-xl">
-                <div class="flex justify-between items-center mb-md">
-                    <h2 class="section-title" style="margin: 0;">🎵 Trending Songs</h2>
-                    <a href="#music" class="nav-link" data-section="music"
-                        style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">View
-                        All Tracks &rarr;</a>
-                </div>
-                <div class="trending-carousel" id="trendingMusicCarousel"></div>
             </div>
         </section>
 
@@ -248,6 +261,30 @@
 
 
     </main>
+
+        <aside class="right-rail">
+            <div class="rail-section">
+                <div class="rail-header">
+                    <p class="rail-eyebrow">THIS WEEK</p>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                        <h3>Trending Music</h3>
+                        <a href="#music" class="see-all" onclick="document.querySelector('[data-section=\'music\']').click()">Listen &rarr;</a>
+                    </div>
+                </div>
+                <div class="rail-list" id="trendingMusicCarousel" style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- JS will populate trending songs here -->
+                </div>
+            </div>
+            
+            <footer class="rail-footer">
+                <a href="#">About</a> <a href="#">Guidelines</a> <a href="#">Privacy</a> <a href="#">Help</a>
+                <p>&copy; 2026 Cinema Muchatlu &middot; Made with ❤️ for Telugu cinema</p>
+            </footer>
+        </aside>
+
+    </div>
+
+    </div></div>
 
     <!-- Movie Detail Modal -->
     <div class="modal" id="movieModal">
